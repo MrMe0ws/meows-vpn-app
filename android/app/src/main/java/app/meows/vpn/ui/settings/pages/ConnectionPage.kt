@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Router
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import app.meows.vpn.MeowsViewModel
@@ -22,6 +23,9 @@ fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit) {
     SettingsPageScaffold("Подключение", onBack) {
         SettingsGroup {
             SwitchRow(Icons.Rounded.PlayArrow, "Подключаться при запуске", vm.flag(XKStore.P_AUTOCONN, false)) { vm.setFlag(XKStore.P_AUTOCONN, it) }
+            SwitchRow(Icons.Rounded.SwapHoriz, "Автопереключение серверов", vm.flag(XKStore.P_AUTOSWITCH, true), "Если сервер перестал отвечать, Meows подключится к ближайшему рабочему. Выключите, если нужна конкретная страна") {
+                vm.setFlag(XKStore.P_AUTOSWITCH, it)
+            }
             SwitchRow(Icons.Rounded.Router, "Локальная сеть мимо VPN", vm.flag(XKStore.P_LAN, true), "Роутер, принтеры, Chromecast") {
                 vm.setFlag(XKStore.P_LAN, it, reconnect = true)
             }

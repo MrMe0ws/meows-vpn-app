@@ -9,7 +9,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.LocalServerSocket;
+import android.net.ConnectivityManager;
 import android.net.LocalSocket;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
@@ -27,6 +30,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class XKVpnService extends VpnService {
     public static final String ACTION_START = "app.meows.vpn.START";
@@ -239,6 +244,7 @@ public class XKVpnService extends VpnService {
             connectedAt = System.currentTimeMillis();
             broadcast(CONNECTED);
             ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключено"));
+            startWatchdog();
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {
@@ -258,10 +264,116 @@ public class XKVpnService extends VpnService {
         fo.close(); in.close();
     }
 
+    // ---------- автопереключение сервера ----------
+    private volatile Thread watchdog;
+    private static final ArrayList<Long> switches = new ArrayList<>();   // когда переключались (не чаще 3 раз за 10 минут)
+
+    private void startWatchdog() {
+        stopWatchdog();
+        Thread t = new Thread(new Runnable() { public void run() { watchLoop(); } }, "xk-watchdog");
+        t.setDaemon(true); watchdog = t; t.start();
+    }
+
+    private void stopWatchdog() { Thread t = watchdog; watchdog = null; if (t != null) t.interrupt(); }
+
+    /**
+     * Раз в 30 с проверяет текущий сервер «реальным пингом» (трафик приложения идёт мимо VPN — проверяется сам сервер).
+     * Два сбоя подряд при живой сети → пингуем все серверы; есть рабочий — переключаемся на лучший.
+     * Если не отвечает никто — скорее всего нет интернета, ничего не меняем. Настройка: «Подключение → Автопереключение серверов».
+     */
+    private void watchLoop() {
+        Thread me = Thread.currentThread();
+        int fails = 0;
+        try {
+            while (watchdog == me && state == CONNECTED && !stopping) {
+                Thread.sleep(30_000);
+                if (watchdog != me || state != CONNECTED || stopping) return;
+                XKStore st = st0();
+                if (!st.flag(XKStore.P_AUTOSWITCH, true) || !underlyingOnline()) { fails = 0; continue; }
+                int cur = st.index();
+                pingBlocking(st, new int[]{cur}, 20_000);
+                Integer ms = st.pings.get(cur);
+                if (ms != null && ms == -2) continue;            // UDP-протокол: честно проверить нельзя
+                if (ms != null && ms > 0) { fails = 0; continue; }
+                if (++fails < 2) continue;
+                pingBlocking(st, null, 90_000);
+                List<XKStore.Server> list = st.servers();
+                int best = -1, bestMs = Integer.MAX_VALUE;
+                for (int i = 0; i < list.size(); i++) {
+                    Integer p = st.pings.get(i);
+                    if (i != cur && p != null && p > 0 && p < bestMs) { bestMs = p; best = i; }
+                }
+                fails = 0;
+                if (best < 0 || !allowSwitch()) continue;
+                String from = cur < list.size() ? list.get(cur).title : "Сервер";
+                String to = list.get(best).title;
+                st.setIndex(best);
+                notifySwitch(from, to);
+                restartTunnel();
+                return;                                          // новый сторож запустится после подключения
+            }
+        } catch (InterruptedException ignored) { }
+    }
+
+    private void pingBlocking(XKStore st, int[] only, long timeoutMs) throws InterruptedException {
+        final CountDownLatch l = new CountDownLatch(1);
+        st.pingSome(only, new Runnable() { public void run() { } }, new Runnable() { public void run() { l.countDown(); } });
+        l.await(timeoutMs, TimeUnit.MILLISECONDS);
+    }
+
+    /** Есть ли рабочая сеть помимо VPN (иначе «нет ответа» — это не вина сервера). */
+    private boolean underlyingOnline() {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            for (Network n : cm.getAllNetworks()) {
+                NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                if (c != null && !c.hasTransport(NetworkCapabilities.TRANSPORT_VPN) && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) return true;
+            }
+        } catch (Exception ignored) { }
+        return false;
+    }
+
+    private static synchronized boolean allowSwitch() {
+        long now = System.currentTimeMillis();
+        for (int i = switches.size() - 1; i >= 0; i--) if (now - switches.get(i) > 600_000L) switches.remove(i);
+        if (switches.size() >= 3) return false;
+        switches.add(now);
+        return true;
+    }
+
+    private void notifySwitch(String from, String to) {
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("switch") == null) {
+            nm.createNotificationChannel(new NotificationChannel("switch", "Смена сервера", NotificationManager.IMPORTANCE_DEFAULT));
+        }
+        int fl = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
+        Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "switch") : new Notification.Builder(this);
+        b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Сервер сменился")
+                .setContentText("«" + from + "» не отвечал — подключились к «" + to + "»")
+                .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl)).setAutoCancel(true).setColor(0xFF7CD62B);
+        nm.notify(30, b.build());
+    }
+
+    /** Перезапуск туннеля на новый сервер без остановки сервиса (иначе Android может не дать запустить его из фона). */
+    private void restartTunnel() {
+        synchronized (this) {
+            stopping = true;
+            if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
+            if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
+            connectedAt = 0;
+        }
+        broadcast(CONNECTING);
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключаемся…"));
+        try { Thread.sleep(700); } catch (InterruptedException ignored) { }   // даём старому читателю вывода завершиться
+        new Thread(new Runnable() { public void run() { startVpn(); } }, "xk-restart").start();
+    }
+
     /** Пауза: снимаем туннель и ядро, но сервис и уведомление остаются — можно продолжить одной кнопкой. */
     private synchronized void pauseVpn() {
         if (state != CONNECTED) return;
         paused = true; stopping = true;
+        stopWatchdog();
         if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
         if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
         connectedAt = 0;
@@ -273,6 +385,7 @@ public class XKVpnService extends VpnService {
         if (stopping && state == IDLE && !paused) return;
         paused = false;
         stopping = true;
+        stopWatchdog();
         if (error != null) lastError = error;
         if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
         if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }

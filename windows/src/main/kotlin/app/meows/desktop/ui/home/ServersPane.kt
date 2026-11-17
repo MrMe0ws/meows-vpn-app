@@ -47,7 +47,7 @@ fun ServersPane(app: AppModel, onAdd: () -> Unit, modifier: Modifier = Modifier)
             item {
                 SubscriptionCard(
                     sub, expanded, { expanded = !expanded }, app.refreshing, app.pinging,
-                    onRefresh = { app.refresh(false) }, onPing = app::pingAll, onDelete = app::deleteSubscription,
+                    onRefresh = { app.refresh(false) }, onPing = app::pingAll, onFastest = app::selectFastest, onDelete = app::deleteSubscription,
                 )
             }
             if (expanded) itemsIndexed(servers) { i, s ->

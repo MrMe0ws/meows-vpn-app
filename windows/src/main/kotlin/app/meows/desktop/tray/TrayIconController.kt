@@ -14,6 +14,7 @@ import javax.imageio.ImageIO
  */
 class TrayIconController(private val onOpen: () -> Unit, private val onMenu: (x: Int, y: Int) -> Unit) {
     private var icon: TrayIcon? = null
+    private var pendingUrl: String? = null   // куда вести по щелчку на всплывающем уведомлении
 
     /** true — иконка добавлена (трей поддерживается). */
     fun install(tooltip: String): Boolean {
@@ -30,10 +31,14 @@ class TrayIconController(private val onOpen: () -> Unit, private val onMenu: (x:
                 override fun mousePressed(e: MouseEvent) { if (e.isPopupTrigger) popup() }
                 override fun mouseReleased(e: MouseEvent) { if (e.isPopupTrigger) popup() }
             })
+            ti.addActionListener { val u = pendingUrl; pendingUrl = null; if (u != null) runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI(u)) } else onOpen() }
             tray.add(ti); icon = ti
             true
         }.getOrDefault(false)
     }
+
+    /** Всплывающее уведомление у иконки; щелчок по нему открывает [url] (если задан). */
+    fun notify(title: String, text: String, url: String?) { pendingUrl = url; icon?.displayMessage(title, text, TrayIcon.MessageType.INFO) }
 
     private fun popup() { val p = MouseInfo.getPointerInfo().location; onMenu(p.x, p.y) }
 

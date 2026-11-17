@@ -40,6 +40,7 @@ public final class XKStore {
     public static final String P_AUTO = "autoMode";        // 0 by sub, -1 off, N hours
     public static final String P_LAUNCH = "updateOnLaunch";// default true
     public static final String P_REMIND = "remind";        // default true
+    public static final String P_AUTOSWITCH = "autoswitch"; // default true: сменить сервер, если текущий перестал отвечать
     public static final String P_EXCLUDED = "excludedApps";
     public static final String P_CATS = "bypassCats";
     public static final String P_SITES = "bypassSites";
@@ -427,7 +428,7 @@ public final class XKStore {
             }
             final String fe = err;
             main.post(new Runnable() { public void run() {
-                if (fe == null) scheduleReminders();
+                if (fe == null) { scheduleReminders(); XKReceiver.checkTraffic(ctx, XKStore.this); }
                 cb.done(fe);
             }});
         }});

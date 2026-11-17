@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
         val app = remember { AppModel(startHidden = "--minimized" in args && link == null, connectOnStart = "--connect" in args).also { Inbox.attach(it); link?.let(Inbox::deliver) } }
         val icon = BitmapPainter(Res.bitmap("icon.png"))
         val tray = remember { TrayIconController(onOpen = { app.windowVisible = true; app.showTick++ }, onMenu = { x, y -> app.trayAnchor = Point(x, y) }) }
-        val trayOk = remember { tray.install("Meows") }
+        val trayOk = remember { tray.install("Meows").also { app.notifier = tray::notify } }
         DisposableEffect(Unit) { onDispose { tray.remove() } }
         LaunchedEffect(app.exitRequested) { if (app.exitRequested) exitApplication() }
         TrayMenuWindow(app, app.trayAnchor) { app.trayAnchor = null }

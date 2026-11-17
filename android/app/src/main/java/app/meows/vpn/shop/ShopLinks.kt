@@ -10,7 +10,7 @@ object ShopLinks {
     const val CABINET_FALLBACK = "https://cabinet.me0ws.store"
     const val SUPPORT_FALLBACK = "https://t.me/VPNmeows_bot"
 
-    fun cabinet(st: XKStore): String = st.webUrl()?.takeIf { it.isNotBlank() } ?: CABINET_FALLBACK
+    @JvmStatic fun cabinet(st: XKStore): String = st.webUrl()?.takeIf { it.isNotBlank() } ?: CABINET_FALLBACK
     fun support(st: XKStore): String = st.supportUrl()?.takeIf { it.isNotBlank() } ?: SUPPORT_FALLBACK
 
     /** Дней до конца подписки: null — срок неизвестен, отрицательное — уже закончилась. */

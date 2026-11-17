@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Palette
@@ -69,9 +68,6 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain")
                     .putExtra(Intent.EXTRA_TEXT, "Meows — быстрый и удобный VPN. Скачать приложение для Android: ${AppLinks.RELEASES_URL}")
                 runCatching { ctx.startActivity(Intent.createChooser(send, "Рассказать друзьям").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-            }
-            ValueRow(Icons.Rounded.Code, "Проект на GitHub", summary = AppLinks.GITHUB_URL.removePrefix("https://")) {
-                runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AppLinks.GITHUB_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {

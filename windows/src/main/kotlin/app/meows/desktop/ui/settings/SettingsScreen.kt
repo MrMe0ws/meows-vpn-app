@@ -46,8 +46,6 @@ import app.meows.desktop.ui.components.hand
 import app.meows.desktop.ui.home.openUrl
 import app.meows.desktop.ui.theme.Palettes
 
-private const val GITHUB = "https://github.com/MrMe0ws/meows-vpn-app"
-
 @Composable
 internal fun Group(title: String, footer: String? = null, content: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
@@ -102,7 +100,6 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
             UpdatesGroup(app)
             Group("О приложении") {
                 ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Версия") }, trailingContent = { Text(AppInfo.VERSION) })
-                ListItem(modifier = Modifier.clickable { openUrl(GITHUB) }.hand(), colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Проект на GitHub") }, supportingContent = { Text("github.com/MrMe0ws/meows-vpn-app") })
             }
             Spacer(Modifier.height(24.dp))
         }

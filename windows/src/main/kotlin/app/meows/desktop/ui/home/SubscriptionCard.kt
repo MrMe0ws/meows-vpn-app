@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.ExpandMore
@@ -67,7 +68,7 @@ fun copyText(text: String) { runCatching { Toolkit.getDefaultToolkit().systemCli
 @Composable
 fun SubscriptionCard(
     sub: SubscriptionData, expanded: Boolean, onExpand: () -> Unit, refreshing: Boolean, pinging: Boolean,
-    onRefresh: () -> Unit, onPing: () -> Unit, onDelete: () -> Unit,
+    onRefresh: () -> Unit, onPing: () -> Unit, onFastest: () -> Unit, onDelete: () -> Unit,
 ) {
     val shape = if (expanded) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(28.dp)
     val chevron by animateFloatAsState(if (expanded) 0f else -90f, label = "chevron")
@@ -93,6 +94,10 @@ fun SubscriptionCard(
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Выбрать быстрейший") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
+                            onClick = { menu = false; onFastest() },
+                        )
                         DropdownMenuItem(
                             text = { Text("Скопировать ссылку") }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) },
                             onClick = { menu = false; copyText(sub.url) },

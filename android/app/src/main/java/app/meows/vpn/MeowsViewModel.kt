@@ -152,13 +152,24 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         st.setIndex(i); bump(); reconnectIfNeeded()
     }
 
+    /** «Выбрать быстрейший»: пингуем все серверы и выбираем лучший по результату. */
     fun selectFastest() {
+        if (!st.hasSubscription() || pinging) return
+        toast = "Измеряем пинг…"
+        pinging = true; pingHidden = false
+        handler.removeCallbacksAndMessages(PING_TOKEN)
+        st.pingAll({ bump() }, { pinging = false; bump(); scheduleHidePing(); pickFastest() })
+    }
+
+    private fun pickFastest() {
         var best = -1; var bestMs = Int.MAX_VALUE
         for (i in servers.indices) {
             val ms = st.pings[i] ?: continue
             if (ms in 1 until bestMs) { bestMs = ms; best = i }
         }
-        if (best >= 0) select(best) else toast = "Сначала измерьте пинг"
+        if (best < 0) { toast = "Ни один сервер не ответил"; return }
+        toast = "Быстрейший: ${servers[best].title} · $bestMs мс"
+        select(best)
     }
 
     private fun autoPing() {
