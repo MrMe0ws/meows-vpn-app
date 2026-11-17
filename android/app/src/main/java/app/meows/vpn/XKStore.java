@@ -89,7 +89,9 @@ public final class XKStore {
 
     public interface Callback { void done(String error); }
 
-    private static XKStore inst;
+    /** Несколько подписок: слот 0 хранит данные под прежними ключами «sub.*» (обновление приложения ничего не теряет), остальные — «sub<N>.*». */
+    private static final Map<Integer, XKStore> insts = new HashMap<>();
+    private final int slot;
     private final Context ctx;
     private final SharedPreferences sp;
     private List<Server> servers;
@@ -97,27 +99,83 @@ public final class XKStore {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService pool = Executors.newFixedThreadPool(8);
 
-    public static synchronized XKStore get(Context c) {
-        if (inst == null) inst = new XKStore(c.getApplicationContext());
-        return inst;
+    /** Активная подписка — та, с которой подключается VPN. Всё приложение, кроме списка подписок, работает с ней. */
+    public static synchronized XKStore get(Context c) { return byId(c, activeId(c)); }
+
+    public static synchronized XKStore byId(Context c, int id) {
+        XKStore s = insts.get(id);
+        if (s == null) { s = new XKStore(c.getApplicationContext(), id); insts.put(id, s); }
+        return s;
     }
 
-    private XKStore(Context c) {
+    private static SharedPreferences gp(Context c) { return c.getApplicationContext().getSharedPreferences("xk", Context.MODE_PRIVATE); }
+
+    public static synchronized List<Integer> slotIds(Context c) {
+        List<Integer> r = new ArrayList<>();
+        for (String x : gp(c).getString("sub.slots", "0").split(",")) { try { r.add(Integer.parseInt(x.trim())); } catch (Exception ignored) { } }
+        if (r.isEmpty()) r.add(0);
+        return r;
+    }
+
+    private static void saveSlots(Context c, List<Integer> ids) {
+        StringBuilder b = new StringBuilder();
+        for (int i : ids) { if (b.length() > 0) b.append(','); b.append(i); }
+        gp(c).edit().putString("sub.slots", b.toString()).apply();
+    }
+
+    public static synchronized List<XKStore> all(Context c) {
+        List<XKStore> r = new ArrayList<>();
+        for (int id : slotIds(c)) r.add(byId(c, id));
+        return r;
+    }
+
+    public static synchronized int activeId(Context c) {
+        List<Integer> ids = slotIds(c);
+        int a = gp(c).getInt("sub.active", ids.get(0));
+        return ids.contains(a) ? a : ids.get(0);
+    }
+
+    public static synchronized void activate(Context c, int id) { if (slotIds(c).contains(id)) gp(c).edit().putInt("sub.active", id).apply(); }
+
+    /** Куда сохранить ссылку: подписка с такой же ссылкой (обновим её), иначе пустой слот, иначе новый. */
+    public static synchronized XKStore slotFor(Context c, String link) {
+        List<XKStore> all = all(c);
+        for (XKStore s : all) if (s.url().equals(link)) return s;
+        for (XKStore s : all) if (s.url().isEmpty()) return s;
+        List<Integer> ids = slotIds(c);
+        int next = 0; for (int i : ids) next = Math.max(next, i + 1);
+        ids.add(next); saveSlots(c, ids);
+        return byId(c, next);
+    }
+
+    /** Удалить подписку; последнюю не убираем из списка слотов, а очищаем. */
+    public static synchronized void removeSlot(Context c, int id) {
+        XKStore s = byId(c, id);
+        s.clear();
+        List<Integer> ids = slotIds(c);
+        if (ids.size() > 1) { ids.remove((Integer) id); saveSlots(c, ids); insts.remove(id); }
+    }
+
+    private XKStore(Context c, int slot) {
         ctx = c;
+        this.slot = slot;
         sp = c.getSharedPreferences("xk", Context.MODE_PRIVATE);
     }
 
+    public int id() { return slot; }
+    private String k(String n) { return slot == 0 ? "sub." + n : "sub" + slot + "." + n; }
+
     public SharedPreferences prefs() { return sp; }
-    public String url() { return sp.getString("sub.url", ""); }
-    public String body() { return sp.getString("sub.body", ""); }
+    public String url() { return sp.getString(k("url"), ""); }
+    public String body() { return sp.getString(k("body"), ""); }
     public boolean hasSubscription() { return body().length() > 0; }
-    public long updated() { return sp.getLong("sub.updated", 0); }
+    public long updated() { return sp.getLong(k("updated"), 0); }
 
     public int index() {
-        int i = sp.getInt("sub.index", 0);
+        int i = sp.getInt(k("index"), 0);
         return (i >= 0 && i < servers().size()) ? i : 0;
     }
-    public void setIndex(int i) { sp.edit().putInt("sub.index", i).apply(); }
+    public void setIndex(int i) { sp.edit().putInt(k("index"), i).apply(); }
 
     /** Расширенно: все российские сайты/зоны напрямую поверх правил подписки. По умолчанию выключено. */
     public boolean ruDirect() { return sp.getBoolean(P_RU, false); }
@@ -132,7 +190,7 @@ public final class XKStore {
 
     // ---------- headers ----------
     private JSONObject headers() {
-        try { return new JSONObject(sp.getString("sub.headers", "{}")); } catch (Exception e) { return new JSONObject(); }
+        try { return new JSONObject(sp.getString(k("headers"), "{}")); } catch (Exception e) { return new JSONObject(); }
     }
     private String header(String name) {
         String v = headers().optString(name, null);
@@ -413,8 +471,8 @@ public final class XKStore {
                             if (e.getKey() == null || e.getValue() == null || e.getValue().isEmpty()) continue;
                             h.put(e.getKey().toLowerCase(), e.getValue().get(0));
                         }
-                        sp.edit().putString("sub.url", link).putString("sub.body", body).putString("sub.headers", h.toString())
-                                .putLong("sub.updated", System.currentTimeMillis()).apply();
+                        sp.edit().putString(k("url"), link).putString(k("body"), body).putString(k("headers"), h.toString())
+                                .putLong(k("updated"), System.currentTimeMillis()).apply();
                         synchronized (XKStore.this) { servers = null; }
                         pings.clear();
                     }
@@ -435,7 +493,7 @@ public final class XKStore {
     }
 
     public void clear() {
-        sp.edit().remove("sub.url").remove("sub.body").remove("sub.headers").remove("sub.updated").remove("sub.index").apply();
+        sp.edit().remove(k("url")).remove(k("body")).remove(k("headers")).remove(k("updated")).remove(k("index")).apply();
         synchronized (this) { servers = null; }
         pings.clear();
         scheduleReminders();
@@ -613,9 +671,9 @@ public final class XKStore {
         long expire = expire() * 1000L;
         long[] before = {3 * 86400_000L, 86400_000L, 0};
         for (int k = 0; k < 3; k++) {
-            Intent i = new Intent(ctx, XKReceiver.class).setAction(XKReceiver.ACTION_REMIND).putExtra("kind", k);
+            Intent i = new Intent(ctx, XKReceiver.class).setAction(XKReceiver.ACTION_REMIND).putExtra("kind", k).putExtra("slot", slot);
             int flags = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
-            PendingIntent pi = PendingIntent.getBroadcast(ctx, 100 + k, i, flags);
+            PendingIntent pi = PendingIntent.getBroadcast(ctx, 100 + slot * 3 + k, i, flags);
             am.cancel(pi);
             if (!remind() || expire <= 0) continue;
             long fire = expire - before[k];

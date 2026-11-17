@@ -18,16 +18,23 @@ import app.meows.vpn.update.UpdateController
 
 /** Связывает старую Java-логику (XKStore / XKVpnService) с Compose-состоянием. */
 class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Listener {
-    val st: XKStore = XKStore.get(app)
+    /** Активная подписка — та, с которой подключается VPN (остальные видны на главной своими карточками). */
+    val st: XKStore get() = XKStore.get(getApplication())
     private val handler = Handler(Looper.getMainLooper())
 
     var vpnState by mutableIntStateOf(XKVpnService.state); private set
     /** Растёт при любом изменении подписки, серверов, пингов или настроек. */
     var rev by mutableIntStateOf(0); private set
-    var refreshing by mutableStateOf(false); private set
-    var pinging by mutableStateOf(false); private set
-    /** Серверы, которые сейчас пингуются по одному (свайп). */
-    val pingingOne = mutableStateSetOf<Int>()
+    /** Какие подписки сейчас обновляются / пингуются (по номеру слота) и какие серверы пингуются по одному (слот*1000 + индекс). */
+    private val refreshingSlots = mutableStateSetOf<Int>()
+    private val pingingSlots = mutableStateSetOf<Int>()
+    private val pingingOne = mutableStateSetOf<Int>()
+    val refreshing: Boolean get() = refreshingSlots.isNotEmpty()
+    val pinging: Boolean get() = pingingSlots.isNotEmpty()
+    fun isRefreshing(s: XKStore) = s.id() in refreshingSlots
+    fun isPinging(s: XKStore) = s.id() in pingingSlots
+    fun isPingingOne(s: XKStore, i: Int) = (s.id() * 1000 + i) in pingingOne
+    fun isActive(s: XKStore) = s.id() == st.id()
     private var pingHidden = false
 
     val updates = UpdateController(app, st.prefs(), viewModelScope)
@@ -66,6 +73,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     override fun onState(state: Int) {
         vpnState = state
+        bump()   // сервис мог сам сменить сервер (автопереключение) — обновляем список и выбранный сервер
         if (state == XKVpnService.IDLE) {
             XKVpnService.lastError?.let { alert("Не подключилось", it); XKVpnService.lastError = null }
         }
@@ -95,40 +103,68 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     }
     private fun bump() { rev++ }
 
-    // ---------- подписка ----------
+    // ---------- подписки ----------
+    /** Все подписки (карточки на главной). */
+    val subs: List<XKStore> get() { rev; return XKStore.all(getApplication()).filter { it.hasSubscription() } }
     val servers: List<XKStore.Server> get() { rev; return st.servers() }
     val selected: Int get() { rev; return st.index() }
-    val hasSub: Boolean get() { rev; return st.hasSubscription() }
+    val hasSub: Boolean get() { rev; return XKStore.all(getApplication()).any { it.hasSubscription() } }
 
+    /** Добавить подписку: такая же ссылка уже есть — обновим её, иначе новая карточка. Первая подписка становится активной. */
     fun addSubscription(raw: String) {
-        refreshing = true
-        st.fetch(raw) { error ->
-            refreshing = false
-            if (error != null) { fetchError("Не получилось", error); return@fetch }
-            toast = "Подписка добавлена"
-            syncGeo()
-            bump(); autoPing(); reconnectIfNeeded()
+        val link = LinkNormalizer.normalize(raw)
+        if (!LinkNormalizer.isHttpLink(link)) { fetchError("Не получилось", "Это не похоже на ссылку подписки."); return }
+        val hadActive = st.hasSubscription()
+        val s = XKStore.slotFor(getApplication(), link)
+        fetchInto(s, raw, replaced = false) { if (!hadActive) XKStore.activate(getApplication(), s.id()) }
+    }
+
+    /** «Заменить ссылку» в карточке: новая ссылка записывается в эту же подписку. */
+    fun replaceSubscription(s: XKStore, raw: String) = fetchInto(s, raw, replaced = true) {}
+
+    private fun fetchInto(s: XKStore, raw: String, replaced: Boolean, onOk: () -> Unit) {
+        refreshingSlots.add(s.id())
+        s.fetch(raw) { error ->
+            refreshingSlots.remove(s.id())
+            if (error != null) {
+                if (s.url().isEmpty()) XKStore.removeSlot(getApplication(), s.id())   // новая карточка не получилась — не оставляем пустую
+                bump(); fetchError("Не получилось", error); return@fetch
+            }
+            onOk()
+            toast = if (replaced) "Ссылка заменена" else "Подписка добавлена"
+            if (isActive(s)) { syncGeo(); bump(); autoPing(); reconnectIfNeeded() } else bump()
         }
     }
 
-    fun refresh(silent: Boolean) {
-        if (st.url().isEmpty() || refreshing) return
-        refreshing = true
-        st.fetch(st.url()) { error ->
-            refreshing = false
+    fun refresh(silent: Boolean) = refresh(st, silent)
+
+    fun refresh(s: XKStore, silent: Boolean) {
+        if (s.url().isEmpty() || s.id() in refreshingSlots) return
+        refreshingSlots.add(s.id())
+        s.fetch(s.url()) { error ->
+            refreshingSlots.remove(s.id())
             if (error != null) { if (!silent) fetchError("Не удалось обновить", error); return@fetch }
             if (!silent) toast = "Подписка обновлена"
-            syncGeo()
-            bump(); autoPing()
+            if (isActive(s)) { syncGeo(); bump(); autoPing() } else bump()
         }
     }
+
+    /** Обновить те подписки, которым пора (по их собственному интервалу). */
+    fun refreshStale() { subs.filter { it.needsAutoUpdate() }.forEach { refresh(it, true) } }
 
     /** Гео-файлы следуют ссылкам из заголовка `routing` панели (см. GeoUpdater). */
     private fun syncGeo() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { app.meows.vpn.geo.GeoUpdater.sync(getApplication(), st) } }
     }
 
-    fun deleteSubscription() { st.clear(); bump(); if (vpnState != XKVpnService.IDLE) XKVpnService.stop(getApplication()) }
+    fun deleteSubscription() = deleteSubscription(st)
+
+    fun deleteSubscription(s: XKStore) {
+        val wasActive = isActive(s)
+        XKStore.removeSlot(getApplication(), s.id())
+        bump()
+        if (wasActive && vpnState != XKVpnService.IDLE) XKVpnService.stop(getApplication())
+    }
 
     fun copy(text: String, label: String = "meows") {
         val cm = getApplication<Application>().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -147,29 +183,33 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     }
 
     // ---------- сервер / пинг ----------
-    fun select(i: Int) {
-        if (i == st.index()) return
-        st.setIndex(i); bump(); reconnectIfNeeded()
+    fun select(i: Int) = select(st, i)
+
+    /** Выбор сервера в любой карточке: подписка карточки становится активной. */
+    fun select(s: XKStore, i: Int) {
+        if (isActive(s) && i == s.index()) return
+        XKStore.activate(getApplication(), s.id()); s.setIndex(i); bump(); reconnectIfNeeded()
     }
 
-    /** «Выбрать быстрейший»: пингуем все серверы и выбираем лучший по результату. */
-    fun selectFastest() {
-        if (!st.hasSubscription() || pinging) return
+    /** «Выбрать быстрейший»: пингуем все серверы подписки и выбираем лучший по результату. */
+    fun selectFastest(s: XKStore = st) {
+        if (!s.hasSubscription() || isPinging(s)) return
         toast = "Измеряем пинг…"
-        pinging = true; pingHidden = false
+        pingingSlots.add(s.id()); pingHidden = false
         handler.removeCallbacksAndMessages(PING_TOKEN)
-        st.pingAll({ bump() }, { pinging = false; bump(); scheduleHidePing(); pickFastest() })
+        s.pingAll({ bump() }, { pingingSlots.remove(s.id()); bump(); scheduleHidePing(); pickFastest(s) })
     }
 
-    private fun pickFastest() {
+    private fun pickFastest(s: XKStore) {
+        val list = s.servers()
         var best = -1; var bestMs = Int.MAX_VALUE
-        for (i in servers.indices) {
-            val ms = st.pings[i] ?: continue
+        for (i in list.indices) {
+            val ms = s.pings[i] ?: continue
             if (ms in 1 until bestMs) { bestMs = ms; best = i }
         }
         if (best < 0) { toast = "Ни один сервер не ответил"; return }
-        toast = "Быстрейший: ${servers[best].title} · $bestMs мс"
-        select(best)
+        toast = "Быстрейший: ${list[best].title} · $bestMs мс"
+        select(s, best)
     }
 
     private fun autoPing() {
@@ -177,18 +217,19 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         autoPingDone = true; ping()
     }
 
-    fun ping() {
-        if (pinging || !st.hasSubscription()) return
-        pinging = true; pingHidden = false
+    fun ping(s: XKStore = st) {
+        if (isPinging(s) || !s.hasSubscription()) return
+        pingingSlots.add(s.id()); pingHidden = false
         handler.removeCallbacksAndMessages(PING_TOKEN)
-        st.pingAll({ bump() }, { pinging = false; bump(); scheduleHidePing() })
+        s.pingAll({ bump() }, { pingingSlots.remove(s.id()); bump(); scheduleHidePing() })
     }
 
     /** Пинг одного сервера (свайп по строке). */
-    fun pingOne(i: Int) {
-        if (!st.hasSubscription() || i in pingingOne) return
-        pingingOne.add(i); pingHidden = false
-        st.pingSome(intArrayOf(i), { bump() }, { pingingOne.remove(i); bump(); scheduleHidePing() })
+    fun pingOne(i: Int, s: XKStore = st) {
+        val key = s.id() * 1000 + i
+        if (!s.hasSubscription() || key in pingingOne) return
+        pingingOne.add(key); pingHidden = false
+        s.pingSome(intArrayOf(i), { bump() }, { pingingOne.remove(key); bump(); scheduleHidePing() })
     }
 
     private fun scheduleHidePing() {
@@ -198,7 +239,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     }
 
     /** Пинг сервера: null — не показывать, -1 нет ответа, -2 UDP-протокол. */
-    fun pingOf(i: Int): Int? { rev; return if (pingHidden && !pinging) null else st.pings[i] }
+    fun pingOf(i: Int, s: XKStore = st): Int? { rev; return if (pingHidden && !isPinging(s)) null else s.pings[i] }
 
     // ---------- подключение ----------
     fun startVpn() { XKVpnService.start(getApplication()) }

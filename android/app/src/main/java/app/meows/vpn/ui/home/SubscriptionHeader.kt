@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 import app.meows.vpn.ui.components.formatBytesRu
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -66,8 +67,7 @@ private val RU = Locale.forLanguageTag("ru")
 /** Карточка подписки: название, обновить, пинг, меню (…), трафик, срок, объявление. Верх списка серверов. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SubscriptionHeader(vm: MeowsViewModel, expanded: Boolean, onExpand: () -> Unit, onReplace: () -> Unit, onSupport: () -> Unit, modifier: Modifier = Modifier) {
-    val st = vm.st
+fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExpand: () -> Unit, onReplace: () -> Unit, onSupport: () -> Unit, modifier: Modifier = Modifier) {
     vm.rev
     val total = st.total(); val used = st.used(); val expire = st.expire() * 1000L
     val ctx = LocalContext.current
@@ -91,18 +91,18 @@ fun SubscriptionHeader(vm: MeowsViewModel, expanded: Boolean, onExpand: () -> Un
                 }
                 val inf = rememberInfiniteTransition(label = "refresh")
                 val rot by inf.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "rot")
-                IconButton(onClick = { vm.refresh(false) }, enabled = !vm.refreshing) {
-                    Icon(Icons.Rounded.Refresh, "Обновить подписку", Modifier.rotate(if (vm.refreshing) rot else 0f))
+                IconButton(onClick = { vm.refresh(st, false) }, enabled = !vm.isRefreshing(st)) {
+                    Icon(Icons.Rounded.Refresh, "Обновить подписку", Modifier.rotate(if (vm.isRefreshing(st)) rot else 0f))
                 }
-                IconButton(onClick = vm::ping, enabled = !vm.pinging) {
-                    if (vm.pinging) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.Speed, "Пинг серверов подписки")
+                IconButton(onClick = { vm.ping(st) }, enabled = !vm.isPinging(st)) {
+                    if (vm.isPinging(st)) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.Speed, "Пинг серверов подписки")
                 }
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
                             text = { Text("Выбрать быстрейший") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
-                            onClick = { menu = false; vm.selectFastest() },
+                            onClick = { menu = false; vm.selectFastest(st) },
                         )
                         DropdownMenuItem(
                             text = { Text("Скопировать ссылку") }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) },
@@ -120,7 +120,7 @@ fun SubscriptionHeader(vm: MeowsViewModel, expanded: Boolean, onExpand: () -> Un
                         DropdownMenuItem(
                             text = { Text("Удалить подписку", color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                            onClick = { menu = false; vm.deleteSubscription() },
+                            onClick = { menu = false; vm.deleteSubscription(st) },
                         )
                     }
                 }
@@ -162,7 +162,7 @@ fun SubscriptionHeader(vm: MeowsViewModel, expanded: Boolean, onExpand: () -> Un
                     style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center,
                 )
             }
-            AccountActions(vm, onSupport)
+            AccountActions(vm, st, onSupport)
         }
     }
 }

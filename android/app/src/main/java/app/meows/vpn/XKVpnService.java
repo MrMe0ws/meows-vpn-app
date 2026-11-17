@@ -352,6 +352,7 @@ public class XKVpnService extends VpnService {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "switch") : new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Сервер сменился")
                 .setContentText("«" + from + "» не отвечал — подключились к «" + to + "»")
+                .setStyle(new Notification.BigTextStyle().bigText("«" + from + "» не отвечал — подключились к «" + to + "»"))
                 .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl)).setAutoCancel(true).setColor(0xFF7CD62B);
         nm.notify(30, b.build());
     }

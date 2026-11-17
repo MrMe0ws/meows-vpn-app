@@ -15,14 +15,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 
 /** JSON-конфигурация сервера (долгое нажатие на строку). */
 @Composable
-fun ConfigDialog(vm: MeowsViewModel, index: Int, onDismiss: () -> Unit) {
-    val cfg = remember(index) { vm.st.prettyConfig(index) }
+fun ConfigDialog(vm: MeowsViewModel, st: XKStore, index: Int, onDismiss: () -> Unit) {
+    val cfg = remember(index) { st.prettyConfig(index) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(vm.servers.getOrNull(index)?.title ?: "Конфигурация") },
+        title = { Text(st.servers().getOrNull(index)?.title ?: "Конфигурация") },
         text = {
             Column(Modifier.height(320.dp).verticalScroll(rememberScrollState())) {
                 Text(

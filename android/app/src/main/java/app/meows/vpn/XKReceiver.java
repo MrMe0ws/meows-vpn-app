@@ -16,11 +16,13 @@ public class XKReceiver extends BroadcastReceiver {
 
     @Override public void onReceive(Context c, Intent i) {
         if (Intent.ACTION_BOOT_COMPLETED.equals(i.getAction())) {
-            XKStore.get(c).scheduleReminders();
+            for (XKStore st : XKStore.all(c)) st.scheduleReminders();
             return;
         }
         if (!ACTION_REMIND.equals(i.getAction())) return;
         int kind = i.getIntExtra("kind", 0);
+        XKStore st = XKStore.byId(c, i.getIntExtra("slot", 0));
+        String who = XKStore.slotIds(c).size() > 1 ? "«" + st.title() + "»: " : "";   // с несколькими подписками — чья именно
         String[] titles = {"Подписка скоро закончится", "Завтра заканчивается подписка", "Подписка закончилась"};
         String[] bodies = {
                 "Через 3 дня подписка закончится. Нажмите, чтобы продлить в личном кабинете.",
@@ -31,16 +33,16 @@ public class XKReceiver extends BroadcastReceiver {
             nm.createNotificationChannel(new NotificationChannel("remind", "Напоминания о подписке", NotificationManager.IMPORTANCE_HIGH));
         }
         int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
-        PendingIntent pi = PendingIntent.getActivity(c, 7, cabinetIntent(c), fl);   // нажатие — сразу в кабинет, продлить
+        PendingIntent pi = PendingIntent.getActivity(c, 7 + kind + 20 * st.id(), cabinetIntent(c, st), fl);   // нажатие — сразу в кабинет, продлить
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, "remind") : new Notification.Builder(c);
-        b.setSmallIcon(R.drawable.ic_stat).setContentTitle(titles[kind]).setContentText(bodies[kind])
-                .setStyle(new Notification.BigTextStyle().bigText(bodies[kind]))
+        b.setSmallIcon(R.drawable.ic_stat).setContentTitle(titles[kind]).setContentText(who + bodies[kind])
+                .setStyle(new Notification.BigTextStyle().bigText(who + bodies[kind]))
                 .setColor(0xFF7CD62B).setAutoCancel(true).setContentIntent(pi);
-        nm.notify(10 + kind, b.build());
+        nm.notify(10 + kind + 100 * st.id(), b.build());
     }
 
-    private static Intent cabinetIntent(Context c) {
-        String url = app.meows.vpn.shop.ShopLinks.cabinet(XKStore.get(c));
+    private static Intent cabinetIntent(Context c, XKStore st) {
+        String url = app.meows.vpn.shop.ShopLinks.cabinet(st);
         return new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
@@ -50,11 +52,12 @@ public class XKReceiver extends BroadcastReceiver {
         if (!st.remind() || total <= 0) return;
         int pct = (int) Math.min(100, st.used() * 100 / total);
         int level = pct >= 100 ? 100 : (pct >= 90 ? 90 : 0);
-        String key = st.expire() + ":" + level;
+        String key = st.expire() + ":" + level;   // у каждой подписки свой счётчик (ключ trafficWarn<слот>)
         android.content.SharedPreferences sp = st.prefs();
-        if (level == 0) { sp.edit().remove("trafficWarn").apply(); return; }   // новый период — снова можно предупреждать
-        if (key.equals(sp.getString("trafficWarn", ""))) return;
-        sp.edit().putString("trafficWarn", key).apply();
+        String wk = "trafficWarn" + st.id();
+        if (level == 0) { sp.edit().remove(wk).apply(); return; }   // новый период — снова можно предупреждать
+        if (key.equals(sp.getString(wk, ""))) return;
+        sp.edit().putString(wk, key).apply();
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("remind") == null) {
             nm.createNotificationChannel(new NotificationChannel("remind", "Напоминания о подписке", NotificationManager.IMPORTANCE_HIGH));
@@ -64,7 +67,7 @@ public class XKReceiver extends BroadcastReceiver {
         int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, "remind") : new Notification.Builder(c);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))
-                .setColor(0xFF7CD62B).setAutoCancel(true).setContentIntent(PendingIntent.getActivity(c, 8, cabinetIntent(c), fl));
-        nm.notify(20, b.build());
+                .setColor(0xFF7CD62B).setAutoCancel(true).setContentIntent(PendingIntent.getActivity(c, 8 + 20 * st.id(), cabinetIntent(c, st), fl));
+        nm.notify(20 + 100 * st.id(), b.build());
     }
 }

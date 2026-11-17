@@ -27,15 +27,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 import app.meows.vpn.shop.Diagnostics
 import app.meows.vpn.shop.ShopLinks
 
 /** «Поддержка»: отчёт с версией, устройством, сервером и последней ошибкой + переход в чат поддержки. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SupportSheet(vm: MeowsViewModel, onDismiss: () -> Unit) {
+fun SupportSheet(vm: MeowsViewModel, st: XKStore, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
-    val report = remember { Diagnostics.build(ctx, vm.st, vm.lastError) }
+    val report = remember { Diagnostics.build(ctx, st, vm.lastError) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
             Text("Поддержка", style = MaterialTheme.typography.titleLarge)
@@ -53,7 +54,7 @@ fun SupportSheet(vm: MeowsViewModel, onDismiss: () -> Unit) {
                 Button(
                     onClick = {
                         vm.copy(report, "support"); vm.toast = "Отчёт скопирован — вставьте его в чат"
-                        vm.openLink(ShopLinks.support(vm.st)); onDismiss()
+                        vm.openLink(ShopLinks.support(st)); onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Icon(Icons.Rounded.Send, null); Spacer(Modifier.width(8.dp)); Text("Написать в поддержку") }

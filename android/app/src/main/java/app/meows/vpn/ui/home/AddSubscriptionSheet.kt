@@ -29,15 +29,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 
 /** Ручной ввод ссылки подписки (нижний лист). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSubscriptionSheet(vm: MeowsViewModel, onDismiss: () -> Unit) {
+fun AddSubscriptionSheet(vm: MeowsViewModel, replace: XKStore? = null, onDismiss: () -> Unit) {
     var url by remember { mutableStateOf("") }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text("Ссылка подписки", style = MaterialTheme.typography.titleLarge)
+            Text(if (replace != null) "Заменить ссылку" else "Ссылка подписки", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
             Text(
                 "Вставьте ссылку из бота или личного кабинета Meows.",
@@ -53,8 +54,8 @@ fun AddSubscriptionSheet(vm: MeowsViewModel, onDismiss: () -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) { Text("Отмена") }
                 Spacer(Modifier.width(8.dp))
-                FilledTonalButton(onClick = { vm.addSubscription(url); onDismiss() }, enabled = url.isNotBlank()) {
-                    Icon(Icons.Rounded.Add, null); Spacer(Modifier.width(8.dp)); Text("Добавить")
+                FilledTonalButton(onClick = { if (replace != null) vm.replaceSubscription(replace, url) else vm.addSubscription(url); onDismiss() }, enabled = url.isNotBlank()) {
+                    Icon(Icons.Rounded.Add, null); Spacer(Modifier.width(8.dp)); Text(if (replace != null) "Заменить" else "Добавить")
                 }
             }
         }

@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (vm.st.needsAutoUpdate()) vm.refresh(true)
+        vm.refreshStale()
     }
 
     /** meows://add/<ссылка подписки> (и happ://add/…). Ссылка может прийти URL-кодированной. */

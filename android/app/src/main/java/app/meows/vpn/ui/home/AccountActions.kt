@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 import app.meows.vpn.shop.ShopLinks
 
 /**
@@ -25,16 +26,16 @@ import app.meows.vpn.shop.ShopLinks
  * Ссылки — из заголовков подписки (см. [ShopLinks]).
  */
 @Composable
-fun AccountActions(vm: MeowsViewModel, onSupport: () -> Unit) {
+fun AccountActions(vm: MeowsViewModel, st: XKStore, onSupport: () -> Unit) {
     vm.rev
-    val renew = ShopLinks.needsRenewal(vm.st)
+    val renew = ShopLinks.needsRenewal(st)
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (renew) {
-            Button(onClick = { vm.openLink(ShopLinks.cabinet(vm.st)) }, modifier = Modifier.weight(1f)) {
+            Button(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.Autorenew, null); Spacer(Modifier.width(8.dp)); Text("Продлить")
             }
         } else {
-            FilledTonalButton(onClick = { vm.openLink(ShopLinks.cabinet(vm.st)) }, modifier = Modifier.weight(1f)) {
+            FilledTonalButton(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.AccountCircle, null); Spacer(Modifier.width(8.dp)); Text("Кабинет")
             }
         }

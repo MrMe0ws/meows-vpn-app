@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.FloatingToolbarExitDirection
@@ -26,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -34,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.XKStore
 import app.meows.vpn.ui.components.CatConnectButton
 
 /**
@@ -43,30 +48,33 @@ import app.meows.vpn.ui.components.CatConnectButton
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Unit, onScanQr: () -> Unit) {
-    val servers = vm.servers
-    val selected = vm.selected
-    var expanded by rememberSaveable { mutableStateOf(true) }
+    val subs = vm.subs
     var manualEntry by remember { mutableStateOf(false) }
-    var supportSheet by remember { mutableStateOf(false) }
-    var configOf by remember { mutableIntStateOf(-1) }
+    var replaceOf by remember { mutableStateOf<XKStore?>(null) }
+    var supportOf by remember { mutableStateOf<XKStore?>(null) }
+    var configOf by remember { mutableStateOf<Pair<XKStore, Int>?>(null) }
+    val collapsed = remember { mutableStateListOf<Int>() }   // карточки, свёрнутые пользователем (по номеру слота)
 
     // панель уезжает вниз при прокрутке списка и возвращается при прокрутке вверх
     val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
     Box(Modifier.fillMaxSize().nestedScroll(toolbarScroll)) {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    // кнопка подключения закреплена вверху: при прокрутке списка не уезжает, а плавно уменьшается
+    val listState = rememberLazyListState()
+    val scrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 24 } }
+    val btn by animateDpAsState(if (scrolled) 112.dp else 200.dp, label = "btn")
+    Column(Modifier.fillMaxWidth().padding(top = if (scrolled) 8.dp else 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        CatConnectButton(vm.vpnState, size = btn, onClick = onToggle)
+        Spacer(Modifier.height(if (scrolled) 4.dp else 12.dp))
+        StatusText(vm.vpnState)
+        Spacer(Modifier.height(if (scrolled) 8.dp else 16.dp))
+    }
     LazyColumn(
-        Modifier.fillMaxSize().statusBarsPadding(),
+        Modifier.weight(1f).fillMaxWidth(), state = listState,
         contentPadding = PaddingValues(bottom = 112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
     ) {
-        item {
-            Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                CatConnectButton(vm.vpnState, size = 200.dp, onClick = onToggle)
-                Spacer(Modifier.height(12.dp))
-                StatusText(vm.vpnState)
-                Spacer(Modifier.height(16.dp))
-            }
-        }
 
-        if (!vm.hasSub) {
+        if (subs.isEmpty()) {
             item {
                 EmptyCard(
                     Modifier.padding(horizontal = 16.dp),
@@ -77,30 +85,39 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
             }
         } else {
             item {
+                val allOpen = collapsed.isEmpty()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
                     Text(
-                        if (expanded) "Скрыть все" else "Показать все",
-                        Modifier.clickable { expanded = !expanded }.padding(vertical = 6.dp),
+                        if (allOpen) "Скрыть все" else "Показать все",
+                        Modifier.clickable { if (allOpen) { collapsed.clear(); collapsed.addAll(subs.map { it.id() }) } else collapsed.clear() }.padding(vertical = 6.dp),
                         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            item {
-                SubscriptionHeader(
-                    vm, expanded, onExpand = { expanded = !expanded }, onReplace = { manualEntry = true }, onSupport = { supportSheet = true },
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                )
-            }
-            if (expanded) {
-                itemsIndexed(servers) { i, s ->
-                    ServerRow(
-                        server = s, selected = i == selected, last = i == servers.lastIndex,
-                        ping = vm.pingOf(i), pinging = i in vm.pingingOne,
-                        onSelect = { vm.select(i) }, onPing = { vm.pingOne(i) }, onConfig = { configOf = i },
+            subs.forEach { store ->
+                val id = store.id()
+                val expanded = id !in collapsed
+                val list = store.servers()
+                item(key = "head$id") {
+                    SubscriptionHeader(
+                        vm, store, expanded, onExpand = { if (expanded) collapsed.add(id) else collapsed.remove(id) },
+                        onReplace = { replaceOf = store }, onSupport = { supportOf = store },
+                        modifier = Modifier.padding(horizontal = 12.dp),
                     )
                 }
+                if (expanded) {
+                    itemsIndexed(list, key = { i, _ -> "srv${id}_$i" }) { i, s ->
+                        ServerRow(
+                            server = s, selected = vm.isActive(store) && i == store.index(), last = i == list.lastIndex,
+                            ping = vm.pingOf(i, store), pinging = vm.isPingingOne(store, i),
+                            onSelect = { vm.select(store, i) }, onPing = { vm.pingOne(i, store) }, onConfig = { configOf = store to i },
+                        )
+                    }
+                }
+                item(key = "gap$id") { Spacer(Modifier.height(16.dp)) }
             }
         }
+    }
     }
     HomeToolbar(
         vm, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
@@ -109,6 +126,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     }
 
     if (manualEntry) AddSubscriptionSheet(vm) { manualEntry = false }
-    if (supportSheet) SupportSheet(vm) { supportSheet = false }
-    if (configOf >= 0) ConfigDialog(vm, configOf) { configOf = -1 }
+    replaceOf?.let { s -> AddSubscriptionSheet(vm, replace = s) { replaceOf = null } }
+    supportOf?.let { s -> SupportSheet(vm, s) { supportOf = null } }
+    configOf?.let { (s, i) -> ConfigDialog(vm, s, i) { configOf = null } }
 }
