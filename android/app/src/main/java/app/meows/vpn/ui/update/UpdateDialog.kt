@@ -1,15 +1,18 @@
 package app.meows.vpn.ui.update
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,7 +22,10 @@ import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.ui.components.formatBytesRu
 import app.meows.vpn.update.UpdateState
 
-/** Диалог «Доступна новая версия»: скачать → установить. Показывается при автопроверке и ручной проверке. */
+/**
+ * «Доступна новая версия». Две кнопки в стандартных местах диалога: главная залитая («Скачать» → «Установить»)
+ * и «Позже» (закрывает окно; автопроверка предложит снова при одном из следующих запусков, не чаще раза в 12 часов).
+ */
 @Composable
 fun UpdateDialog(vm: MeowsViewModel) {
     val u = vm.updates
@@ -31,20 +37,23 @@ fun UpdateDialog(vm: MeowsViewModel) {
         is UpdateState.Downloaded -> s.info
         else -> return
     }
+    val busy = s is UpdateState.Downloading
 
     AlertDialog(
-        onDismissRequest = { if (s !is UpdateState.Downloading) u.dismissDialog() },
+        onDismissRequest = { if (!busy) u.dismissDialog() },
         title = { Text("Доступна версия ${info.version}") },
         text = {
             Column {
                 Text(
-                    "Сейчас установлена ${u.currentVersion}" + if (info.apkSize > 0) " · размер ${formatBytesRu(info.apkSize)}" else "",
+                    "Сейчас установлена ${u.currentVersion}" + if (info.apkSize > 0) " · ${formatBytesRu(info.apkSize)}" else "",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (info.notes.isNotBlank()) {
                     Spacer(Modifier.height(12.dp))
-                    Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())) {
-                        Text(info.notes.trim(), style = MaterialTheme.typography.bodyMedium)
+                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                        Column(Modifier.heightIn(max = 200.dp).verticalScroll(rememberScrollState()).padding(14.dp)) {
+                            Text(info.notes.trim(), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
                 if (s is UpdateState.Downloading) {
@@ -57,26 +66,14 @@ fun UpdateDialog(vm: MeowsViewModel) {
         },
         confirmButton = {
             when (s) {
-                is UpdateState.Available -> TextButton(onClick = u::download) { Text("Скачать") }
-                is UpdateState.Downloaded -> TextButton(onClick = {
+                is UpdateState.Downloaded -> Button(onClick = {
                     if (u.install()) u.dismissDialog()
                     else vm.toast = "Разрешите установку из этого источника и нажмите «Установить» ещё раз"
                 }) { Text("Установить") }
+                is UpdateState.Available -> Button(onClick = u::download) { Text("Скачать") }
                 else -> {}
             }
         },
-        dismissButton = {
-            if (s !is UpdateState.Downloading) {
-                Row2(onSkip = u::skipThisVersion, onLater = u::dismissDialog)
-            }
-        },
+        dismissButton = { if (!busy) TextButton(onClick = u::dismissDialog) { Text("Позже") } },
     )
-}
-
-@Composable
-private fun Row2(onSkip: () -> Unit, onLater: () -> Unit) {
-    androidx.compose.foundation.layout.Row {
-        TextButton(onClick = onSkip) { Text("Пропустить версию") }
-        TextButton(onClick = onLater) { Text("Позже") }
-    }
 }

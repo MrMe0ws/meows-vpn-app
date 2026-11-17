@@ -53,7 +53,7 @@ class UpdateController(
             }
             val s = state
             if (s is UpdateState.Available) pending = s.info
-            if (s is UpdateState.Available && (manual || s.info.version != prefs.getString(KEY_SKIPPED, null))) dialogVisible = true
+            if (s is UpdateState.Available) dialogVisible = true
         }
     }
 
@@ -85,12 +85,6 @@ class UpdateController(
         return true
     }
 
-    fun skipThisVersion() {
-        val info = when (val s = state) { is UpdateState.Available -> s.info; is UpdateState.Downloaded -> s.info; else -> null }
-        info?.let { prefs.edit().putString(KEY_SKIPPED, it.version).apply() }
-        dismissDialog()
-    }
-
     fun dismissDialog() { dialogVisible = false }
     fun showDialog() { if (state is UpdateState.Available || state is UpdateState.Downloaded) dialogVisible = true }
     fun clearError() { if (state is UpdateState.Error) state = UpdateState.Idle }
@@ -98,7 +92,6 @@ class UpdateController(
     companion object {
         private const val KEY_AUTO = "updateCheck"
         private const val KEY_LAST = "updateLastCheck"
-        private const val KEY_SKIPPED = "updateSkipped"
         private const val CHECK_INTERVAL_MS = 12 * 3_600_000L
     }
 }
