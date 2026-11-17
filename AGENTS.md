@@ -1,6 +1,6 @@
 # Meows — инструкция для агентов (репозиторий `meows-vpn-app`)
 
-Монорепо клиентов VPN по ссылке подписки Remnawave (`android/` — готово, `ios/` — в планах, см. `docs/platforms.md`). Android: Kotlin + Jetpack Compose, Material 3 Expressive («Material You»).
+Монорепо клиентов VPN по ссылке подписки Remnawave (`android/` — готово, `windows/` — первая версия, `ios/` — в планах, см. `docs/platforms.md`). Android: Kotlin + Jetpack Compose, Material 3 Expressive («Material You»).
 Основа — Breeze VPN (логика на Java + ядро Xray). **Читай этот файл первым, дальше — только нужные страницы из `docs/`.**
 
 ## Золотые правила
@@ -28,6 +28,7 @@
 | Собрать, подписать, выпустить релиз | `docs/build.md`, `docs/release.md` |
 | Что делать дальше | `docs/roadmap.md` |
 | Устройство репозитория, iOS | `docs/platforms.md` |
+| Windows-версия | `docs/windows/overview.md` |
 | Что за магазин и как с ним связано приложение | `docs/business-context.md` |
 | Почему сделано именно так | `docs/decisions.md` |
 

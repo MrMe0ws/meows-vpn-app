@@ -1,4 +1,4 @@
-//go:build !cgo
+//go:build android
 
 // Android entry point: run as a child process of the app's VpnService.
 //   libxkcore.so <config-file> <asset-dir> <abstract-socket-name>
@@ -13,8 +13,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strings"
-	"sync"
 	"runtime/debug"
 	"syscall"
 
@@ -49,11 +47,6 @@ func recvFd(name string) (int, error) {
 		return -1, fmt.Errorf("no fd")
 	}
 	return fds[0], nil
-}
-
-func fail(msg string) {
-	fmt.Fprintln(os.Stderr, "XKERR "+msg)
-	os.Exit(1)
 }
 
 func main() {
@@ -122,37 +115,4 @@ func main() {
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	<-sig
 	inst.Close()
-}
-
-func runMeasure() {
-	if len(os.Args) < 6 {
-		fail("usage: measure sub url timeout idx")
-	}
-	body, err := os.ReadFile(os.Args[2])
-	if err != nil {
-		fail(err.Error())
-	}
-	var to int
-	fmt.Sscan(os.Args[4], &to)
-	idx := strings.Split(os.Args[5], ",")
-	sem := make(chan struct{}, 4)
-	var wg sync.WaitGroup
-	var out sync.Mutex
-	for _, s := range idx {
-		var i int
-		if _, err := fmt.Sscan(s, &i); err != nil {
-			continue
-		}
-		wg.Add(1)
-		sem <- struct{}{}
-		go func(i int) {
-			defer wg.Done()
-			ms := measureSub(body, i, os.Args[3], to)
-			<-sem
-			out.Lock()
-			fmt.Printf("XKMS %d %d\n", i, ms)
-			out.Unlock()
-		}(i)
-	}
-	wg.Wait()
 }

@@ -139,3 +139,61 @@ func buildTunConfig(obj map[string]any) ([]byte, error) {
 	}
 	return json.Marshal(obj)
 }
+
+// buildProxyConfig rewrites a client config for desktop use: inbounds -> local SOCKS5 + HTTP on 127.0.0.1
+// (the app switches the system proxy to the HTTP one), no API/stats.
+func buildProxyConfig(obj map[string]any, socksPort, httpPort int) ([]byte, error) {
+	sniff := func() map[string]any {
+		return map[string]any{"enabled": true, "destOverride": []any{"http", "tls", "quic"}, "routeOnly": true}
+	}
+	obj["inbounds"] = []any{
+		map[string]any{"tag": "socks-in", "listen": "127.0.0.1", "port": socksPort, "protocol": "socks",
+			"settings": map[string]any{"udp": true, "auth": "noauth"}, "sniffing": sniff()},
+		map[string]any{"tag": "http-in", "listen": "127.0.0.1", "port": httpPort, "protocol": "http",
+			"settings": map[string]any{}, "sniffing": sniff()},
+	}
+	delete(obj, "api")
+	delete(obj, "stats")
+	delete(obj, "metrics")
+	delete(obj, "reverse")
+	if lg, ok := obj["log"].(map[string]any); ok {
+		lg["access"] = "none"
+		lg["error"] = ""
+		lg["loglevel"] = "warning"
+	} else {
+		obj["log"] = map[string]any{"loglevel": "warning", "access": "none"}
+	}
+	routing, _ := obj["routing"].(map[string]any)
+	if routing == nil {
+		routing = map[string]any{}
+	}
+	rules, _ := routing["rules"].([]any)
+	kept := []any{}
+	for _, r := range rules {
+		m, ok := r.(map[string]any)
+		if !ok {
+			continue
+		}
+		if tags, ok := m["inboundTag"].([]any); ok {
+			api := false
+			for _, t := range tags {
+				if s, _ := t.(string); strings.EqualFold(s, "api") {
+					api = true
+				}
+			}
+			if api {
+				continue
+			}
+		}
+		if s, _ := m["outboundTag"].(string); strings.EqualFold(s, "api") {
+			continue
+		}
+		kept = append(kept, m)
+	}
+	routing["rules"] = kept
+	obj["routing"] = routing
+	if _, ok := obj["dns"]; !ok {
+		obj["dns"] = map[string]any{"servers": []any{"1.1.1.1", "8.8.8.8"}}
+	}
+	return json.Marshal(obj)
+}

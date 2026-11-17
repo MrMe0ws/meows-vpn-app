@@ -7,6 +7,7 @@ meows-vpn-app/
   AGENTS.md  README.md  docs/     общее: правила, дизайн, решения, roadmap
   core/                            Go-обёртка ядра Xray (общая для платформ)
   android/                         Android-приложение (Kotlin, Compose, Material 3 Expressive) — сделано
+  windows/                         Windows (Compose Desktop + ядро Xray) — первая версия, см. docs/windows/overview.md
   ios/                             iOS (SwiftUI + NetworkExtension) — пока не начато
 ```
 

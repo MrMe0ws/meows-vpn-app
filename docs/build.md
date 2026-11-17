@@ -32,3 +32,5 @@ AGP 8.11.1 · Kotlin 2.2.0 · Compose BOM 2025.10.00 · **material3 1.5.0-alpha0
 - Флаг `-checklinkname=0` нужен из-за `wlynxg/anet`.
 
 Проверено на устройстве: **только arm64** (Pixel 10 — 64-битный). Остальные ABI собраны и проверены по ELF-заголовкам (тип PIE, архитектура, загрузчик), но не запускались.
+## Windows
+Ядро: `.\core\build-windows.ps1` (чистый Go, `GOOS=windows`). Приложение: `cd windows; .\build.ps1` → `windows\dist\Meows-win-x64-<версия>.zip`. Подробно — `docs/windows/overview.md`.

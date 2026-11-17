@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import com.materialkolor.PaletteStyle
 import com.materialkolor.rememberDynamicColorScheme
 
 private val MeowsShapes = Shapes(
@@ -64,8 +63,8 @@ fun MeowsTheme(
 ) {
     val dark = when (themeMode) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
     val ctx = LocalContext.current
-    val seed = Palettes.seeds[palette.coerceIn(0, Palettes.seeds.lastIndex)]
-    val kolor = rememberDynamicColorScheme(seedColor = seed, isDark = dark, style = PaletteStyle.Vibrant)
+    val idx = palette.coerceIn(0, Palettes.seeds.lastIndex)
+    val kolor = rememberDynamicColorScheme(seedColor = Palettes.seeds[idx], isDark = dark, style = Palettes.styles[idx])
     var scheme = if (dynamic && Build.VERSION.SDK_INT >= 31) {
         if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
     } else kolor

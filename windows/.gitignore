@@ -1,0 +1,4 @@
+build/
+.gradle/
+dist/
+resources/windows-x64/meows-core.exe
