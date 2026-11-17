@@ -31,6 +31,7 @@ import java.util.Set;
 public class XKVpnService extends VpnService {
     public static final String ACTION_START = "app.meows.vpn.START";
     public static final String ACTION_STOP = "app.meows.vpn.STOP";
+    public static final String ACTION_PAUSE = "app.meows.vpn.PAUSE";
 
     public static final int IDLE = 0, CONNECTING = 1, CONNECTED = 2;
     public static volatile int state = IDLE;
@@ -46,6 +47,7 @@ public class XKVpnService extends VpnService {
     private ParcelFileDescriptor tun;
     private Process proc;
     private volatile boolean stopping;
+    private volatile boolean paused;   // туннель снят, уведомление осталось: «Продолжить» / «Отключить»
 
     /** Apps that must never go through the VPN. */
     static final String[] ALWAYS_DIRECT = {};
@@ -80,7 +82,9 @@ public class XKVpnService extends VpnService {
         XKAppHolder.ctx = getApplicationContext();
         String a = intent != null ? intent.getAction() : ACTION_START; // null = always-on restart
         if (ACTION_STOP.equals(a)) { stopVpn(null); return START_NOT_STICKY; }
+        if (ACTION_PAUSE.equals(a)) { pauseVpn(); return START_STICKY; }
         if (state != IDLE) return START_STICKY;
+        paused = false;
         Notification n0 = notification("Подключаемся…");
         if (Build.VERSION.SDK_INT >= 34) startForeground(1, n0, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         else startForeground(1, n0);
@@ -105,10 +109,17 @@ public class XKVpnService extends VpnService {
         int fl = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl);
         PendingIntent stop = PendingIntent.getService(this, 1, new Intent(this, XKVpnService.class).setAction(ACTION_STOP), fl);
+        PendingIntent pause = PendingIntent.getService(this, 2, new Intent(this, XKVpnService.class).setAction(ACTION_PAUSE), fl);
+        PendingIntent resume = PendingIntent.getService(this, 3, new Intent(this, XKVpnService.class).setAction(ACTION_START), fl);
+        // название приложения система показывает мелко сверху; заголовок — сервер, под ним — состояние
+        String title = "Meows";
+        try { List<XKStore.Server> l = st0().servers(); int ix = st0().index(); if (ix < l.size()) title = l.get(ix).title; } catch (Exception ignored) { }
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "vpn") : new Notification.Builder(this);
-        b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Meows").setContentText(text)
-                .setContentIntent(open).setOngoing(true).setColor(0xFF7CD62B)
-                .addAction(new Notification.Action.Builder(null, "Отключить", stop).build());
+        b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
+                .setContentIntent(open).setOngoing(true).setColor(0xFF7CD62B);
+        if (paused) b.addAction(new Notification.Action.Builder(null, "Продолжить", resume).build());
+        else if (state == CONNECTED) b.addAction(new Notification.Action.Builder(null, "Пауза", pause).build());
+        b.addAction(new Notification.Action.Builder(null, "Отключить", stop).build());
         return b.build();
     }
 
@@ -227,7 +238,7 @@ public class XKVpnService extends VpnService {
             if (!ok) throw new Exception(err.length() > 0 ? err.toString() : "Ядро VPN не запустилось");
             connectedAt = System.currentTimeMillis();
             broadcast(CONNECTED);
-            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(st0().ruApps() ? "Подключено · российские приложения напрямую" : "Подключено"));
+            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключено"));
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {
@@ -247,8 +258,20 @@ public class XKVpnService extends VpnService {
         fo.close(); in.close();
     }
 
+    /** Пауза: снимаем туннель и ядро, но сервис и уведомление остаются — можно продолжить одной кнопкой. */
+    private synchronized void pauseVpn() {
+        if (state != CONNECTED) return;
+        paused = true; stopping = true;
+        if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
+        if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
+        connectedAt = 0;
+        broadcast(IDLE);
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Приостановлено"));
+    }
+
     private synchronized void stopVpn(String error) {
-        if (stopping && state == IDLE) return;
+        if (stopping && state == IDLE && !paused) return;
+        paused = false;
         stopping = true;
         if (error != null) lastError = error;
         if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
