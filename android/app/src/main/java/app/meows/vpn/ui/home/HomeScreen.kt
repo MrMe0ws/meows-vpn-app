@@ -57,9 +57,8 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
         Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(bottom = 112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
     ) {
-        item { HomeTopBar() }
         item {
-            Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 CatConnectButton(vm.vpnState, size = 200.dp, onClick = onToggle)
                 Spacer(Modifier.height(12.dp))
                 StatusText(vm.vpnState)

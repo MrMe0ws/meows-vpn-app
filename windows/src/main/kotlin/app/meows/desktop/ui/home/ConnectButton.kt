@@ -67,7 +67,10 @@ fun ConnectButton(state: ConnState, size: Dp, onClick: () -> Unit) {
         }
         Box(Modifier.fillMaxSize().padding(size * 0.09f).clip(CircleShape).background(plate), contentAlignment = Alignment.Center) {
             Crossfade(state == ConnState.Idle, label = "cat") { sleeping ->
-                if (sleeping) Image(Res.bitmap("sleep_cat.png"), "Кот спит — нажмите, чтобы подключиться", Modifier.fillMaxSize().padding(size * 0.1f))
+                if (sleeping) Box(Modifier.fillMaxSize()) {
+                    Image(Res.bitmap("sleep_cat.png"), "Кот спит — нажмите, чтобы подключиться", Modifier.fillMaxSize().padding(size * 0.1f))
+                    SleepZzz(size, Modifier.align(Alignment.TopEnd).padding(top = size * 0.12f, end = size * 0.16f))
+                }
                 else Image(
                     Res.bitmap("paw.png"), "Подключение", Modifier.fillMaxSize().padding(size * 0.22f).scale(if (state == ConnState.Connected) pulse else 1f),
                     colorFilter = ColorFilter.tint(primary), alpha = if (state == ConnState.Connected) 1f else 0.45f + glow,

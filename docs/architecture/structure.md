@@ -14,7 +14,7 @@ XKAppHolder.java         глобальный Context для плитки/сер
 
 ui/theme/        Theme.kt (MeowsTheme), Palettes.kt
 ui/components/   CatConnectButton.kt, PingChip.kt, Format.kt — общие виджеты и форматирование
-ui/home/         HomeScreen.kt (сборка экрана), HomeTopBar.kt (только название), HomeToolbar.kt (нижняя панель: настройки и «+»), StatusText.kt,
+ui/home/         HomeScreen.kt (сборка экрана), HomeToolbar.kt (нижняя панель: настройки и «+»), StatusText.kt,
                  SubscriptionHeader.kt, AccountActions.kt (Кабинет/Продлить/Поддержка), SupportSheet.kt,
                  ServerRow.kt (свайп влево открывает кнопку «Пинг»), EmptyCard.kt,
                  AddSubscriptionSheet.kt (ручной ввод), ConfigDialog.kt
