@@ -1,0 +1,27 @@
+name: floating-latest
+# Держит «плавающие» релизы android-latest / windows-latest (постоянные ссылки на свежую сборку).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Тег релиза, например android-v1.4.0 или windows-v1.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    # сам плавающий релиз (android-latest / windows-latest) не обрабатываем
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'android-v') || startsWith(github.event.release.tag_name, 'windows-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Обновить плавающий релиз
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+        run: ./tools/publish-latest.ps1 -Tag $env:TAG

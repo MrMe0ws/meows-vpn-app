@@ -21,3 +21,16 @@ cd windows; .\build.ps1
 gh release create windows-vX.Y.Z windows\dist\Meows-X.Y.Z.msi windows\dist\Meows-win-x64-X.Y.Z.zip --title "Meows X.Y.Z (Windows)" --notes "что нового"
 ```
 Проверка обновления: поставить MSI меньшей версии, запустить, «Настройки → Обновления → Проверить сейчас».
+
+## Постоянные ссылки на свежую сборку («плавающие» релизы)
+Кабинет магазина и сайт дают прямую ссылку без номера версии:
+- Android: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/android-latest/Meows.apk`
+- Windows: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows.msi`
+
+Как это устроено: релизы с тегами `android-latest` и `windows-latest` (не prerelease, не «Latest» репозитория), в каждом один файл с постоянным именем.
+Обновляет их workflow `.github/workflows/floating-latest.yml` при **каждом** выходе релиза `android-v…` / `windows-v…` — он запускает `tools/publish-latest.ps1`
+(скачивает ассет релиза, удаляет старый `Meows.apk`/`Meows.msi`, кладёт новый, обновляет описание). Руками ничего делать не нужно.
+- Вручную (если Actions не сработал): `.	ools\publish-latest.ps1 -Tag android-v1.4.0` (нужен авторизованный `gh`).
+- Приложения их не видят: проверка обновлений берёт только теги `android-v…` / `windows-v…`.
+- Плавающие релизы не удалять и не помечать как prerelease/«Latest».
+

@@ -11,11 +11,14 @@
 
 ## Что за приложение — факты, которые нужны для текстов и ссылок
 - Название в интерфейсе: **Meows** (латиницей, без «VPN»). «Мяус VPN» — название сервиса.
-- Android: от Android 7.0, APK (в Google Play **нет**), ставится вручную из GitHub Releases; Play Protect может попросить подтвердить установку — об этом надо предупредить в шаге установки. Релизы — теги `android-vX.Y.Z`. Сейчас выпущена **1.3.0**.
+- Android: от Android 7.0, APK (в Google Play **нет**), ставится вручную из GitHub Releases; Play Protect может попросить подтвердить установку — об этом надо предупредить в шаге установки. Релизы — теги `android-vX.Y.Z`. Сейчас выпущена **1.4.0**.
 - Windows: Windows 10/11 x64, установщик `.msi` (ставится на пользователя, без прав администратора). Релизы — теги `windows-vX.Y.Z`. Выпущен 1.0.0 (файл `Meows-1.0.0.msi`).
   - Подписи кода нет: при первом запуске установщика SmartScreen может предупредить («Подробнее → Выполнить в любом случае»). Упомяни в тексте.
   - Режим «Все программы» (TUN, по умолчанию) просит права администратора при запуске приложения (окно UAC) — это нормально, надо сказать «нажмите Да».
-- Страница релизов (единственная стабильная ссылка): `https://github.com/MrMe0ws/meows-vpn-app/releases`. Ссылку вида `/releases/latest/download/<файл>` **использовать нельзя**: «latest» — это самый свежий релиз репозитория вообще (Android или Windows), а имена файлов содержат версию (`MeowsVPN-1.3.0.apk`, `Meows-1.0.0.msi`).
+- **Прямые постоянные ссылки на свежую сборку** (без номера версии; всегда указывают на последний релиз, обновляются автоматически):
+  - Android: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/android-latest/Meows.apk`
+  - Windows: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows.msi`
+  Используй их в кнопках «Скачать» (кнопка сразу качает файл). Страница релизов — `https://github.com/MrMe0ws/meows-vpn-app/releases` — запасная ссылка «все версии». Ссылку вида `/releases/latest/download/<файл>` использовать **нельзя**: «latest» — самый свежий релиз репозитория вообще (Android или Windows), а имена файлов в обычных релизах содержат версию.
 - Deep link: `meows://add/<ссылка подписки>` — ссылка **без кодирования и без base64** (как у `happ://add/` и `incy://add/`). Приложение принимает и URL-кодированную, и сырую. Шифрования deep link у Meows **нет**.
 - Android + Chrome: ссылку на пользовательскую схему Chrome часто не открывает. Надёжнее `intent://add/<ссылка>#Intent;scheme=meows;package=app.meows.vpn;S.browser_fallback_url=<url-encoded страница релизов>;end` — при отсутствии приложения откроется страница загрузки. Готовый пример страницы: `docs/cabinet/open-in-app.html` в репозитории приложения. Посмотри, как кабинет уже решает это для других приложений (комментарий в `useConnectionGuide.ts` про обход Telegram WebView), и сделай так же; отдельную страницу заводить не надо, если существующий механизм справляется.
 - Иконка приложения: бирюзовая лапка на тёмном круге. Файл в репозитории приложения: `windows/src/main/resources/icon.png` (квадрат с кругом). Попроси у владельца файл или скачай из `https://raw.githubusercontent.com/MrMe0ws/meows-vpn-app/main/windows/src/main/resources/icon.png`.
@@ -34,13 +37,13 @@
 
 Android:
 - installationStep.description: «Скачайте приложение Meows из GitHub и установите его. Android может предупредить об установке из неизвестного источника — разрешите её для браузера или файлового менеджера. Если Play Защита просит проверить приложение — нажмите «Всё равно установить».»
-- installationStep.buttons: одна кнопка «Скачать с GitHub» → `https://github.com/MrMe0ws/meows-vpn-app/releases` (в релизе `android-v…` файл `MeowsVPN-….apk`).
+- installationStep.buttons: одна кнопка «Скачать с GitHub» → `https://github.com/MrMe0ws/meows-vpn-app/releases/download/android-latest/Meows.apk` (прямая загрузка).
 - addSubscriptionStep.description: «Нажмите кнопку ниже — Meows откроется и добавит подписку сам. Если нет — скопируйте ссылку подписки, в Meows нажмите «+» → «Вставить из буфера обмена».»
 - connectAndUseStep.description: «Нажмите большую кнопку с котом — он проснётся, и VPN включится. Согласитесь на создание VPN-подключения, когда Android спросит. Российские сайты открываются напрямую, остальное идёт через VPN.»
 
 Windows:
 - installationStep.description: «Скачайте установщик Meows (файл .msi из последнего релиза Windows) и запустите. Права администратора для установки не нужны. Windows может показать предупреждение SmartScreen — нажмите «Подробнее» → «Выполнить в любом случае».»
-- installationStep.buttons: «Скачать с GitHub» → страница релизов (в релизе `windows-v…` файл `Meows-….msi`).
+- installationStep.buttons: «Скачать с GitHub» → `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows.msi` (прямая загрузка).
 - addSubscriptionStep.description: «Нажмите кнопку ниже — Meows откроется и добавит подписку сам. Если нет — скопируйте ссылку подписки, в Meows нажмите «Добавить» слева и вставьте её.»
 - connectAndUseStep.description: «При запуске Meows попросит права администратора — нажмите «Да»: это нужно, чтобы весь интернет компьютера шёл через VPN. Нажмите большую кнопку справа — когда появится «Подключено», всё работает.»
 
@@ -65,7 +68,7 @@ Windows:
 - Не пушь и не деплой — вернёшь результат владельцу.
 
 ## Что нельзя делать
-- Windows-релиз **уже выпущен** (`windows-v1.0.0`, 2026-11-17), Android — `android-v1.3.0`: добавляй обе платформы сразу. Ссылки — только на страницу релизов, не на `/latest/download/…`.
+- Windows-релиз **уже выпущен** (`windows-v1.0.0`, 2026-11-17), Android — `android-v1.3.0`: добавляй обе платформы сразу. Ссылки — постоянные `android-latest` / `windows-latest` (см. выше), не `/latest/download/…`.
 - Не меняй `isFeatured`, порядок остальных приложений и тексты существующих записей.
 - Не пиши в разметке кабинета «Мяус»/«Meows» как бренд сервиса: кабинет нейтрален по бренду (`brand_name` из `/auth/bootstrap`), название приложения «Meows» — только в `app-config` как имя приложения.
 - Не меняй бэкенд (Go), если не обнаружишь, что без этого нельзя; в `internal/cabinet/deeplink` лежат шифрованные ссылки только для Happ/INCY — Meows они не касаются.
