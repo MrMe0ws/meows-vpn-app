@@ -108,7 +108,7 @@ fun CatConnectButton(state: Int, size: Dp, onClick: () -> Unit) {
                     // лапка красится в цвет выбранной темы (primary)
                     Image(
                         painter = painterResource(R.drawable.paw),
-                        contentDescription = "Подключение Мяус VPN",
+                        contentDescription = "Подключение Meows",
                         colorFilter = ColorFilter.tint(primary),
                         alpha = if (state == XKVpnService.CONNECTED) 1f else 0.45f + glow,
                         modifier = Modifier.fillMaxSize().padding(size * 0.22f).scale(if (state == XKVpnService.CONNECTED) pulse else 1f),

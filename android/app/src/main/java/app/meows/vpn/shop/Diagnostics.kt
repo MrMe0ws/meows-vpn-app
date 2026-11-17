@@ -24,7 +24,7 @@ object Diagnostics {
             else -> "отключено"
         }
         return buildString {
-            appendLine("Мяус VPN $version")
+            appendLine("Meows $version")
             appendLine("Android ${Build.VERSION.RELEASE}, ${Build.MANUFACTURER} ${Build.MODEL}")
             appendLine("Сервер: $server")
             appendLine("Подписка: $sub")

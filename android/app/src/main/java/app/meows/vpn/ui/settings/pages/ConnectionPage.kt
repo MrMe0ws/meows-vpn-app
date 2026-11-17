@@ -29,7 +29,7 @@ fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit) {
         SettingsGroup(footer = "Kill switch включается в системе: ⚙ рядом с приложением → «Постоянная VPN» и «Блокировать соединения без VPN».") {
             ValueRow(Icons.Rounded.Shield, "Always-on и Kill switch") {
                 runCatching { ctx.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
-                vm.toast = "Нажмите ⚙ рядом с Мяус VPN → «Постоянная VPN»"
+                vm.toast = "Нажмите ⚙ рядом с Meows → «Постоянная VPN»"
             }
         }
     }

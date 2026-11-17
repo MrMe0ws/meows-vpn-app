@@ -73,19 +73,14 @@ func dropHeavyGeo(obj map[string]any, keepAds bool) {
 	}
 }
 
-// Categories the user can send around the VPN.
+// Categories the user can send around the VPN. Tags come from the roscomvpn geosite.dat
+// (the same file Happ downloads from the panel): there is no per-bank/per-service split, only category-ru + whitelist.
 var categoryDomains = map[string][]any{
-	"banks":  {"geosite:category-bank-ru", "geosite:tbank-ru"},
-	"gov":    {"geosite:category-gov-ru"},
-	"shops":  {"geosite:category-ecommerce-ru", "geosite:category-retail-ru"},
-	"yandex": {"geosite:yandex"},
-	"vk":     {"geosite:vk", "geosite:mailru", "geosite:mailru-group"},
-	"media":  {"geosite:category-media-ru", "geosite:category-entertainment-ru", "geosite:rutube"},
-	"apple":  {"geosite:apple"},
+	"ru":        {"geosite:category-ru", "geosite:whitelist"},
+	"apple":     {"geosite:apple"},
 	"microsoft": {"geosite:microsoft"},
-	"games":  {"geosite:category-games", "geosite:steam", "geosite:epicgames"},
+	"games":     {"geosite:steam", "geosite:epicgames", "geosite:riot", "geosite:faceit", "geosite:origin", "geosite:escapefromtarkov"},
 }
-
 func userDomain(d string) string {
 	d = strings.TrimSpace(strings.ToLower(d))
 	d = strings.TrimPrefix(strings.TrimPrefix(d, "https://"), "http://")
@@ -113,23 +108,16 @@ func parseOpts(s string) xkOpts {
 	return o
 }
 
+// Optional extra ("all Russian sites direct", off by default): the subscription template already
+// routes category-ru/whitelist direct, this additionally sends whole Russian zones direct.
 var ruDirectDomains = []any{
-	"geosite:category-ru", "geosite:ru-available-only-inside", "geosite:tld-ru",
-	"geosite:yandex", "geosite:vk", "geosite:mailru", "geosite:mailru-group",
-	"geosite:category-gov-ru", "geosite:category-bank-ru", "geosite:category-retail-ru",
-	"geosite:category-ecommerce-ru", "geosite:category-media-ru", "geosite:category-entertainment-ru",
-	"geosite:category-education-ru", "geosite:category-medicine-ru", "geosite:category-travel-ru",
-	"geosite:tbank-ru", "geosite:mts-ru", "geosite:t2-ru", "geosite:rutube", "geosite:autoru",
-	"geosite:myoffice-ru", "geosite:category-ai-ru",
-	`regexp:\.ru$`, `regexp:\.su$`, `regexp:\.xn--p1ai$`, `regexp:\.xn--d1acj3b$`,
-	`regexp:\.moscow$`, `regexp:\.tatar$`, `regexp:\.xn--80adxhks$`,
+	"geosite:category-ru", "geosite:whitelist",
+	`regexp:\.ru$`, `regexp:\.su$`, `regexp:\.xn--p1ai$`,
 }
-
 // addRouting injects our routing on top of the subscription rules:
 //  1. ads -> block (optional)
-//  2. sites blocked in RU (even on .ru) -> proxy
-//  3. Russian domains & zones -> direct
-//  4. Russian & private IPs -> direct
+//  2. optional: Russian zones/lists -> direct (ruDirect)
+//  3. then the subscription template rules (its own split-routing)
 // Domains that must ALWAYS bypass the VPN (VkusVill: client app, courier
 // app, site, CDNs), regardless of user settings.
 var alwaysDirectDomains = []any{
@@ -220,19 +208,12 @@ func addRouting(obj map[string]any, o xkOpts) {
 		pre = append(pre, map[string]any{"type": "field", "domain": userDoms, "outboundTag": direct})
 	}
 	if o.BlockAds {
-		pre = append(pre, map[string]any{"type": "field", "domain": []any{"geosite:category-ads-all"}, "outboundTag": block})
+		pre = append(pre, map[string]any{"type": "field", "domain": []any{"geosite:category-ads", "geosite:win-spy"}, "outboundTag": block})
 	}
 	if o.RuDirect {
-		if len(proxyRule) > 0 && !o.Lite {
-			r := map[string]any{"type": "field", "domain": []any{"geosite:ru-blocked"}}
-			for k, v := range proxyRule {
-				r[k] = v
-			}
-			pre = append(pre, r)
-		}
 		pre = append(pre,
 			map[string]any{"type": "field", "domain": ruDirectDomains, "outboundTag": direct},
-			map[string]any{"type": "field", "ip": []any{"geoip:ru", "geoip:private"}, "outboundTag": direct},
+			map[string]any{"type": "field", "ip": []any{"geoip:whitelist", "geoip:direct", "geoip:private"}, "outboundTag": direct},
 		)
 	}
 	rules, _ := routing["rules"].([]any)

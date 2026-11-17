@@ -22,7 +22,7 @@ public class XKTileService extends TileService {
         if (t == null) return;
         int s = XKVpnService.state;
         t.setState(s == XKVpnService.CONNECTED ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
-        t.setLabel("Мяус VPN");
+        t.setLabel("Meows");
         if (Build.VERSION.SDK_INT >= 29) t.setSubtitle(s == XKVpnService.CONNECTED ? "Подключено" : s == XKVpnService.CONNECTING ? "Подключение…" : "Выключен");
         t.updateTile();
     }

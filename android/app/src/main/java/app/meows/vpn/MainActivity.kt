@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
     private val vpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         if (r.resultCode == RESULT_OK) vm.startVpn()
-        else vm.alert("VPN не разрешён", "Разрешите Мяус VPN создать VPN-подключение.")
+        else vm.alert("VPN не разрешён", "Разрешите Meows создать VPN-подключение.")
     }
     private val notifPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 

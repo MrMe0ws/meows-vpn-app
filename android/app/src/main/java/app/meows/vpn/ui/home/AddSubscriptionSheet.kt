@@ -40,7 +40,7 @@ fun AddSubscriptionSheet(vm: MeowsViewModel, onDismiss: () -> Unit) {
             Text("Ссылка подписки", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
             Text(
-                "Вставьте ссылку из бота или личного кабинета Мяус VPN.",
+                "Вставьте ссылку из бота или личного кабинета Meows.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))

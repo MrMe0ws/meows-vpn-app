@@ -106,7 +106,7 @@ public class XKVpnService extends VpnService {
         PendingIntent open = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl);
         PendingIntent stop = PendingIntent.getService(this, 1, new Intent(this, XKVpnService.class).setAction(ACTION_STOP), fl);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "vpn") : new Notification.Builder(this);
-        b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Мяус VPN").setContentText(text)
+        b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Meows").setContentText(text)
                 .setContentIntent(open).setOngoing(true).setColor(0xFF7CD62B)
                 .addAction(new Notification.Action.Builder(null, "Отключить", stop).build());
         return b.build();
@@ -152,7 +152,7 @@ public class XKVpnService extends VpnService {
                 
             }
         } catch (Exception ignored) { }
-        if (st.ruDirect()) for (String p : RU_APPS) pkgs.add(p);
+        if (st.ruApps()) for (String p : RU_APPS) pkgs.add(p);
         pkgs.addAll(st.excludedApps());
         for (String p : pkgs) {
             try { b.addDisallowedApplication(p); } catch (PackageManager.NameNotFoundException ignored) { }
@@ -171,7 +171,9 @@ public class XKVpnService extends VpnService {
                 File out = new File(assetDir, f);
                 long want = -1;
                 try { android.content.res.AssetFileDescriptor afd = getAssets().openFd(f); want = afd.getLength(); afd.close(); } catch (Exception ignored) { }
-                if (!out.exists() || (want >= 0 && out.length() != want)) copyAsset(f, out);
+                // geo-файлы, скачанные по ссылкам из панели (маркер custom), не перезаписываем вшитыми
+                boolean custom = new File(assetDir, "custom").exists();
+                if (!out.exists() || (!custom && want >= 0 && out.length() != want)) copyAsset(f, out);
             }
             // config for the core
             org.json.JSONObject cfg = new org.json.JSONObject();
@@ -181,7 +183,7 @@ public class XKVpnService extends VpnService {
             fo.write(cfg.toString().getBytes("UTF-8")); fo.close();
 
             Builder b = new Builder();
-            b.setSession("Мяус VPN").setMtu(1500)
+            b.setSession("Meows").setMtu(1500)
                     .addAddress("172.19.0.1", 30)
                     .addAddress("fd66:f83a:c650::1", 126).addRoute("::", 0)
                     .addDnsServer("172.19.0.2");
@@ -225,7 +227,7 @@ public class XKVpnService extends VpnService {
             if (!ok) throw new Exception(err.length() > 0 ? err.toString() : "Ядро VPN не запустилось");
             connectedAt = System.currentTimeMillis();
             broadcast(CONNECTED);
-            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(st0().ruDirect() ? "Подключено · российские сайты напрямую" : "Подключено"));
+            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(st0().ruApps() ? "Подключено · российские приложения напрямую" : "Подключено"));
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {

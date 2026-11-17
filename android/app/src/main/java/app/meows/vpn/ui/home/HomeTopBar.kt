@@ -26,6 +26,6 @@ fun HomeTopBar() {
     ) {
         Image(painterResource(R.drawable.logo_icon), null, Modifier.size(28.dp))
         Spacer(Modifier.width(10.dp))
-        Text("Мяус VPN", style = MaterialTheme.typography.titleLarge)
+        Text("Meows", style = MaterialTheme.typography.titleLarge)
     }
 }

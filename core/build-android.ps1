@@ -22,7 +22,10 @@ $libxk = "$Work\libxk"; New-Item -ItemType Directory -Force $libxk | Out-Null
 Get-ChildItem "$here\*.go" | Where-Object { $_.Name -ne "xk_test.go" } | Copy-Item -Destination $libxk -Force
 $env:CGO_ENABLED = "0"; $env:GOARCH = "arm64"; $env:CC = ""; $env:GOARM = ""
 New-Item -ItemType Directory -Force "$jni\arm64-v8a" | Out-Null
-go build -trimpath -ldflags $ld -o "$jni\arm64-v8a\libxkcore.so" -C $Work ./libxk
+Push-Location $Work
+$out64 = "$jni\arm64-v8a\libxkcore.so"; if (Test-Path $out64) { [IO.File]::Delete($out64) }   # чтобы устаревший файл не выдал себя за новый
+go build -trimpath -ldflags $ld -o $out64 ./libxk
+"arm64-v8a: {0}" -f $(if ($LASTEXITCODE -eq 0 -and (Test-Path $out64)) { "ok" } else { "FAILED" })
 
 # --- остальные ABI: cgo; из обёртки убираем c-shared-часть (main.go, measure_cgo.go) и тег !cgo у android_main.go
 $cg = "$Work\libxk_cgo"; if (Test-Path $cg) { [IO.Directory]::Delete($cg, $true) }; New-Item -ItemType Directory $cg | Out-Null
@@ -37,6 +40,8 @@ $targets = @(
 foreach ($t in $targets) {
     $env:GOARCH = $t.arch; $env:CC = "$bin\$($t.cc)"; $env:GOARM = $t.arm
     New-Item -ItemType Directory -Force "$jni\$($t.abi)" | Out-Null
-    go build -trimpath -buildmode=pie -ldflags $ld -o "$jni\$($t.abi)\libxkcore.so" -C $Work ./libxk_cgo
-    "{0}: {1}" -f $t.abi, $(if (Test-Path "$jni\$($t.abi)\libxkcore.so") { "ok" } else { "FAILED" })
+    $o = "$jni\$($t.abi)\libxkcore.so"; if (Test-Path $o) { [IO.File]::Delete($o) }
+    go build -trimpath -buildmode=pie -ldflags $ld -o $o ./libxk_cgo
+    "{0}: {1}" -f $t.abi, $(if ($LASTEXITCODE -eq 0 -and (Test-Path $o)) { "ok" } else { "FAILED" })
 }
+Pop-Location

@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import app.meows.vpn.update.UpdateController
 
 /** Связывает старую Java-логику (XKStore / XKVpnService) с Compose-состоянием. */
@@ -104,6 +105,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             refreshing = false
             if (error != null) { fetchError("Не получилось", error); return@fetch }
             toast = "Подписка добавлена"
+            syncGeo()
             bump(); autoPing(); reconnectIfNeeded()
         }
     }
@@ -115,8 +117,14 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             refreshing = false
             if (error != null) { if (!silent) fetchError("Не удалось обновить", error); return@fetch }
             if (!silent) toast = "Подписка обновлена"
+            syncGeo()
             bump(); autoPing()
         }
+    }
+
+    /** Гео-файлы следуют ссылкам из заголовка `routing` панели (см. GeoUpdater). */
+    private fun syncGeo() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { app.meows.vpn.geo.GeoUpdater.sync(getApplication(), st) } }
     }
 
     fun deleteSubscription() { st.clear(); bump(); if (vpnState != XKVpnService.IDLE) XKVpnService.stop(getApplication()) }

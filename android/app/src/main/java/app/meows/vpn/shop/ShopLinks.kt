@@ -3,7 +3,7 @@ package app.meows.vpn.shop
 import app.meows.vpn.XKStore
 
 /**
- * Ссылки магазина Мяус VPN. Берём из заголовков подписки (их задаёт панель Remnawave:
+ * Ссылки магазина Meows. Берём из заголовков подписки (их задаёт панель Remnawave:
  * `profile-web-page-url`, `support-url`); если подписка ещё не добавлена — запасные адреса.
  */
 object ShopLinks {

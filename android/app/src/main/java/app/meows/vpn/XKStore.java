@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /** Subscription storage, parsing, fetching, ping, settings. */
 public final class XKStore {
     public static final String P_THEME = "theme";          // 0 auto, 1 light, 2 dark
-    public static final String P_RU = "ruDirect";          // default true
+    public static final String P_RU = "ruDirect";          // default false (расширенное правило; основной split — в шаблоне подписки)
     public static final String P_ADS = "blockAds";
     public static final String P_AUTO = "autoMode";        // 0 by sub, -1 off, N hours
     public static final String P_LAUNCH = "updateOnLaunch";// default true
@@ -51,6 +51,7 @@ public final class XKStore {
     public static final String P_AUTOCONN = "autoConnect";    // default false
     public static final String P_LAN = "allowLan";            // default true
     public static final String P_HWID = "sendHwid";           // default true
+    public static final String P_RU_APPS = "ruApps";          // default true
     public static String LOCK_HOST = "";                      // white-label lock to one subscription host
     public static final String[] PING_URLS = {"https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204", "https://captive.apple.com/hotspot-detect.html"};
     public int pref(String k, int def) { return sp.getInt(k, def); }
@@ -58,16 +59,10 @@ public final class XKStore {
 
     /** id, title, hint */
     public static final String[][] CATEGORIES = {
-            {"banks", "Банки", "Сбер, Т-Банк, ВТБ, Альфа…"},
-            {"gov", "Госуслуги и госсайты", "Госуслуги, налоговая, mos.ru"},
-            {"shops", "Маркетплейсы и магазины", "Ozon, Wildberries, Мегамаркет…"},
-            {"yandex", "Яндекс", "Поиск, Такси, Музыка, Карты"},
-            {"vk", "VK и Mail.ru", "ВКонтакте, Одноклассники, почта"},
-            {"media", "Российские видео и кино", "Кинопоиск, Rutube, Okko, ivi"},
+            {"ru", "Российские сайты и сервисы", "Банки, Госуслуги, магазины, Яндекс, VK — списки roscomvpn"},
             {"apple", "Apple", "iCloud, App Store, обновления"},
             {"microsoft", "Microsoft", "Outlook, Teams, OneDrive"},
-            {"games", "Игры", "Steam, Epic Games"}};
-
+            {"games", "Игры", "Steam, Epic Games, Riot, Faceit"}};
     public Set<String> bypassCats() { return new HashSet<>(sp.getStringSet(P_CATS, new HashSet<String>())); }
     public void setBypassCats(Set<String> s) { sp.edit().putStringSet(P_CATS, s).apply(); }
     public List<String> bypassSites() {
@@ -123,7 +118,10 @@ public final class XKStore {
     }
     public void setIndex(int i) { sp.edit().putInt("sub.index", i).apply(); }
 
-    public boolean ruDirect() { return sp.getBoolean(P_RU, true); }
+    /** Расширенно: все российские сайты/зоны напрямую поверх правил подписки. По умолчанию выключено. */
+    public boolean ruDirect() { return sp.getBoolean(P_RU, false); }
+    /** Российские приложения (банки, Госуслуги и т.д.) целиком мимо VPN. По умолчанию включено. */
+    public boolean ruApps() { return sp.getBoolean(P_RU_APPS, true); }
     public boolean blockAds() { return sp.getBoolean(P_ADS, false); }
     public boolean remind() { return sp.getBoolean(P_REMIND, true); }
     public boolean updateOnLaunch() { return sp.getBoolean(P_LAUNCH, true); }
@@ -146,7 +144,7 @@ public final class XKStore {
         }
         return v;
     }
-    public String title() { String t = b64prefixed(header("profile-title")); return t != null ? t : "Мяус VPN"; }
+    public String title() { String t = b64prefixed(header("profile-title")); return t != null ? t : "Meows"; }
     public String announce() { return b64prefixed(header("announce")); }
     public String supportUrl() { return header("support-url"); }
     public String webUrl() { return header("profile-web-page-url"); }
@@ -350,6 +348,13 @@ public final class XKStore {
         return id;
     }
 
+    private String appVersion() {
+        try { return ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0).versionName; } catch (Exception e) { return "0"; }
+    }
+
+    /** Заголовок `routing` из ответа панели (happ://routing/add/<base64 JSON>) — там закреплённые ссылки на geo-файлы. */
+    public String routingHeader() { return header("routing"); }
+
     // ---------- network ----------
     public void fetch(final String raw, final Callback cb) {
         String t = raw == null ? "" : raw.trim();
@@ -366,10 +371,16 @@ public final class XKStore {
         }
         pool.execute(new Runnable() { public void run() {
             String err = null;
+            // сначала представляемся как MeowsVPN (правило в панели Remnawave); если панель его ещё не знает и отдаёт ссылки,
+            // повторяем запрос как Happ — тогда подписка работает в любом случае
+            String[] uas = {"MeowsVPN/" + appVersion(), "Happ/3.9.0"};
+            for (int attempt = 0; attempt < uas.length; attempt++) {
+            err = null;
             try {
                 HttpURLConnection c = (HttpURLConnection) new URL(link).openConnection();
                 c.setConnectTimeout(15000); c.setReadTimeout(20000);
-                c.setRequestProperty("User-Agent", "Happ/3.9.0");
+                c.setRequestProperty("User-Agent", uas[attempt]);
+                c.setRequestProperty("Accept", "*/*");   // иначе Java шлёт text/html и панель отдаёт HTML-страницу
                 if (flag(P_HWID, true)) c.setRequestProperty("x-hwid", hwid());
                 c.setRequestProperty("x-device-os", "Android");
                 c.setRequestProperty("x-ver-os", Build.VERSION.RELEASE);
@@ -394,7 +405,7 @@ public final class XKStore {
                             String dec = "";
                             try { dec = new String(Base64.decode(tr, Base64.DEFAULT), "UTF-8").trim(); } catch (Exception ignored) { }
                             if (!(dec.startsWith("[") || dec.startsWith("{")))
-                                err = "Сервер отдал ссылки вместо Xray JSON. Включите Xray JSON шаблон для Happ в Remnawave.";
+                                err = "Сервер отдал ссылки вместо Xray JSON. Включите Xray JSON шаблон для клиентов Meows в Remnawave.";
                         }
                     }
                     if (err == null) {
@@ -412,6 +423,9 @@ public final class XKStore {
                 c.disconnect();
             } catch (Exception e) {
                 err = "Нет связи с сервером подписки.\n" + e.getMessage();
+            }
+            if (err != null && err.startsWith("Сервер отдал ссылки") && attempt + 1 < uas.length) continue;
+            break;
             }
             final String fe = err;
             main.post(new Runnable() { public void run() {

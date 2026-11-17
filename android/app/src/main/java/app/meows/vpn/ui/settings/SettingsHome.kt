@@ -46,7 +46,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
             ValueRow(Icons.Rounded.Palette, "Оформление", summary = "$theme · $color") { open(SettingsPage.Appearance) }
             ValueRow(
                 Icons.Rounded.Language, "Маршрутизация",
-                summary = (if (st.ruDirect()) "Российское напрямую" else "Всё через VPN") + if (bypassCount > 0) " · исключений: $bypassCount" else "",
+                summary = (if (st.ruApps()) "Российские приложения напрямую" else "По правилам подписки") + if (bypassCount > 0) " · исключений: $bypassCount" else "",
             ) { open(SettingsPage.Routing) }
             ValueRow(Icons.Rounded.Autorenew, "Подписка", summary = autoUpdateTitle(st)) { open(SettingsPage.Subscription) }
             ValueRow(
@@ -67,7 +67,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
         SettingsGroup {
             ValueRow(Icons.Rounded.Share, "Рассказать друзьям", summary = "Отправить ссылку на приложение") {
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, "Мяус VPN — быстрый и удобный VPN. Скачать приложение для Android: ${AppLinks.RELEASES_URL}")
+                    .putExtra(Intent.EXTRA_TEXT, "Meows — быстрый и удобный VPN. Скачать приложение для Android: ${AppLinks.RELEASES_URL}")
                 runCatching { ctx.startActivity(Intent.createChooser(send, "Рассказать друзьям").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }
             ValueRow(Icons.Rounded.Code, "Проект на GitHub", summary = AppLinks.GITHUB_URL.removePrefix("https://")) {
@@ -75,7 +75,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            Text("Мяус VPN ${vm.updates.currentVersion}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Meows ${vm.updates.currentVersion}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
