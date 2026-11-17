@@ -24,14 +24,14 @@ class CoreProcess {
         require(AppDirs.coreExe.exists()) { "Не найден meows-core.exe (${AppDirs.coreExe})" }
         syncGeo()
         val cfg = JSONObject().put("sub", sub.body).put("index", index).put("opts", opts)
-            .put("socksPort", SOCKS_PORT).put("httpPort", HTTP_PORT).put("mode", mode)
+            .put("socksPort", SOCKS_PORT).put("httpPort", HTTP_PORT).put("mode", mode).put("traffic", true)
         val f = AppDirs.file("core.json").apply { writeText(cfg.toString()) }
         stopping = false
         val p = ProcessBuilder(AppDirs.coreExe.absolutePath, f.absolutePath, AppDirs.geo.absolutePath).redirectErrorStream(true).start()
         proc = p
         val lines = LinkedBlockingQueue<String>()
         thread(isDaemon = true, name = "meows-core-out") {
-            p.inputStream.bufferedReader().useLines { s -> s.forEach { AppLog.add("CORE", it); lines.put(it) } }
+            p.inputStream.bufferedReader().useLines { s -> s.forEach { if (!AppLog.addCoreLine(it)) lines.put(it) } }
             lines.put("\u0000EXIT")
         }
         val err = StringBuilder()

@@ -225,3 +225,22 @@ func buildProxyConfig(obj map[string]any, socksPort, httpPort int) ([]byte, erro
 	}
 	return json.Marshal(obj)
 }
+
+// withAccessLog включает журнал доступа Xray в stdout: «from … accepted tcp:host:port [вход >> выход]» и DNS-ответы (имена для IP).
+func withAccessLog(cfg []byte) []byte {
+	var obj map[string]any
+	if json.Unmarshal(cfg, &obj) != nil {
+		return cfg
+	}
+	lg, _ := obj["log"].(map[string]any)
+	if lg == nil {
+		lg = map[string]any{}
+	}
+	lg["access"] = ""
+	lg["loglevel"] = "info" // нужен для строк «got answer: домен -> IP» (имена в журнале трафика)
+	obj["log"] = lg
+	if out, err := json.Marshal(obj); err == nil {
+		return out
+	}
+	return cfg
+}

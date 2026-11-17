@@ -32,13 +32,16 @@ import androidx.compose.ui.unit.sp
 import app.meows.desktop.log.AppLog
 import app.meows.desktop.ui.home.copyText
 
-private val filters = listOf("Всё" to null, "VPN" to "VPN", "Ядро" to "CORE", "Подписка" to "SUB")
+private const val TRAFFIC = "TRAFFIC"
+private val filters = listOf("Всё" to null, "Трафик" to TRAFFIC, "VPN" to "VPN", "Ядро" to "CORE", "Подписка" to "SUB")
 
-/** Логи: события приложения и вывод ядра; фильтр по разделу, копирование для поддержки, очистка. Ссылка подписки в логи не попадает. */
+/** Логи: события приложения, вывод ядра и «Трафик» (куда и как пошло каждое соединение); фильтр по разделу, копирование для поддержки, очистка. Ссылка подписки в логи не попадает. */
 @Composable
 fun LogsScreen() {
     var tag by remember { mutableStateOf<String?>(null) }
-    val shown = AppLog.lines.filter { tag == null || it.tag == tag }
+    val showTraffic = tag == TRAFFIC
+    val shown = if (showTraffic) emptyList() else AppLog.lines.filter { tag == null || it.tag == tag }
+    val traffic = AppLog.traffic.toList()
     val list = rememberLazyListState()
     LaunchedEffect(shown.size, tag) { if (shown.isNotEmpty()) list.scrollToItem(shown.lastIndex) }
 
@@ -47,12 +50,16 @@ fun LogsScreen() {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             filters.forEach { (title, t) -> FilterChip(selected = tag == t, onClick = { tag = t }, label = { Text(title) }) }
             Spacer(Modifier.weight(1f))
-            FilledTonalButton(onClick = { copyText(shown.joinToString("\n") { AppLog.format(it) }) }, enabled = shown.isNotEmpty()) { Text("Скопировать") }
-            OutlinedButton(onClick = AppLog::clear, enabled = shown.isNotEmpty()) { Text("Очистить") }
+            FilledTonalButton(
+                onClick = { copyText(if (showTraffic) traffic.joinToString("\n") { AppLog.format(it) } else shown.joinToString("\n") { AppLog.format(it) }) },
+                enabled = shown.isNotEmpty() || traffic.isNotEmpty() && showTraffic,
+            ) { Text("Скопировать") }
+            OutlinedButton(onClick = AppLog::clear, enabled = shown.isNotEmpty() || traffic.isNotEmpty()) { Text("Очистить") }
         }
         Spacer(Modifier.height(12.dp))
         Surface(Modifier.fillMaxSize().padding(bottom = 16.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
-            if (shown.isEmpty()) Text("Пока пусто. Здесь появятся события подключения, подписки и ядра.", Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (showTraffic) TrafficList(traffic)
+            else if (shown.isEmpty()) Text("Пока пусто. Здесь появятся события подключения, подписки и ядра.", Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             else SelectionContainer {
                 LazyColumn(Modifier.fillMaxSize().padding(12.dp), state = list) {
                     itemsIndexed(shown) { _, l ->

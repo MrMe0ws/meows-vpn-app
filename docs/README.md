@@ -19,6 +19,8 @@ docs/
   build.md        сборка и подпись
   release.md      выпуск релиза на GitHub (для автообновления)
   business-context.md  магазин Мяус VPN и связь с приложением
+  windows/        Windows-версия (overview.md)
+  cabinet/        open-in-app.html (кнопка «Открыть в приложении»), shop-agent-brief.md (задание агенту магазина: добавить Meows в гайд кабинета)
   roadmap.md      что дальше
   decisions.md    журнал решений
 ```

@@ -56,7 +56,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     val updates = UpdateController(settings, scope)
 
     var themeMode by mutableIntStateOf(settings.int("theme", 0))       // 0 авто, 1 светлая, 2 тёмная
-    var palette by mutableIntStateOf(settings.int("palette", 0))
+    var palette by mutableIntStateOf(settings.int("palette", 8))
     var amoled by mutableStateOf(settings.bool("amoled", false))
     var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))

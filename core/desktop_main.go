@@ -26,6 +26,7 @@ type desktopCfg struct {
 	Opts      string `json:"opts"`
 	SocksPort int    `json:"socksPort"`
 	HttpPort  int    `json:"httpPort"`
+	Traffic   bool   `json:"traffic"` // журнал соединений (куда и через какой выход) в stdout
 	Mode      string `json:"mode"` // "tun" — адаптер wintun (нужен админ), иначе локальные прокси
 }
 
@@ -69,6 +70,9 @@ func main() {
 	}
 	if err != nil {
 		fail(err.Error())
+	}
+	if dc.Traffic {
+		cfg = withAccessLog(cfg)
 	}
 	config, err := core.LoadConfig("json", bytes.NewReader(cfg))
 	if err != nil {
