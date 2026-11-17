@@ -7,7 +7,7 @@
 2. `cd android; .\build.ps1` → `android\dist\MeowsVPN-release.apk`. Проверить на устройстве.
 3. Скопировать APK как `MeowsVPN-X.Y.Z.apk` и выпустить:
    ```powershell
-   gh release create android-vX.Y.Z android\dist\MeowsVPN-X.Y.Z.apk --title "Мяус VPN X.Y.Z (Android)" --notes "что нового"
+   gh release create android-vX.Y.Z android\dist\MeowsVPN-X.Y.Z.apk --title "Meows X.Y.Z (Android)" --notes "что нового"
    ```
    Описание релиза показывается пользователю в диалоге обновления — пиши по-русски и коротко.
 4. Не помечать как pre-release и не оставлять черновиком — такие релизы приложение игнорирует.
