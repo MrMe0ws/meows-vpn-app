@@ -1,12 +1,14 @@
 package app.meows.desktop.ui.home
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +21,16 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.meows.desktop.data.Server
+import app.meows.desktop.ui.Res
 
 /** Строка сервера: флаг, название, протокол, пинг; выбранный подсвечен цветом темы. */
 @Composable
@@ -60,14 +66,16 @@ private fun PingChip(ms: Int) {
     }
     Surface(color = bg, contentColor = fg, shape = CircleShape) { Text(text, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge) }
 }
-/** В Windows нет эмодзи-флагов (рисуются буквами) — показываем код страны в аккуратной плашке. */
+/** Windows не умеет рисовать эмодзи-флаги — показываем картинки флагов из Noto (как на Android); нет картинки — плашка с кодом. */
 @Composable
 private fun FlagBadge(flag: String?) {
-    val code = flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('A'.code + it - 0x1F1E6).toChar() }?.joinToString("")
-    Surface(
-        shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.width(44.dp),
-    ) {
-        Text(code ?: "VPN", Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.labelLarge, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    val code = flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('a'.code + it - 0x1F1E6).toChar() }?.joinToString("")
+    val img = remember(code) { code?.let { runCatching { Res.bitmap("flags/$it.png") }.getOrNull() } }
+    if (img != null) {
+        Image(img, code, Modifier.width(44.dp).height(30.dp).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+    } else {
+        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.width(44.dp)) {
+            Text(code?.uppercase() ?: "VPN", Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.labelLarge, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
     }
 }

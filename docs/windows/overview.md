@@ -24,7 +24,7 @@ vpn/                   CoreProcess (запуск ядра), SystemProxy, PingRun
 system/                SingleInstance (порт 47831), Protocol (meows:// в HKCU), Autostart (HKCU Run)
 update/                UpdateChecker (GitHub, тег windows-v*, ассет .msi), UpdateController, UpdateState/Version
 ui/                    MeowsApp, UpdateDialog, Res, Format
-ui/home/               HomeScreen, ConnectButton, StatusText, SubscriptionCard, ServerRow(+FlagBadge), HomeToolbar, AddDialog
+ui/home/               HomeScreen, ConnectButton, StatusText, SubscriptionCard, ServerRow(+FlagBadge: картинки флагов), HomeToolbar, AddDialog
 ui/settings/           SettingsScreen, SystemGroup, UpdatesGroup
 ui/theme/              MeowsTheme, Palettes (те же 8 палитр и порядок, что на Android)
 ```
@@ -45,12 +45,12 @@ ui/theme/              MeowsTheme, Palettes (те же 8 палитр и пор�
 - Релиз: тег **`windows-vX.Y.Z`**, в ассетах `.msi` (его качает обновлялка) и `.zip`. Команда — `docs/release.md`.
 
 ## Проверено на реальном ПК (2026-11-17)
-Установка MSI, ярлык на рабочем столе, добавление подписки через `meows://add/…`, подключение (Cloudflare trace через прокси: DE/Франкфурт, напрямую: TH), отключение возвращает системный прокси, трей (закрытие скрывает, второй запуск показывает окно), автозапуск (ключ реестра включается/убирается), пинг не гонялся.
+Установка MSI, ярлык на рабочем столе, флаги стран (картинки), добавление подписки через `meows://add/…`, подключение (Cloudflare trace через прокси: DE/Франкфурт, напрямую: TH), отключение возвращает системный прокси, трей (закрытие скрывает, второй запуск показывает окно), автозапуск (ключ реестра включается/убирается), пинг не гонялся.
 Заметка: `ifconfig.me` и `ipify.org` идут напрямую **по задумке шаблона** (они в списках roscomvpn `category-ru`/`whitelist`); для проверки IP через VPN использовать `ipinfo.io` или `cloudflare.com/cdn-cgi/trace`.
 
 ## Ограничения и план
 - Нет TUN-режима (Wintun, права администратора): часть программ игнорирует системный прокси.
 - Нет исключения приложений, автообновления гео-файлов (на Android есть `GeoUpdater`), QR-кода.
 - Нет подписи кода: Windows SmartScreen предупреждает при первом запуске установщика.
-- Эмодзи-флагов в Windows нет — показывается плашка с кодом страны (`FlagBadge`); картинки флагов — идея.
+- Эмодзи-флагов в Windows нет: `ServerRow.FlagBadge` показывает **картинки флагов из набора Noto (Android)** — `src/main/resources/flags/<код>.png` (259 шт., ~0,6 МБ), скачаны скриптом `windows/tools/fetch-flags.ps1` (источник: googlefonts/noto-emoji, `third_party/region-flags`, Apache-2.0). Нет картинки — плашка с кодом страны.
 - Логика подписки продублирована с Android (`XKStore.java` ↔ `data/*.kt`): общий модуль Kotlin Multiplatform — тех. долг.
