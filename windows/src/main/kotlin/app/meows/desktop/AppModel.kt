@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.meows.desktop.data.LaunchLog
+import app.meows.desktop.data.LinkNormalizer
 import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
@@ -75,7 +77,8 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     /** Сообщение от второго запуска: ссылка meows://add/<подписка> или «SHOW» — показать окно. */
     fun handleExternal(msg: String) {
         if (msg == "TRAYMENU") { trayAnchor = java.awt.MouseInfo.getPointerInfo().location; return }   // проверка меню без клика по трею
-        if (msg.startsWith("meows://add/") || msg.startsWith("happ://add/")) addSubscription(msg)
+        LaunchLog.write("первый экземпляр получил: [$msg]")
+        if (msg.startsWith("meows:", true) || msg.startsWith("happ:", true)) addSubscription(msg)
         windowVisible = true; showTick++
     }
 
@@ -95,7 +98,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
                 if (!silent) toast = if (added) "Подписка добавлена" else "Подписка обновлена"
                 if (state == ConnState.Connected && added) reconnect()
             }.onFailure {
-                AppLog.add("SUB", "Ошибка: ${it.message}")
+                AppLog.add("SUB", "Ошибка: ${it.message}" + if (it.message?.startsWith("Это не похоже") == true) " (получено: ${LinkNormalizer.head(raw)})" else "")
                 if (!silent) error = (if (added) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка") }
             refreshing = false
         }

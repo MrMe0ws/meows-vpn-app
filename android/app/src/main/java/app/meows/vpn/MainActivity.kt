@@ -67,11 +67,8 @@ class MainActivity : ComponentActivity() {
     /** meows://add/<ссылка подписки> (и happ://add/…). Ссылка может прийти URL-кодированной. */
     private fun handleIntent(i: Intent?) {
         val s = i?.data?.toString() ?: return
-        val k = s.indexOf("://add/")
-        if (k < 0) return
-        var link = s.substring(k + 7)
-        if (link.startsWith("http%3A", true) || link.startsWith("https%3A", true)) link = Uri.decode(link)
-        vm.addSubscription(link)
+        if (!s.startsWith("meows:", true) && !s.startsWith("happ:", true)) return
+        vm.addSubscription(s)   // нормализация ссылки — в XKStore.fetch (LinkNormalizer)
     }
 
     private fun toggle() {

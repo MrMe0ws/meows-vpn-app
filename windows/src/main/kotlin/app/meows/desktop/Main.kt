@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import app.meows.desktop.data.LaunchLog
 import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.system.Elevation
 import app.meows.desktop.tray.TrayIconController
@@ -36,7 +37,8 @@ private object Inbox {
 }
 
 fun main(args: Array<String>) {
-    val link = args.firstOrNull { it.startsWith("meows://") || it.startsWith("happ://") }
+    LaunchLog.write("запуск, аргументы: " + args.joinToString(" | ") { "[$it]" })   // как их передала Windows — нужно разбирать ссылки из браузера
+    val link = args.firstOrNull { it.startsWith("meows:", true) || it.startsWith("happ:", true) }
     // нас перезапустили с правами администратора — ждём, пока закроется прежний экземпляр (он держит «единственный экземпляр»)
     args.indexOf("--wait-pid").takeIf { it >= 0 }?.let { args.getOrNull(it + 1)?.toLongOrNull() }?.let { pid ->
         ProcessHandle.of(pid).ifPresent { h -> runCatching { h.onExit().get(15, TimeUnit.SECONDS) } }

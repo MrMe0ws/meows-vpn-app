@@ -39,9 +39,8 @@ class SubscriptionData(val url: String, val body: String, val headers: Map<Strin
 /** Загрузка подписки. Сначала представляемся как MeowsVPN; если панель отдала ссылки вместо JSON — повторяем как Happ. */
 object SubscriptionClient {
     fun fetch(raw: String, version: String): Result<SubscriptionData> {
-        var link = raw.trim()
-        for (pre in listOf("happ://add/", "meows://add/")) if (link.startsWith(pre)) link = link.removePrefix(pre)
-        if (!(link.startsWith("https://") || link.startsWith("http://"))) return Result.failure(Exception("Это не похоже на ссылку подписки."))
+        val link = LinkNormalizer.normalize(raw)
+        if (!LinkNormalizer.isHttpLink(link)) return Result.failure(Exception("Это не похоже на ссылку подписки."))
         var last: Exception? = null
         for (ua in listOf("MeowsVPN/$version", "Happ/3.9.0")) {
             val r = runCatching { request(link, ua) }

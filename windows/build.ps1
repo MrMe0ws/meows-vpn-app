@@ -1,8 +1,9 @@
 ﻿# Сборка Meows для Windows без IDE.
 #   .\build.ps1                -> dist\Meows-win-x64-<версия>.zip (портативная папка) и dist\Meows-<версия>.msi (установщик)
 #   .\build.ps1 -Run           -> запуск из Gradle (для разработки)
+#   .\build.ps1 -Test          -> только юнит-тесты (gradle test)
 # Нужны: C:\MeowsTools (JDK 17, Gradle), собранное ядро: ..\core\build-windows.ps1
-param([switch]$Run)
+param([switch]$Run, [switch]$Test)
 $ErrorActionPreference = "Continue"
 $T = "C:\MeowsTools"
 $env:JAVA_HOME = "$T\jdk17"
@@ -18,6 +19,7 @@ New-Item -ItemType Directory -Force $work | Out-Null
 robocopy $PSScriptRoot $work /MIR /XD .gradle build dist /NFL /NDL /NJH /NJS /NP | Out-Null
 Set-Location $work
 if ($Run) { gradle run --no-daemon --console=plain; return }
+if ($Test) { gradle test --no-daemon --console=plain; return }
 gradle createDistributable unzipWix --no-daemon --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Gradle завершился с ошибкой" }
 

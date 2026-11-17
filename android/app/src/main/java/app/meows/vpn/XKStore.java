@@ -357,10 +357,8 @@ public final class XKStore {
 
     // ---------- network ----------
     public void fetch(final String raw, final Callback cb) {
-        String t = raw == null ? "" : raw.trim();
-        for (String pre : new String[]{"happ://add/", "meows://add/"}) if (t.startsWith(pre)) t = t.substring(pre.length());
-        final String link = t;
-        if (!(link.startsWith("https://") || link.startsWith("http://"))) {
+        final String link = LinkNormalizer.normalize(raw);   // meows://add/…, кавычки, %3A%2F%2F, https// и т. п. → https://…
+        if (!LinkNormalizer.isHttpLink(link)) {
             cb.done("Это не похоже на ссылку подписки.");
             return;
         }
