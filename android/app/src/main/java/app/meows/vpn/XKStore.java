@@ -163,6 +163,10 @@ public final class XKStore {
     }
 
     public int id() { return slot; }
+
+    /** Закреплённые подписки показываются на главной выше остальных. */
+    public boolean isPinned() { return sp.getBoolean(k("pinned"), false); }
+    public void setPinned(boolean v) { sp.edit().putBoolean(k("pinned"), v).apply(); }
     private String k(String n) { return slot == 0 ? "sub." + n : "sub" + slot + "." + n; }
 
     public SharedPreferences prefs() { return sp; }
@@ -493,7 +497,7 @@ public final class XKStore {
     }
 
     public void clear() {
-        sp.edit().remove(k("url")).remove(k("body")).remove(k("headers")).remove(k("updated")).remove(k("index")).apply();
+        sp.edit().remove(k("url")).remove(k("body")).remove(k("headers")).remove(k("updated")).remove(k("index")).remove(k("pinned")).apply();
         synchronized (this) { servers = null; }
         pings.clear();
         scheduleReminders();

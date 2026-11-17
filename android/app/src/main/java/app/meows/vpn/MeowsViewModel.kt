@@ -105,7 +105,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     // ---------- подписки ----------
     /** Все подписки (карточки на главной). */
-    val subs: List<XKStore> get() { rev; return XKStore.all(getApplication()).filter { it.hasSubscription() } }
+    val subs: List<XKStore> get() { rev; return XKStore.all(getApplication()).filter { it.hasSubscription() }.sortedByDescending { it.isPinned() } }   // закреплённые — сверху
     val servers: List<XKStore.Server> get() { rev; return st.servers() }
     val selected: Int get() { rev; return st.index() }
     val hasSub: Boolean get() { rev; return XKStore.all(getApplication()).any { it.hasSubscription() } }
@@ -135,6 +135,8 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             if (isActive(s)) { syncGeo(); bump(); autoPing(); reconnectIfNeeded() } else bump()
         }
     }
+
+    fun togglePin(s: XKStore) { s.setPinned(!s.isPinned()); bump() }
 
     fun refresh(silent: Boolean) = refresh(st, silent)
 

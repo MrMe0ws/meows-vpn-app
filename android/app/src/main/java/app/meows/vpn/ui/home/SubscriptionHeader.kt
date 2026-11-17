@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.OpenInBrowser
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.DropdownMenu
@@ -80,7 +81,10 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
             Row(Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onExpand) { Icon(Icons.Rounded.ExpandMore, "Свернуть список", Modifier.rotate(chevron)) }
                 Column(Modifier.weight(1f)) {
-                    Text(st.title(), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(st.title(), Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (st.isPinned()) Icon(Icons.Rounded.PushPin, "Закреплена", Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     val upd = st.updated()
                     val auto = st.autoUpdateHours()
                     Text(
@@ -100,6 +104,10 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(if (st.isPinned()) "Открепить" else "Закрепить сверху") }, leadingIcon = { Icon(Icons.Rounded.PushPin, null) },
+                            onClick = { menu = false; vm.togglePin(st) },
+                        )
                         DropdownMenuItem(
                             text = { Text("Выбрать быстрейший") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
                             onClick = { menu = false; vm.selectFastest(st) },

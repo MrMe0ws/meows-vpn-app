@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SupportAgent
@@ -67,8 +68,8 @@ fun copyText(text: String) { runCatching { Toolkit.getDefaultToolkit().systemCli
  */
 @Composable
 fun SubscriptionCard(
-    sub: SubscriptionData, expanded: Boolean, onExpand: () -> Unit, refreshing: Boolean, pinging: Boolean,
-    onRefresh: () -> Unit, onPing: () -> Unit, onFastest: () -> Unit, onDelete: () -> Unit,
+    sub: SubscriptionData, expanded: Boolean, onExpand: () -> Unit, refreshing: Boolean, pinging: Boolean, pinned: Boolean,
+    onRefresh: () -> Unit, onPing: () -> Unit, onFastest: () -> Unit, onPin: () -> Unit, onDelete: () -> Unit,
 ) {
     val shape = if (expanded) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(28.dp)
     val chevron by animateFloatAsState(if (expanded) 0f else -90f, label = "chevron")
@@ -79,7 +80,10 @@ fun SubscriptionCard(
             Row(Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onExpand) { Icon(Icons.Rounded.ExpandMore, "Свернуть список", Modifier.rotate(chevron)) }
                 Column(Modifier.weight(1f)) {
-                    Text(sub.title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(sub.title, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (pinned) Icon(Icons.Rounded.PushPin, "Закреплена", Modifier.padding(start = 6.dp).size(18.dp), tint = cs.onSurfaceVariant)
+                    }
                     Text(
                         SimpleDateFormat("dd.MM.yyyy HH:mm", RU).format(Date(sub.updated)) + if (sub.updateIntervalHours > 0) " · автообновление ${sub.updateIntervalHours} ч" else "",
                         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 2,
@@ -94,6 +98,10 @@ fun SubscriptionCard(
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(if (pinned) "Открепить" else "Закрепить сверху") }, leadingIcon = { Icon(Icons.Rounded.PushPin, null) },
+                            onClick = { menu = false; onPin() },
+                        )
                         DropdownMenuItem(
                             text = { Text("Выбрать быстрейший") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
                             onClick = { menu = false; onFastest() },

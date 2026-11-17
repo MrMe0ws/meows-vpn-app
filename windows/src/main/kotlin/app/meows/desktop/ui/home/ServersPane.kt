@@ -14,25 +14,22 @@ import app.meows.desktop.ui.components.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.meows.desktop.AppModel
 
-/** Середина: карточка подписки (обновить · пинг · меню) и её серверы. */
+/** Середина: карточки подписок (закреплённые выше) — у каждой свои «Обновить», «Пинг», меню «⋮» — и их серверы. */
 @Composable
 fun ServersPane(app: AppModel, onAdd: () -> Unit, modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(true) }
-    val sub = app.sub
-    val servers = sub?.servers.orEmpty()
+    val collapsed = remember { mutableStateListOf<Int>() }   // свёрнутые карточки (по id подписки)
+    val entries = app.ordered
 
     Column(modifier) {
-        if (sub == null) {
+        if (entries.isEmpty()) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Добавьте подписку", style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
@@ -44,17 +41,23 @@ fun ServersPane(app: AppModel, onAdd: () -> Unit, modifier: Modifier = Modifier)
                 Button(onClick = onAdd) { Text("Добавить подписку") }
             }
         } else LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = 16.dp)) {
-            item {
-                SubscriptionCard(
-                    sub, expanded, { expanded = !expanded }, app.refreshing, app.pinging,
-                    onRefresh = { app.refresh(false) }, onPing = app::pingAll, onFastest = app::selectFastest, onDelete = app::deleteSubscription,
-                )
-            }
-            if (expanded) itemsIndexed(servers) { i, s ->
-                ServerRow(
-                    s, selected = i == app.selected, last = i == servers.lastIndex, ping = app.pings[i], busy = i in app.pingBusy,
-                    onSelect = { app.select(i) }, onPing = { app.pingServer(i) },
-                )
+            entries.forEach { e ->
+                val expanded = e.id !in collapsed
+                val servers = e.data.servers
+                item(key = "head${e.id}") {
+                    SubscriptionCard(
+                        e.data, expanded, { if (expanded) collapsed.add(e.id) else collapsed.remove(e.id) }, e.refreshing, e.pinging, e.pinned,
+                        onRefresh = { app.refresh(e, false) }, onPing = { app.pingAll(e) }, onFastest = { app.selectFastest(e) },
+                        onPin = { app.togglePin(e) }, onDelete = { app.deleteSubscription(e) },
+                    )
+                }
+                if (expanded) itemsIndexed(servers, key = { i, _ -> "srv${e.id}_$i" }) { i, s ->
+                    ServerRow(
+                        s, selected = app.isActive(e) && i == e.selected, last = i == servers.lastIndex, ping = e.pings[i], busy = i in e.pingBusy,
+                        onSelect = { app.select(e, i) }, onPing = { app.pingServer(e, i) },
+                    )
+                }
+                item(key = "gap${e.id}") { Spacer(Modifier.height(16.dp)) }
             }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import app.meows.desktop.data.LaunchLog
 import app.meows.desktop.data.LinkNormalizer
 import app.meows.desktop.data.SettingsStore
+import app.meows.desktop.data.SubEntry
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.log.AppLog
@@ -43,16 +44,23 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     private val core = CoreProcess()
     private val proxy = SystemProxy(settings)
 
-    var sub by mutableStateOf(SubscriptionData.fromJson(settings.str("sub")))
-    var selected by mutableIntStateOf(settings.int("selected", 0))
+    /** Подписки (карточки). Активная — с ней подключается VPN: выбор сервера в любой карточке делает её активной. */
+    val subs = mutableStateListOf<SubEntry>().apply { addAll(SubEntry.load(settings)) }
+    private var activeId by mutableIntStateOf(settings.int("activeSub", -1))
+    val active: SubEntry? get() = subs.firstOrNull { it.id == activeId } ?: subs.firstOrNull()
+    /** Для показа: закреплённые сверху, остальные в порядке добавления. */
+    val ordered: List<SubEntry> get() = subs.sortedByDescending { it.pinned }
+    fun isActive(e: SubEntry) = e.id == active?.id
+    val sub: SubscriptionData? get() = active?.data
+    var selected: Int
+        get() = active?.selected ?: 0
+        set(v) { active?.selected = v; saveSubs() }
     var state by mutableStateOf(ConnState.Idle)
     var connectedAt by mutableLongStateOf(0)
-    var refreshing by mutableStateOf(false)
-    var pinging by mutableStateOf(false)
-    val pingBusy = mutableStateListOf<Int>()           // серверы, у которых сейчас идёт пинг
-    val pingingSelected: Boolean get() = selected in pingBusy
+    val pingingSelected: Boolean get() = selected in (active?.pingBusy ?: emptyList<Int>())
     var mode by mutableStateOf(VpnMode.of(settings.str("mode", "tun")))
-    val pings = mutableStateMapOf<Int, Int>()
+    /** Результаты пинга активной подписки (для панели справа). */
+    val pings: Map<Int, Int> get() = active?.pings ?: emptyMap()
     var error by mutableStateOf<Pair<String, String>?>(null)
     var toast by mutableStateOf<String?>(null)
 
@@ -81,21 +89,25 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     init {
         AppLog.add("APP", "Meows ${AppInfo.VERSION} · Windows ${System.getProperty("os.version")} · администратор: ${if (Elevation.isAdmin()) "да" else "нет"} · режим: ${mode.title}")
         proxy.restore()   // прошлый запуск мог закончиться аварийно с включённым прокси
-        if (sub != null && System.currentTimeMillis() - (sub?.updated ?: 0) > 60_000) refresh(silent = true)
+        subs.forEach { if (System.currentTimeMillis() - it.data.updated > 60_000) refresh(it, silent = true) }
         updates.checkOnLaunch()
         if ((autoConnect || connectOnStart) && sub != null) connect()
         scope.launch { delay(8_000); while (true) { checkReminders(); delay(6 * 3_600_000L) } }
     }
 
-    /** Напоминания: срок подписки (3 дня / 1 день / закончилась) и трафик (90 % / 100 %); каждое — один раз на срок подписки. */
+    /** Напоминания: срок подписки (3 дня / 1 день / закончилась) и трафик (90 % / 100 %); каждое — один раз на срок подписки, у каждой подписки свои. */
     fun checkReminders() {
-        val s = sub ?: return
         if (!remind) return
-        for (n in Reminders.due(s)) {
-            if (settings.str("remind.${n.kind}") == n.key) continue
-            settings.set("remind.${n.kind}", n.key)
-            notifier?.invoke(n.title, n.text, s.webUrl ?: "https://cabinet.me0ws.store")
-            AppLog.add("APP", "Напоминание: ${n.title}")
+        for (e in subs.toList()) {
+            val d = e.data
+            for (n in Reminders.due(d)) {
+                val key = "remind.${n.kind}.${e.id}"
+                if (settings.str(key) == n.key) continue
+                settings.set(key, n.key)
+                val who = if (subs.size > 1) "«${d.title}»: " else ""
+                notifier?.invoke(n.title, who + n.text, d.webUrl ?: "https://cabinet.me0ws.store")
+                AppLog.add("APP", "Напоминание: ${n.title}" + if (subs.size > 1) " (${d.title})" else "")
+            }
         }
     }
 
@@ -109,32 +121,51 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
 
     private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("noVV", true).toString()
 
-    fun addSubscription(raw: String) = fetch(raw, silent = false, added = true)
-    fun refresh(silent: Boolean) { sub?.url?.let { fetch(it, silent, false) } }
+    private fun saveSubs() = SubEntry.save(settings, subs, active?.id ?: -1)
 
-    private fun fetch(raw: String, silent: Boolean, added: Boolean) {
-        if (refreshing) return
-        refreshing = true
+    /** Новая ссылка — новая карточка; такая же ссылка уже есть — обновляем её. Первая подписка становится активной. */
+    fun addSubscription(raw: String) {
+        val link = LinkNormalizer.normalize(raw)
+        fetch(raw, subs.firstOrNull { it.data.url == link }, silent = false)
+    }
+
+    fun refresh(e: SubEntry, silent: Boolean) = fetch(e.data.url, e, silent)
+
+    private fun fetch(raw: String, existing: SubEntry?, silent: Boolean) {
+        if (existing?.refreshing == true) return
+        existing?.refreshing = true
         scope.launch {
-            SubscriptionClient.fetch(raw, AppInfo.VERSION).onSuccess {
-                sub = it; settings.set("sub", it.toJson().toString()); pings.clear()
-                AppLog.add("SUB", (if (added) "Подписка добавлена" else "Подписка обновлена") + ": серверов ${it.servers.size}")
-                if (selected >= it.servers.size) select(0)
-                if (!silent) toast = if (added) "Подписка добавлена" else "Подписка обновлена"
+            SubscriptionClient.fetch(raw, AppInfo.VERSION).onSuccess { d ->
+                val e = existing ?: SubEntry((subs.maxOfOrNull { it.id } ?: 0) + 1, d).also { subs.add(it); if (subs.size == 1) activeId = it.id }
+                e.data = d; e.pings.clear()
+                if (e.selected >= d.servers.size) e.selected = 0
+                saveSubs()
+                AppLog.add("SUB", (if (existing == null) "Подписка добавлена" else "Подписка обновлена") + ": серверов ${d.servers.size}")
+                if (!silent) toast = if (existing == null) "Подписка добавлена" else "Подписка обновлена"
                 checkReminders()
-                if (state == ConnState.Connected && added) reconnect()
+                if (state == ConnState.Connected && existing != null && existing.id == active?.id && !silent && raw != existing.data.url) reconnect()
             }.onFailure {
                 AppLog.add("SUB", "Ошибка: ${it.message}" + if (it.message?.startsWith("Это не похоже") == true) " (получено: ${LinkNormalizer.head(raw)})" else "")
-                if (!silent) error = (if (added) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка") }
-            refreshing = false
+                if (!silent) error = (if (existing == null) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка")
+            }
+            existing?.refreshing = false
         }
     }
 
-    fun deleteSubscription() { disconnect(); sub = null; settings.set("sub", null); pings.clear() }
+    fun deleteSubscription(e: SubEntry) {
+        val was = isActive(e)
+        if (was) disconnect()
+        subs.remove(e)
+        if (was) activeId = subs.firstOrNull()?.id ?: -1
+        saveSubs()
+    }
 
-    fun select(i: Int) {
-        if (i == selected) return
-        selected = i; settings.set("selected", i)
+    fun togglePin(e: SubEntry) { e.pinned = !e.pinned; saveSubs() }
+
+    /** Выбор сервера в любой карточке: подписка карточки становится активной. */
+    fun select(e: SubEntry, i: Int) {
+        if (isActive(e) && i == e.selected) return
+        activeId = e.id; e.selected = i; saveSubs()
         if (state != ConnState.Idle) reconnect()
     }
 
@@ -183,27 +214,25 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
 
     private fun reconnect() { watch.stop(); scope.launch { proxy.restore(); core.stop(); connect() } }
 
-    fun pingAll() {
-        val s = sub ?: return
-        if (pinging) return
-        pinging = true; pings.clear()
+    fun pingAll(e: SubEntry) {
+        if (e.pinging) return
+        e.pinging = true; e.pings.clear()
         scope.launch {
-            PingRunner.measure(s.body, s.servers.indices.toList()) { i, ms -> pings[i] = ms }
-            pinging = false
+            PingRunner.measure(e.data.body, e.data.servers.indices.toList()) { i, ms -> e.pings[i] = ms }
+            e.pinging = false
         }
     }
 
-    /** «Выбрать быстрейший»: пингуем все серверы и выбираем лучший по результату. */
-    fun selectFastest() {
-        val s = sub ?: return
-        if (pinging) return
-        toast = "Измеряем пинг…"; pinging = true; pings.clear()
+    /** «Выбрать быстрейший»: пингуем все серверы подписки и выбираем лучший по результату. */
+    fun selectFastest(e: SubEntry) {
+        if (e.pinging) return
+        toast = "Измеряем пинг…"; e.pinging = true; e.pings.clear()
         scope.launch {
-            PingRunner.measure(s.body, s.servers.indices.toList()) { i, ms -> pings[i] = ms }
-            pinging = false
-            val best = pings.filter { it.value > 0 }.minByOrNull { it.value }
+            PingRunner.measure(e.data.body, e.data.servers.indices.toList()) { i, ms -> e.pings[i] = ms }
+            e.pinging = false
+            val best = e.pings.filter { it.value > 0 }.minByOrNull { it.value }
             if (best == null) toast = "Ни один сервер не ответил"
-            else { toast = "Быстрейший: ${s.servers[best.key].title} · ${best.value} мс"; select(best.key) }
+            else { toast = "Быстрейший: ${e.data.servers[best.key].title} · ${best.value} мс"; select(e, best.key) }
         }
     }
 
@@ -217,25 +246,28 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         AppLog.add("VPN", "Связь через «${s.servers.getOrNull(cur)?.title}» пропала — проверяем серверы")
         proxy.restore(); core.stop(); state = ConnState.Connecting; connectedAt = 0
         val res = java.util.concurrent.ConcurrentHashMap<Int, Int>()
-        PingRunner.measure(s.body, s.servers.indices.toList()) { i, ms -> res[i] = ms; pings[i] = ms }
+        val act = active ?: return
+        PingRunner.measure(s.body, s.servers.indices.toList()) { i, ms -> res[i] = ms; act.pings[i] = ms }
         val best = res.filter { it.key != cur && it.value > 0 }.minByOrNull { it.value }?.key
         val now = System.currentTimeMillis()
         while (switchTimes.isNotEmpty() && now - switchTimes.first() > 600_000L) switchTimes.removeFirst()
         if (best != null && (res[cur] ?: -1) <= 0 && switchTimes.size < 3) {
             switchTimes.addLast(now)
             val msg = "«${s.servers.getOrNull(cur)?.title}» не отвечал — подключились к «${s.servers[best].title}»"
-            selected = best; settings.set("selected", best)
+            selected = best
             AppLog.add("VPN", "Сервер сменился: $msg"); toast = msg; notifier?.invoke("Сервер сменился", msg, null)
         } else AppLog.add("VPN", if (res.values.none { it > 0 }) "Ни один сервер не отвечает — похоже, нет интернета, переподключаемся" else "Сервер отвечает, переподключаемся")
         connect()
     }
 
-    /** Пинг одного сервера (правая кнопка по серверу и кнопка справа). */
-    fun pingServer(i: Int) {
-        val s = sub ?: return
-        if (i in pingBusy) return
-        pingBusy.add(i); pings.remove(i)
-        scope.launch { PingRunner.measure(s.body, listOf(i)) { k, ms -> pings[k] = ms }; pingBusy.remove(i) }
+    /** Пинг одного сервера активной подписки (кнопка справа). */
+    fun pingServer(i: Int) { active?.let { pingServer(it, i) } }
+
+    /** Пинг одного сервера любой подписки (правая кнопка по серверу). */
+    fun pingServer(e: SubEntry, i: Int) {
+        if (i in e.pingBusy) return
+        e.pingBusy.add(i); e.pings.remove(i)
+        scope.launch { PingRunner.measure(e.data.body, listOf(i)) { k, ms -> e.pings[k] = ms }; e.pingBusy.remove(i) }
     }
 
     fun setTheme(m: Int) { themeMode = m; settings.set("theme", m) }
