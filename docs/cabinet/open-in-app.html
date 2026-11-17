@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Открыть в Мяус VPN</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #0e100d; color: #e4e8df; margin: 0; padding: 32px 20px; text-align: center; }
+  .btn { display: inline-block; margin-top: 24px; padding: 16px 28px; border-radius: 28px; background: #7ddb3e; color: #10250a;
+         font-size: 18px; font-weight: 600; text-decoration: none; }
+  .hint { margin-top: 20px; color: #9aa093; font-size: 14px; }
+  a.link { color: #9fe86a; }
+</style>
+</head>
+<body>
+  <h1>Мяус VPN</h1>
+  <p>Нажмите кнопку — приложение откроется и добавит вашу подписку.</p>
+  <a id="open" class="btn" href="#">Открыть в приложении</a>
+  <p class="hint">Приложения нет? <a class="link" href="https://github.com/MrMe0ws/meows-vpn-app/releases">Скачать Мяус VPN для Android</a></p>
+<script>
+  // Подставьте ссылку подписки пользователя (кабинет знает её). Это единственное, что нужно менять.
+  var SUB = "{{SUBSCRIPTION_URL}}";
+  var FALLBACK = "https://github.com/MrMe0ws/meows-vpn-app/releases";
+  var android = /Android/i.test(navigator.userAgent);
+  // На Android Chrome надёжнее intent://: если приложения нет, откроется страница загрузки.
+  document.getElementById("open").href = android
+    ? "intent://add/" + SUB + "#Intent;scheme=meows;package=app.meows.vpn;S.browser_fallback_url=" + encodeURIComponent(FALLBACK) + ";end"
+    : "meows://add/" + SUB;
+</script>
+</body>
+</html>

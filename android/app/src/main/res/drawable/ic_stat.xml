@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Лапка: иконка уведомления и плитки быстрых настроек -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,12.6c-2.7,0 -5.4,2.3 -5.4,4.7c0,1.7 1.4,2.8 2.9,2.8c1,0 1.5,-0.4 2.5,-0.4s1.5,0.4 2.5,0.4c1.5,0 2.9,-1.1 2.9,-2.8C17.4,14.9 14.7,12.6 12,12.6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5.4,9.2m-1.9,0a1.9,2.3 0,1 1,3.8 0a1.9,2.3 0,1 1,-3.8 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M9.2,5.2m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M14.8,5.2m-2,0a2,2.5 0,1 1,4 0a2,2.5 0,1 1,-4 0" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18.6,9.2m-1.9,0a1.9,2.3 0,1 1,3.8 0a1.9,2.3 0,1 1,-3.8 0" />
+</vector>
