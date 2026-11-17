@@ -68,12 +68,29 @@ class UpdateController(private val settings: SettingsStore, private val scope: C
         }
     }
 
-    /** Запускает установку в отдельном процессе (после выхода приложения) и перезапуск. Вызывающий должен закрыть приложение. */
+    /**
+     * Запускает установку в отдельном процессе (после выхода приложения) и запускает приложение снова. Вызывающий должен закрыть приложение.
+     * Команды лежат во временном .cmd: `start /wait` дожидается msiexec (он GUI-процесс, `cmd` сам его не ждёт — раньше приложение
+     * «перезапускалось» до конца установки и не поднималось), а кавычки в путях не ломаются. Папка установки сохраняется (INSTALLDIR),
+     * чтобы обновление не переезжало в папку по умолчанию, если пользователь выбрал свою.
+     */
     fun launchInstaller(): Boolean {
         val s = state as? UpdateState.Downloaded ?: return false
         val exe = ExePath.current()
-        val relaunch = if (exe != null) " & start \"\" \"$exe\"" else ""
-        ProcessBuilder("cmd", "/c", "ping -n 3 127.0.0.1 >nul & msiexec /i \"${s.path}\" /passive /norestart$relaunch").start()
+        val dir = exe?.let { File(it).parent }
+        val script = File.createTempFile("meows-update", ".cmd")
+        script.writeText(
+            buildString {
+                appendLine("@echo off")
+                appendLine("chcp 65001 >nul")
+                appendLine("ping -n 3 127.0.0.1 >nul")
+                appendLine("start /wait \"\" msiexec /i \"${s.path}\" /passive /norestart" + if (dir != null) " INSTALLDIR=\"$dir\"" else "")
+                if (exe != null) appendLine("start \"\" \"$exe\"")
+                appendLine("(goto) 2>nul & del \"%~f0\"")
+            },
+            Charsets.UTF_8,
+        )
+        ProcessBuilder("cmd", "/c", script.absolutePath).start()
         return true
     }
 
