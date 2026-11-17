@@ -9,6 +9,8 @@ import androidx.compose.runtime.setValue
 import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
+import app.meows.desktop.system.Autostart
+import app.meows.desktop.update.UpdateController
 import app.meows.desktop.vpn.CoreProcess
 import app.meows.desktop.vpn.PingRunner
 import app.meows.desktop.vpn.SystemProxy
@@ -20,10 +22,11 @@ import org.json.JSONObject
 
 enum class ConnState { Idle, Connecting, Connected }
 
-object AppInfo { const val VERSION = "1.0.0" }
+/** Версию задаёт jpackage (packageVersion в build.gradle.kts); при запуске из Gradle — запасное значение. */
+object AppInfo { val VERSION: String = System.getProperty("jpackage.app-version") ?: "1.0.0" }
 
 /** Состояние и команды приложения: подписка, серверы, подключение (ядро + системный прокси), пинг, настройки. */
-class AppModel {
+class AppModel(startHidden: Boolean = false) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val settings = SettingsStore()
     private val core = CoreProcess()
@@ -39,6 +42,14 @@ class AppModel {
     var error by mutableStateOf<Pair<String, String>?>(null)
     var toast by mutableStateOf<String?>(null)
 
+    var windowVisible by mutableStateOf(!startHidden)
+    var showTick by mutableIntStateOf(0)            // растёт, когда окно нужно вынести на передний план
+    var exitRequested by mutableStateOf(false)
+    var closeToTray by mutableStateOf(settings.bool("closeToTray", true))
+    var autoStart by mutableStateOf(Autostart.isEnabled())
+    var autoConnect by mutableStateOf(settings.bool("autoConnect", false))
+    val updates = UpdateController(settings, scope)
+
     var themeMode by mutableIntStateOf(settings.int("theme", 0))       // 0 авто, 1 светлая, 2 тёмная
     var palette by mutableIntStateOf(settings.int("palette", 0))
     var amoled by mutableStateOf(settings.bool("amoled", false))
@@ -48,6 +59,14 @@ class AppModel {
     init {
         proxy.restore()   // прошлый запуск мог закончиться аварийно с включённым прокси
         if (sub != null && System.currentTimeMillis() - (sub?.updated ?: 0) > 60_000) refresh(silent = true)
+        updates.checkOnLaunch()
+        if (autoConnect && sub != null) connect()
+    }
+
+    /** Сообщение от второго запуска: ссылка meows://add/<подписка> или «SHOW» — показать окно. */
+    fun handleExternal(msg: String) {
+        if (msg.startsWith("meows://add/") || msg.startsWith("happ://add/")) addSubscription(msg)
+        windowVisible = true; showTick++
     }
 
     private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("noVV", true).toString()
@@ -119,6 +138,13 @@ class AppModel {
     fun chooseAmoled(v: Boolean) { amoled = v; settings.set("amoled", v) }
     fun chooseBlockAds(v: Boolean) { blockAds = v; settings.set("blockAds", v); if (state != ConnState.Idle) reconnect() }
     fun chooseRuDirect(v: Boolean) { ruDirect = v; settings.set("ruDirect", v); if (state != ConnState.Idle) reconnect() }
+
+    fun chooseCloseToTray(v: Boolean) { closeToTray = v; settings.set("closeToTray", v) }
+    fun chooseAutoStart(v: Boolean) { Autostart.set(v); autoStart = Autostart.isEnabled() }
+    fun chooseAutoConnect(v: Boolean) { autoConnect = v; settings.set("autoConnect", v) }
+
+    /** Скачанное обновление: запускаем установщик и закрываемся (он сам перезапустит приложение). */
+    fun installUpdate() { if (updates.launchInstaller()) { shutdown(); exitRequested = true } }
 
     fun shutdown() { proxy.restore(); core.stop() }
 }

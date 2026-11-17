@@ -26,6 +26,7 @@ fun MeowsApp(app: AppModel) {
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { pad ->
         if (settings) SettingsScreen(app) { settings = false } else HomeScreen(app) { settings = true }
     }
+    UpdateDialog(app)
     app.error?.let { (title, text) ->
         AlertDialog(
             onDismissRequest = { app.error = null },

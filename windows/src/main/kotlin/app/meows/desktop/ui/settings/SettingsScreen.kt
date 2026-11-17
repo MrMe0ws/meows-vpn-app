@@ -48,7 +48,7 @@ import app.meows.desktop.ui.theme.Palettes
 private const val GITHUB = "https://github.com/MrMe0ws/meows-vpn-app"
 
 @Composable
-private fun Group(title: String, footer: String? = null, content: @Composable () -> Unit) {
+internal fun Group(title: String, footer: String? = null, content: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
         Text(title.uppercase(), Modifier.padding(start = 12.dp, bottom = 8.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Card(shape = MaterialTheme.shapes.extraLarge, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) { Column(Modifier.padding(vertical = 4.dp)) { content() } }
@@ -57,7 +57,7 @@ private fun Group(title: String, footer: String? = null, content: @Composable ()
 }
 
 @Composable
-private fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = ListItem(
+internal fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = ListItem(
     modifier = Modifier.clickable { onChange(!checked) }, colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) }, supportingContent = sub?.let { { Text(it) } }, trailingContent = { Switch(checked, onChange) },
 )
@@ -97,6 +97,8 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
                 SwitchRow("Блокировать рекламу", null, app.blockAds, app::chooseBlockAds)
                 SwitchRow("Все российские сайты напрямую", "Расширенно, поверх правил подписки", app.ruDirect, app::chooseRuDirect)
             }
+            SystemGroup(app)
+            UpdatesGroup(app)
             Group("О приложении") {
                 ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Версия") }, trailingContent = { Text(AppInfo.VERSION) })
                 ListItem(modifier = Modifier.clickable { openUrl(GITHUB) }, colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Проект на GitHub") }, supportingContent = { Text("github.com/MrMe0ws/meows-vpn-app") })

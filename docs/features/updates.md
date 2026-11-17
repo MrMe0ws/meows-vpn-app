@@ -19,3 +19,6 @@ APK не из Google Play, поэтому обновляем сами через
 
 ## Состояния
 `UpdateState`: Idle · Checking · UpToDate · Available · Downloading(percent) · Downloaded · Error. Логика — `UpdateController` (не в UI).
+
+## Windows
+Та же схема, но тег `windows-vX.Y.Z` и ассет `.msi` (`windows/.../update/`). Скачанный MSI ставится так: приложение запускает `cmd /c ping … & msiexec /i <msi> /passive /norestart & start Meows.exe` и закрывается; MSI обновляет установку на месте (постоянный `upgradeUuid`), `Meows.exe` стартует снова. Подробнее — `docs/windows/overview.md`.

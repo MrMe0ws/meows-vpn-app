@@ -14,3 +14,10 @@
 5. Пользователи получат предложение при следующей проверке (до 12 ч) или по «Проверить сейчас».
 
 Обновится только APK, подписанный **тем же ключом** (см. `build.md`). Репозиторий публичный — иначе API без токена вернёт 404.
+## Windows
+Тег **`windows-vX.Y.Z`**, ассеты: `Meows-X.Y.Z.msi` (обязательно: его скачивает обновлялка) и `Meows-win-x64-X.Y.Z.zip` (портативная). Версия — в `windows/build.gradle.kts` (`version` и `packageVersion`).
+```powershell
+cd windows; .\build.ps1
+gh release create windows-vX.Y.Z windows\dist\Meows-X.Y.Z.msi windows\dist\Meows-win-x64-X.Y.Z.zip --title "Meows X.Y.Z (Windows)" --notes "что нового"
+```
+Проверка обновления: поставить MSI меньшей версии, запустить, «Настройки → Обновления → Проверить сейчас».

@@ -28,12 +28,17 @@ compose.desktop {
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             packageName = "Meows"
             packageVersion = "1.0.0"
-            description = "Meows — клиент VPN по подписке Remnawave"
+            description = "Meows VPN client"
             vendor = "Meows"
             modules("java.net.http", "jdk.unsupported", "java.naming")
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             windows {
                 iconFile.set(project.file("icons/meows.ico"))
                 menuGroup = "Meows"
+                perUserInstall = true          // без прав администратора: %LOCALAPPDATA%\Meows
+                shortcut = true                // ярлык на рабочем столе
+                dirChooser = false
+                upgradeUuid = "8f3c2a6e-5d41-4b7a-9c1e-2b6f0a7d4e11"   // постоянный: по нему MSI обновляет прежнюю версию
             }
         }
     }

@@ -35,7 +35,7 @@ fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, onSe
     Surface(Modifier.fillMaxWidth().padding(horizontal = 12.dp).clickable(onClick = onSelect), color = bg, shape = shape) {
         Column {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(server.flag ?: "🌐", fontSize = 28.sp)
+                FlagBadge(server.flag)
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(server.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer else cs.onSurface)
@@ -59,4 +59,15 @@ private fun PingChip(ms: Int) {
         else -> Triple("$ms мс", cs.errorContainer, cs.onErrorContainer)
     }
     Surface(color = bg, contentColor = fg, shape = CircleShape) { Text(text, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge) }
+}
+/** В Windows нет эмодзи-флагов (рисуются буквами) — показываем код страны в аккуратной плашке. */
+@Composable
+private fun FlagBadge(flag: String?) {
+    val code = flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('A'.code + it - 0x1F1E6).toChar() }?.joinToString("")
+    Surface(
+        shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.width(44.dp),
+    ) {
+        Text(code ?: "VPN", Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.labelLarge, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
 }

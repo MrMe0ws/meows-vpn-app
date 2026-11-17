@@ -44,7 +44,8 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     var themeMode by mutableIntStateOf(st.pref(XKStore.P_THEME, 0))
     var palette by mutableIntStateOf(st.pref("palette", 0))
-    var dynamicColors by mutableStateOf(st.flag("dynamic", false))
+    /** По умолчанию — цвета из обоев (канон Material You, Android 12+); пока пользователь не выбрал палитру сам. */
+    var dynamicColors by mutableStateOf(st.flag("dynamic", android.os.Build.VERSION.SDK_INT >= 31))
     var amoled by mutableStateOf(st.flag("amoled", false))
 
     private var autoPingDone = false
