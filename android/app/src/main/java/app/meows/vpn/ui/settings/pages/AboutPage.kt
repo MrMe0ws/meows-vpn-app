@@ -29,15 +29,15 @@ fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit) {
     SettingsPageScaffold("О приложении", onBack) {
         SettingsGroup(footer = "HWID отправляется в панель при обновлении подписки, чтобы считать устройства. Он не меняется при переустановке. Нажмите, чтобы скопировать.") {
             ValueRow(Icons.Rounded.Info, "Версия приложения", vm.updates.currentVersion)
-            ValueRow(Icons.Rounded.Memory, "Ядро", CORE)
-            ValueRow(Icons.Rounded.PhoneAndroid, "Устройство", device)
-            ValueRow(Icons.Rounded.Fingerprint, "ID устройства (HWID)", hwid, onClick = {
+            ValueRow(Icons.Rounded.Memory, "Ядро", summary = CORE)
+            ValueRow(Icons.Rounded.PhoneAndroid, "Устройство", summary = device)
+            ValueRow(Icons.Rounded.Fingerprint, "ID устройства (HWID)", summary = hwid, onClick = {
                 vm.copy(hwid, "hwid"); vm.toast = "HWID скопирован"
             })
         }
         SettingsGroup {
-            ValueRow(Icons.Rounded.SupportAgent, "Поддержка", ShopLinks.support(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.support(vm.st)) })
-            ValueRow(Icons.Rounded.AccountCircle, "Личный кабинет", ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
+            ValueRow(Icons.Rounded.SupportAgent, "Поддержка", summary = ShopLinks.support(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.support(vm.st)) })
+            ValueRow(Icons.Rounded.AccountCircle, "Личный кабинет", summary = ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
         }
     }
 }

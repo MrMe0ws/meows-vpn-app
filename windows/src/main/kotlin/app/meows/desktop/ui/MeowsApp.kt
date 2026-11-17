@@ -28,6 +28,7 @@ import app.meows.desktop.ui.logs.LogsScreen
 import app.meows.desktop.ui.nav.MeowsRail
 import app.meows.desktop.ui.nav.Page
 import app.meows.desktop.ui.settings.SettingsScreen
+import app.meows.desktop.ui.stats.StatsScreen
 
 /** Корень: слева рейка разделов, справа — выбранный раздел; снэкбар, диалог добавления подписки и ошибки. */
 @Composable
@@ -43,6 +44,7 @@ fun MeowsApp(app: AppModel) {
             when (page) {
                 Page.Home -> HomeScreen(app, onAdd = { adding = true })
                 Page.Settings -> Centered { SettingsScreen(app) { page = Page.Home } }
+                Page.Stats -> Centered { StatsScreen(app) }
                 Page.Logs -> Centered { LogsScreen() }
                 Page.About -> Centered { AboutScreen(app) }
             }

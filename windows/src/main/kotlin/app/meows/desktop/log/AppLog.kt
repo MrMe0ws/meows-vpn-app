@@ -47,7 +47,9 @@ object AppLog {
         return false
     }
 
-    @Synchronized private fun addTraffic(proto: String, dest: String, detour: String) {
+    @Synchronized private fun addTraffic(proto: String, destRaw: String, detour: String) {
+        // «https://host/путь» (запросы DoH и т. п.) → «host:443»; обычное «host:порт» не трогаем
+        val dest = if (destRaw.startsWith("http://") || destRaw.startsWith("https://")) destRaw.substringAfter("://").substringBefore('/').let { if (':' in it) it else it + (if (destRaw.startsWith("https")) ":443" else ":80") } else destRaw
         val out = detour.substringAfterLast(">>").substringAfterLast("->").trim().lowercase()
         val route = when {
             "dns" in out -> return                          // внутренние DNS-запросы не показываем

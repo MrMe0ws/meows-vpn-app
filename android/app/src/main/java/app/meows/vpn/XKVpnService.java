@@ -242,13 +242,14 @@ public class XKVpnService extends VpnService {
             }
             if (!ok) throw new Exception(err.length() > 0 ? err.toString() : "Ядро VPN не запустилось");
             connectedAt = System.currentTimeMillis();
+            app.meows.vpn.stats.StatsFeed.reset();
             broadcast(CONNECTED);
             ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключено"));
             startWatchdog();
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {
-                try { while (fr.readLine() != null) { } } catch (Exception ignored) { }
+                try { String ln; while ((ln = fr.readLine()) != null) { app.meows.vpn.stats.StatsFeed.accept(ln); } } catch (Exception ignored) { }
                 if (!stopping) stopVpn("Ядро VPN остановилось");
             }}).start();
         } catch (Exception e) {

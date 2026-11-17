@@ -14,6 +14,7 @@ import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.log.AppLog
 import app.meows.desktop.notify.Reminders
+import app.meows.desktop.stats.StatsFeed
 import app.meows.desktop.system.Autostart
 import app.meows.desktop.system.Elevation
 import app.meows.desktop.update.UpdateController
@@ -147,6 +148,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         val s = sub ?: return
         if (mode == VpnMode.Tun && !Elevation.isAdmin()) { elevateAndConnect(); return }
         state = ConnState.Connecting
+        StatsFeed.reset()
         AppLog.add("VPN", "Подключаемся: ${s.servers.getOrNull(selected)?.title ?: "сервер $selected"}, режим «${mode.title}»")
         scope.launch {
             core.start(s, selected, opts(), mode.key) { tail ->

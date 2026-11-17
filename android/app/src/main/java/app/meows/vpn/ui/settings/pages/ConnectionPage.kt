@@ -16,7 +16,7 @@ import app.meows.vpn.ui.settings.SettingsPageScaffold
 import app.meows.vpn.ui.settings.SwitchRow
 import app.meows.vpn.ui.settings.ValueRow
 
-/** Автозапуск, локальная сеть, системные Always-on VPN и Kill switch. */
+/** Автозапуск, автопереключение серверов, локальная сеть, системная «защита от обрыва» (Always-on VPN / Kill switch). */
 @Composable
 fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit) {
     val ctx = LocalContext.current
@@ -30,8 +30,8 @@ fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit) {
                 vm.setFlag(XKStore.P_LAN, it, reconnect = true)
             }
         }
-        SettingsGroup(footer = "Kill switch включается в системе: ⚙ рядом с приложением → «Постоянная VPN» и «Блокировать соединения без VPN».") {
-            ValueRow(Icons.Rounded.Shield, "Always-on и Kill switch") {
+        SettingsGroup(footer = "Включается в настройках Android (по умолчанию выключено). «Блокировать соединения без VPN» включайте осторожно: тогда интернета не будет и у приложений, которые мы намеренно пускаем напрямую (российские приложения, обновления Meows).") {
+            ValueRow(Icons.Rounded.Shield, "Защита от обрыва VPN", summary = "VPN включается сам и не даёт трафику уйти открыто при обрыве") {
                 runCatching { ctx.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
                 vm.toast = "Нажмите ⚙ рядом с Meows → «Постоянная VPN»"
             }

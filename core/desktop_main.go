@@ -72,7 +72,7 @@ func main() {
 		fail(err.Error())
 	}
 	if dc.Traffic {
-		cfg = withAccessLog(cfg)
+		cfg = withStats(withAccessLog(cfg))
 	}
 	config, err := core.LoadConfig("json", bytes.NewReader(cfg))
 	if err != nil {
@@ -86,6 +86,7 @@ func main() {
 		fail("ошибка старта: " + err.Error())
 	}
 	fmt.Println("XKOK")
+	go statsLoop(inst)
 
 	stop := make(chan struct{}, 1)
 	go func() { _, _ = io.Copy(io.Discard, os.Stdin); stop <- struct{}{} }()

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material.icons.rounded.Timeline
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -23,9 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.meows.desktop.ui.Res
 
-enum class Page { Home, Settings, Logs, About }
+enum class Page { Home, Settings, Stats, Logs, About }
 
-/** Левая навигационная рейка (Material 3): Серверы · Добавить подписку · Настройки · Логи; «О программе» — внизу. */
+/** Левая навигационная рейка (Material 3): Серверы · Добавить подписку · Настройки · Статистика · Логи; «О программе» — внизу. */
 @Composable
 fun MeowsRail(page: Page, onPage: (Page) -> Unit, onAdd: () -> Unit) {
     NavigationRail(
@@ -36,6 +37,7 @@ fun MeowsRail(page: Page, onPage: (Page) -> Unit, onAdd: () -> Unit) {
         NavigationRailItem(page == Page.Home, { onPage(Page.Home) }, { Icon(Icons.Rounded.Public, null) }, label = { Text("Серверы") })
         NavigationRailItem(false, onAdd, { Icon(Icons.Rounded.Add, null) }, label = { Text("Добавить") })
         NavigationRailItem(page == Page.Settings, { onPage(Page.Settings) }, { Icon(Icons.Rounded.Settings, null) }, label = { Text("Настройки") })
+        NavigationRailItem(page == Page.Stats, { onPage(Page.Stats) }, { Icon(Icons.Rounded.Timeline, null) }, label = { Text("Статистика") })
         NavigationRailItem(page == Page.Logs, { onPage(Page.Logs) }, { Icon(Icons.Rounded.Terminal, null) }, label = { Text("Логи") })
         Spacer(Modifier.weight(1f))
         NavigationRailItem(page == Page.About, { onPage(Page.About) }, { Icon(Icons.Rounded.Info, null) }, label = { Text("О программе") })

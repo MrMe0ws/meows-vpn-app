@@ -3,6 +3,7 @@ package app.meows.desktop.vpn
 import app.meows.desktop.data.AppDirs
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.log.AppLog
+import app.meows.desktop.stats.StatsFeed
 import org.json.JSONObject
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
@@ -31,7 +32,7 @@ class CoreProcess {
         proc = p
         val lines = LinkedBlockingQueue<String>()
         thread(isDaemon = true, name = "meows-core-out") {
-            p.inputStream.bufferedReader().useLines { s -> s.forEach { if (!AppLog.addCoreLine(it)) lines.put(it) } }
+            p.inputStream.bufferedReader().useLines { s -> s.forEach { if (!StatsFeed.accept(it) && !AppLog.addCoreLine(it)) lines.put(it) } }
             lines.put("\u0000EXIT")
         }
         val err = StringBuilder()

@@ -97,6 +97,7 @@ func main() {
 	}
 	os.Setenv("xray.tun.fd", fmt.Sprint(fd))
 
+	cfg = withStats(cfg)
 	config, err := core.LoadConfig("json", bytes.NewReader(cfg))
 	if err != nil {
 		fail("ошибка конфига: " + err.Error())
@@ -109,6 +110,7 @@ func main() {
 		fail("ошибка старта: " + err.Error())
 	}
 	fmt.Println("XKOK")
+	go statsLoop(inst)
 	debug.FreeOSMemory()
 
 	sig := make(chan os.Signal, 1)

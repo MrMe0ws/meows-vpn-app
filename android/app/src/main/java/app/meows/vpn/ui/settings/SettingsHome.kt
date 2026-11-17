@@ -13,6 +13,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.Timeline
 import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +57,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
                 Icons.Rounded.Speed, "Пинг",
                 summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else "Реальный") + " · ${st.pref(XKStore.P_PING_TO, 3)} с",
             ) { open(SettingsPage.Ping) }
+            ValueRow(Icons.Rounded.Timeline, "Статистика", summary = "Скорость и трафик за подключение") { open(SettingsPage.Stats) }
             ValueRow(
                 Icons.Rounded.SystemUpdate, "Обновления приложения",
                 summary = if (vm.updates.autoCheck) "Проверять автоматически" else "Проверка выключена",
