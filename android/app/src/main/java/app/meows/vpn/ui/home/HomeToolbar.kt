@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,7 +45,12 @@ import app.meows.vpn.MeowsViewModel
 @Composable
 fun HomeToolbar(vm: MeowsViewModel, hasSub: Boolean, openSettings: () -> Unit, onScanQr: () -> Unit, onManual: () -> Unit, modifier: Modifier = Modifier) {
     var menu by remember { mutableStateOf(false) }
-    HorizontalFloatingToolbar(expanded = true, modifier = modifier.navigationBarsPadding().padding(bottom = 12.dp)) {
+    // vibrant: контейнер цвета темы (primaryContainer) — панель отделяется от списка, а не сливается с ним
+    HorizontalFloatingToolbar(
+        expanded = true,
+        colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+        modifier = modifier.navigationBarsPadding().padding(bottom = 12.dp),
+    ) {
         IconButton(onClick = openSettings) { Icon(Icons.Rounded.Settings, "Настройки") }
         Box {
             IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.Add, "Добавить подписку") }
