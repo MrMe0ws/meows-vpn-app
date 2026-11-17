@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import app.meows.desktop.AppModel
 import app.meows.desktop.ui.home.AddDialog
 import app.meows.desktop.ui.home.HomeScreen
+import app.meows.desktop.ui.about.AboutScreen
+import app.meows.desktop.ui.logs.LogsScreen
 import app.meows.desktop.ui.nav.MeowsRail
 import app.meows.desktop.ui.nav.Page
 import app.meows.desktop.ui.settings.SettingsScreen
@@ -40,9 +42,9 @@ fun MeowsApp(app: AppModel) {
             MeowsRail(page, { page = it }, onAdd = { adding = true })
             when (page) {
                 Page.Home -> HomeScreen(app, onAdd = { adding = true })
-                Page.Settings -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                    Box(Modifier.widthIn(max = 760.dp).fillMaxSize()) { SettingsScreen(app) { page = Page.Home } }
-                }
+                Page.Settings -> Centered { SettingsScreen(app) { page = Page.Home } }
+                Page.Logs -> Centered { LogsScreen() }
+                Page.About -> Centered { AboutScreen(app) }
             }
         }
     }
@@ -55,4 +57,10 @@ fun MeowsApp(app: AppModel) {
             confirmButton = { TextButton(onClick = { app.error = null }) { Text("Понятно") } },
         )
     }
+}
+
+/** Страницы-списки не растягиваем на всю ширину окна: колонка до 760 dp по центру. */
+@Composable
+private fun Centered(content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) { Box(Modifier.widthIn(max = 760.dp).fillMaxSize()) { content() } }
 }

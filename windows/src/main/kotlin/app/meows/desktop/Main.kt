@@ -22,6 +22,7 @@ import app.meows.desktop.system.SingleInstance
 import app.meows.desktop.ui.MeowsApp
 import app.meows.desktop.ui.Res
 import app.meows.desktop.ui.theme.MeowsTheme
+import app.meows.desktop.ui.theme.TitleBarTint
 import java.util.concurrent.TimeUnit
 
 /** Сообщения от второго запуска могут прийти раньше, чем создана модель, — складываем в очередь. */
@@ -73,6 +74,7 @@ fun main(args: Array<String>) {
             window.minimumSize = java.awt.Dimension(900, 600)
             LaunchedEffect(app.showTick) { if (app.showTick > 0) { window.toFront(); window.requestFocus() } }
             MeowsTheme(app.themeMode, app.palette, app.amoled) {
+                TitleBarTint(window, app.windowVisible)
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) { MeowsApp(app) }
             }
         }

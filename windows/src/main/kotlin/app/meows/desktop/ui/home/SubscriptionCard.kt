@@ -58,6 +58,8 @@ private val RU = Locale.forLanguageTag("ru")
 
 fun openUrl(url: String) { runCatching { Desktop.getDesktop().browse(URI(url)) } }
 
+fun copyText(text: String) { runCatching { Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(text), null) } }
+
 /**
  * Карточка подписки: название, «Обновить» и «Пинг» этой подписки, меню «⋮» (ссылка, удаление), трафик, срок,
  * объявление, «Кабинет» и «Поддержка». Действия относятся именно к этой подписке — подписок может быть несколько.
@@ -93,7 +95,7 @@ fun SubscriptionCard(
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
                             text = { Text("Скопировать ссылку") }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) },
-                            onClick = { menu = false; Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(sub.url), null) },
+                            onClick = { menu = false; copyText(sub.url) },
                         )
                         DropdownMenuItem(
                             text = { Text("Удалить подписку", color = cs.error) }, leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = cs.error) },

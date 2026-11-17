@@ -37,7 +37,11 @@ vpn/                   CoreProcess (запуск ядра), SystemProxy, PingRun
 system/                SingleInstance (порт 47831), Protocol (meows:// в HKCU), Autostart (задача планировщика / HKCU Run), Elevation (UAC)
 update/                UpdateChecker (GitHub, тег windows-v*, ассет .msi), UpdateController, UpdateState/Version
 ui/                    MeowsApp, UpdateDialog, Res, Format
-ui/nav/                MeowsRail (NavigationRail), Page
+ui/nav/                MeowsRail (NavigationRail: Серверы · Добавить · Настройки · Логи, внизу «О программе»), Page
+ui/about/              AboutScreen (версия, ядро, режим, HWID, ссылки), UpdateBlock (проверка/скачивание/установка обновления)
+ui/logs/               LogsScreen (фильтры Всё/VPN/Ядро/Подписка, копировать, очистить)
+log/                   AppLog — журнал в памяти (~1500 строк), вывод ядра идёт с тегом CORE; ссылку подписки не пишем
+ui/theme/TitleBarTint  цвет заголовка окна (DWM, Windows 11) = цвет рейки + 18% основного цвета темы; system/TitleBar.kt
 ui/home/               HomeScreen (две панели), ServersPane (центр), ConnectPane (справа), ModePicker, ModeInfoDialog, ConnectButton, StatusText,
                        SubscriptionCard (обновить · пинг · ⋮), ServerRow(+FlagBadge, PingChip), AddDialog
 ui/settings/           SettingsScreen, SystemGroup, UpdatesGroup
@@ -47,6 +51,8 @@ ui/theme/              MeowsTheme, Palettes (те же 8 палитр и пор�
 ## Возможности (v1.0.0)
 - Подписка: вставка/ввод ссылки, **ссылка `meows://add/…`** (протокол регистрируется при первом запуске; из кабинета Windows откроет Meows), обновление, лимит устройств по HWID.
 - Подключение/отключение в двух режимах (TUN по умолчанию / системный прокси), список серверов, пинг, темы и палитры (авто/светлая/тёмная, AMOLED), блок рекламы, расширенное «все российские сайты напрямую», кнопки «Кабинет»/«Поддержка».
+- **Заголовок окна** подкрашен под тему (`DwmSetWindowAttribute`: цвет, цвет текста, тёмный режим) — окно остаётся системным (снап, resize). На Windows 10 цвет не применится (нужна Windows 11).
+- **Логи** и **«О программе»** (идея — Happ): события приложения и ядра, копирование для поддержки; версия, HWID, ссылки, проверка обновлений.
 - **Трей:** иконка (открыть · подключить/отключить · выход); закрытие окна сворачивает в трей (настройка).
 - **Автозапуск** с Windows (в трей, `--minimized`) и **подключение при запуске** — настройки «Система».
 - **Один экземпляр:** повторный запуск (ярлык, ссылка) показывает окно первого и передаёт ссылку.

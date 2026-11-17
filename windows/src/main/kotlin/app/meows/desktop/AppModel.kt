@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
+import app.meows.desktop.log.AppLog
 import app.meows.desktop.system.Autostart
 import app.meows.desktop.system.Elevation
 import app.meows.desktop.update.UpdateController
@@ -61,6 +62,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
 
     init {
+        AppLog.add("APP", "Meows ${AppInfo.VERSION} · Windows ${System.getProperty("os.version")} · администратор: ${if (Elevation.isAdmin()) "да" else "нет"} · режим: ${mode.title}")
         proxy.restore()   // прошлый запуск мог закончиться аварийно с включённым прокси
         if (sub != null && System.currentTimeMillis() - (sub?.updated ?: 0) > 60_000) refresh(silent = true)
         updates.checkOnLaunch()
@@ -84,10 +86,13 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         scope.launch {
             SubscriptionClient.fetch(raw, AppInfo.VERSION).onSuccess {
                 sub = it; settings.set("sub", it.toJson().toString()); pings.clear()
+                AppLog.add("SUB", (if (added) "Подписка добавлена" else "Подписка обновлена") + ": серверов ${it.servers.size}")
                 if (selected >= it.servers.size) select(0)
                 if (!silent) toast = if (added) "Подписка добавлена" else "Подписка обновлена"
                 if (state == ConnState.Connected && added) reconnect()
-            }.onFailure { if (!silent) error = (if (added) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка") }
+            }.onFailure {
+                AppLog.add("SUB", "Ошибка: ${it.message}")
+                if (!silent) error = (if (added) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка") }
             refreshing = false
         }
     }
@@ -111,14 +116,15 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         val s = sub ?: return
         if (mode == VpnMode.Tun && !Elevation.isAdmin()) { elevateAndConnect(); return }
         state = ConnState.Connecting
+        AppLog.add("VPN", "Подключаемся: ${s.servers.getOrNull(selected)?.title ?: "сервер $selected"}, режим «${mode.title}»")
         scope.launch {
             core.start(s, selected, opts(), mode.key) { tail ->
                 proxy.restore(); state = ConnState.Idle; connectedAt = 0
                 error = "Подключение прервано" to (tail ?: "Ядро остановилось")
             }.onSuccess {
                 if (mode == VpnMode.Proxy) runCatching { proxy.enable(CoreProcess.HTTP_PORT) }.onFailure { error = "Системный прокси" to (it.message ?: "Не удалось включить") }
-                connectedAt = System.currentTimeMillis(); state = ConnState.Connected
-            }.onFailure { state = ConnState.Idle; error = "Не подключилось" to (it.message ?: "Ошибка ядра") }
+                connectedAt = System.currentTimeMillis(); state = ConnState.Connected; AppLog.add("VPN", "Подключено")
+            }.onFailure { state = ConnState.Idle; AppLog.add("VPN", "Не подключилось: ${it.message}"); error = "Не подключилось" to (it.message ?: "Ошибка ядра") }
         }
     }
 
@@ -137,7 +143,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     }
 
     fun disconnect() {
-        scope.launch { proxy.restore(); core.stop(); state = ConnState.Idle; connectedAt = 0 }
+        scope.launch { proxy.restore(); core.stop(); state = ConnState.Idle; connectedAt = 0; AppLog.add("VPN", "Отключено") }
     }
 
     private fun reconnect() { scope.launch { proxy.restore(); core.stop(); connect() } }
