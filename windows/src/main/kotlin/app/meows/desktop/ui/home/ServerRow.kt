@@ -3,6 +3,13 @@ package app.meows.desktop.ui.home
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntOffset
+import app.meows.desktop.ui.components.hand
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,11 +41,13 @@ import app.meows.desktop.ui.Res
 
 /** Строка сервера: флаг, название, протокол, пинг; выбранный подсвечен цветом темы. */
 @Composable
-fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, onSelect: () -> Unit) {
+fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, busy: Boolean, onSelect: () -> Unit, onPing: () -> Unit) {
+    var menuAt by remember { mutableStateOf<IntOffset?>(null) }
     val cs = MaterialTheme.colorScheme
     val bg by animateColorAsState(if (selected) cs.primaryContainer else cs.surfaceContainer, label = "bg")
     val shape = if (last) RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp) else RoundedCornerShape(0.dp)
-    Surface(Modifier.fillMaxWidth().padding(horizontal = 12.dp).clickable(onClick = onSelect), color = bg, shape = shape) {
+    Box(Modifier.fillMaxWidth().secondaryClick { menuAt = it }) {
+    Surface(Modifier.fillMaxWidth().padding(horizontal = 12.dp).clickable(onClick = onSelect).hand(), color = bg, shape = shape) {
         Column {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 FlagBadge(server.flag)
@@ -47,11 +56,13 @@ fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, onSe
                     Text(server.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer else cs.onSurface)
                     Text(server.subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onSurfaceVariant)
                 }
-                if (ping != null) PingChip(ping)
+                if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else if (ping != null) PingChip(ping)
                 if (selected) { Spacer(Modifier.width(8.dp)); Icon(Icons.Rounded.CheckCircle, "Выбран", tint = cs.primary) }
             }
             if (!last) HorizontalDivider(Modifier.padding(start = 60.dp), color = cs.outlineVariant.copy(alpha = 0.4f))
         }
+    }
+    ServerMenu(menuAt, server.title, onDismiss = { menuAt = null }, onPing = onPing, onSelect = onSelect)
     }
 }
 

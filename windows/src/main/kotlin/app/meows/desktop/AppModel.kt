@@ -3,6 +3,7 @@ package app.meows.desktop
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -41,12 +42,14 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     var connectedAt by mutableLongStateOf(0)
     var refreshing by mutableStateOf(false)
     var pinging by mutableStateOf(false)
-    var pingingSelected by mutableStateOf(false)
+    val pingBusy = mutableStateListOf<Int>()           // серверы, у которых сейчас идёт пинг
+    val pingingSelected: Boolean get() = selected in pingBusy
     var mode by mutableStateOf(VpnMode.of(settings.str("mode", "tun")))
     val pings = mutableStateMapOf<Int, Int>()
     var error by mutableStateOf<Pair<String, String>?>(null)
     var toast by mutableStateOf<String?>(null)
 
+    var trayAnchor by mutableStateOf<java.awt.Point?>(null)   // где показать меню трея (null — скрыто)
     var windowVisible by mutableStateOf(!startHidden)
     var showTick by mutableIntStateOf(0)            // растёт, когда окно нужно вынести на передний план
     var exitRequested by mutableStateOf(false)
@@ -56,7 +59,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     val updates = UpdateController(settings, scope)
 
     var themeMode by mutableIntStateOf(settings.int("theme", 0))       // 0 авто, 1 светлая, 2 тёмная
-    var palette by mutableIntStateOf(settings.int("palette", 8))
+    var palette by mutableIntStateOf(settings.int("palette", 10))
     var amoled by mutableStateOf(settings.bool("amoled", false))
     var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
@@ -71,6 +74,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
 
     /** Сообщение от второго запуска: ссылка meows://add/<подписка> или «SHOW» — показать окно. */
     fun handleExternal(msg: String) {
+        if (msg == "TRAYMENU") { trayAnchor = java.awt.MouseInfo.getPointerInfo().location; return }   // проверка меню без клика по трею
         if (msg.startsWith("meows://add/") || msg.startsWith("happ://add/")) addSubscription(msg)
         windowVisible = true; showTick++
     }
@@ -158,12 +162,12 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         }
     }
 
-    /** Пинг только выбранного сервера (панель справа). */
-    fun pingSelected() {
+    /** Пинг одного сервера (правая кнопка по серверу и кнопка справа). */
+    fun pingServer(i: Int) {
         val s = sub ?: return
-        if (pingingSelected) return
-        pingingSelected = true; val i = selected; pings.remove(i)
-        scope.launch { PingRunner.measure(s.body, listOf(i)) { k, ms -> pings[k] = ms }; pingingSelected = false }
+        if (i in pingBusy) return
+        pingBusy.add(i); pings.remove(i)
+        scope.launch { PingRunner.measure(s.body, listOf(i)) { k, ms -> pings[k] = ms }; pingBusy.remove(i) }
     }
 
     fun setTheme(m: Int) { themeMode = m; settings.set("theme", m) }

@@ -10,13 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import androidx.compose.ui.window.isTraySupported
 import androidx.compose.ui.window.rememberWindowState
 import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.system.Elevation
+import app.meows.desktop.tray.TrayIconController
+import app.meows.desktop.ui.tray.TrayMenuWindow
+import androidx.compose.runtime.DisposableEffect
+import java.awt.Point
 import app.meows.desktop.system.Protocol
 import app.meows.desktop.system.SingleInstance
 import app.meows.desktop.ui.MeowsApp
@@ -50,20 +52,12 @@ fun main(args: Array<String>) {
 
     application {
         val app = remember { AppModel(startHidden = "--minimized" in args && link == null, connectOnStart = "--connect" in args).also { Inbox.attach(it); link?.let(Inbox::deliver) } }
-        val trayOk = isTraySupported
         val icon = BitmapPainter(Res.bitmap("icon.png"))
+        val tray = remember { TrayIconController(onOpen = { app.windowVisible = true; app.showTick++ }, onMenu = { x, y -> app.trayAnchor = Point(x, y) }) }
+        val trayOk = remember { tray.install("Meows") }
+        DisposableEffect(Unit) { onDispose { tray.remove() } }
         LaunchedEffect(app.exitRequested) { if (app.exitRequested) exitApplication() }
-
-        if (trayOk) Tray(
-            icon = icon, tooltip = "Meows",
-            onAction = { app.windowVisible = true; app.showTick++ },
-            menu = {
-                Item("Открыть Meows", onClick = { app.windowVisible = true; app.showTick++ })
-                Item(if (app.state == ConnState.Idle) "Подключить" else "Отключить", onClick = { app.toggle() })
-                Separator()
-                Item("Выход", onClick = { app.shutdown(); exitApplication() })
-            },
-        )
+        TrayMenuWindow(app, app.trayAnchor) { app.trayAnchor = null }
 
         Window(
             visible = app.windowVisible,

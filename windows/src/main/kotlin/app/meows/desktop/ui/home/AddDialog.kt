@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import app.meows.desktop.ui.components.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import app.meows.desktop.ui.components.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import app.meows.desktop.ui.components.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

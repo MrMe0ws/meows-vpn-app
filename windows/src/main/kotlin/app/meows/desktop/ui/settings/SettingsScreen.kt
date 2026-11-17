@@ -23,16 +23,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import app.meows.desktop.ui.components.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
+import app.meows.desktop.ui.components.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import app.meows.desktop.ui.components.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.meows.desktop.AppInfo
 import app.meows.desktop.AppModel
+import app.meows.desktop.ui.components.hand
 import app.meows.desktop.ui.home.openUrl
 import app.meows.desktop.ui.theme.Palettes
 
@@ -58,13 +59,13 @@ internal fun Group(title: String, footer: String? = null, content: @Composable (
 
 @Composable
 internal fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = ListItem(
-    modifier = Modifier.clickable { onChange(!checked) }, colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    modifier = Modifier.clickable { onChange(!checked) }.hand(), colors = ListItemDefaults.colors(containerColor = Color.Transparent),
     headlineContent = { Text(title) }, supportingContent = sub?.let { { Text(it) } }, trailingContent = { Switch(checked, onChange) },
 )
 
 @Composable
 private fun Swatch(color: Color, selected: Boolean, onClick: () -> Unit) = Surface(
-    onClick = onClick, shape = CircleShape, color = color, modifier = Modifier.size(44.dp),
+    onClick = onClick, shape = CircleShape, color = color, modifier = Modifier.size(44.dp).hand(),
     border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
 ) { Box(contentAlignment = Alignment.Center) { if (selected) Icon(Icons.Rounded.Check, "Выбрано", tint = Color.Black.copy(alpha = 0.75f)) } }
 
@@ -101,7 +102,7 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
             UpdatesGroup(app)
             Group("О приложении") {
                 ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Версия") }, trailingContent = { Text(AppInfo.VERSION) })
-                ListItem(modifier = Modifier.clickable { openUrl(GITHUB) }, colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Проект на GitHub") }, supportingContent = { Text("github.com/MrMe0ws/meows-vpn-app") })
+                ListItem(modifier = Modifier.clickable { openUrl(GITHUB) }.hand(), colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Проект на GitHub") }, supportingContent = { Text("github.com/MrMe0ws/meows-vpn-app") })
             }
             Spacer(Modifier.height(24.dp))
         }

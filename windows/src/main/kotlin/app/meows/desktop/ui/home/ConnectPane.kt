@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
+import app.meows.desktop.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -57,7 +57,7 @@ private fun SelectedServer(app: AppModel) {
                 app.pings[app.selected]?.let { PingChip(it) }
             }
             Spacer(Modifier.height(12.dp))
-            FilledTonalButton(onClick = app::pingSelected, enabled = !app.pingingSelected, modifier = Modifier.fillMaxWidth()) {
+            FilledTonalButton(onClick = { app.pingServer(app.selected) }, enabled = !app.pingingSelected, modifier = Modifier.fillMaxWidth()) {
                 if (app.pingingSelected) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Icon(Icons.Rounded.Speed, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp)); Text("Проверить пинг")
             }

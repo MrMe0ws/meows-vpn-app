@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
+import app.meows.desktop.ui.components.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,7 +51,10 @@ fun ServersPane(app: AppModel, onAdd: () -> Unit, modifier: Modifier = Modifier)
                 )
             }
             if (expanded) itemsIndexed(servers) { i, s ->
-                ServerRow(s, selected = i == app.selected, last = i == servers.lastIndex, ping = app.pings[i]) { app.select(i) }
+                ServerRow(
+                    s, selected = i == app.selected, last = i == servers.lastIndex, ping = app.pings[i], busy = i in app.pingBusy,
+                    onSelect = { app.select(i) }, onPing = { app.pingServer(i) },
+                )
             }
         }
     }

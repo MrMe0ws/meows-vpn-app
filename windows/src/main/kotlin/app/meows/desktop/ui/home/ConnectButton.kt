@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.meows.desktop.ConnState
+import app.meows.desktop.ui.components.hand
 import app.meows.desktop.ui.Res
 
 /** Кнопка подключения: спящий кот → вращающееся кольцо → лапка в цвете темы внутри светящегося кольца. */
@@ -50,7 +51,7 @@ fun ConnectButton(state: ConnState, size: Dp, onClick: () -> Unit) {
     val glow by inf.animateFloat(0.25f, 0.6f, infiniteRepeatable(tween(1800), RepeatMode.Reverse), label = "glow")
 
     Box(
-        Modifier.size(size).clip(CircleShape).clickable(remember { MutableInteractionSource() }, indication = null) { onClick() },
+        Modifier.size(size).clip(CircleShape).clickable(remember { MutableInteractionSource() }, indication = null) { onClick() }.hand(),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {

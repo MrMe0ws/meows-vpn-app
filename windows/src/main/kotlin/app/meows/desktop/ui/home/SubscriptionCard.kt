@@ -25,10 +25,10 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
+import app.meows.desktop.ui.components.DropdownMenuItem
+import app.meows.desktop.ui.components.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import app.meows.desktop.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text

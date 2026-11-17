@@ -3,7 +3,7 @@ package app.meows.desktop.ui.theme
 import androidx.compose.ui.graphics.Color
 import com.materialkolor.PaletteStyle
 
-/** Первые 8 палитр те же, что в Android-версии, в том же порядке (индекс хранится в настройках); дальше — только Windows. */
+/** Палитры те же, что в Android-версии, и в том же порядке (индекс хранится в настройках). «Лапка» (10) — по умолчанию на Windows. */
 object Palettes {
     val names = listOf("Мяу-зелёный", "Бирюза", "Лаванда", "Закат", "Роза", "Океан", "Серая", "Монохром", "Лес", "Шалфей", "Лапка")
     val seeds = listOf(

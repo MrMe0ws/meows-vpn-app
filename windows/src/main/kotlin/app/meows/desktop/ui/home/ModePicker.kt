@@ -12,9 +12,9 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import app.meows.desktop.ui.components.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import app.meows.desktop.ui.components.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import app.meows.desktop.ui.components.hand
 import app.meows.desktop.vpn.VpnMode
 
 /** Выбор режима (TUN / системный прокси) с кнопкой «что это?». Сменить можно и во время подключения — переподключимся. */
@@ -37,7 +38,7 @@ fun ModePicker(mode: VpnMode, enabled: Boolean, onPick: (VpnMode) -> Unit) {
         Box(Modifier.weight(1f)) {
             Surface(
                 onClick = { open = true }, enabled = enabled, shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth().hand(enabled),
             ) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
