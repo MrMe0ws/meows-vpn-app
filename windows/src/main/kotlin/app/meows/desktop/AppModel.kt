@@ -70,6 +70,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     var amoled by mutableStateOf(settings.bool("amoled", false))
     var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
+    var railExpanded by mutableStateOf(settings.bool("railExpanded", true))   // боковое меню: с подписями / только иконки
     var autoSwitch by mutableStateOf(settings.bool("autoSwitch", true))   // сменить сервер, если текущий перестал отвечать
     var remind by mutableStateOf(settings.bool("remind", true))           // напоминания о сроке и трафике
     var notifier: ((String, String, String?) -> Unit)? = null             // всплывающее уведомление (ставит трей)
@@ -245,6 +246,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
 
     fun chooseCloseToTray(v: Boolean) { closeToTray = v; settings.set("closeToTray", v) }
     fun chooseAutoStart(v: Boolean) { Autostart.set(v); autoStart = Autostart.isEnabled() }
+    fun toggleRail() { railExpanded = !railExpanded; settings.set("railExpanded", railExpanded) }
     fun chooseAutoSwitch(v: Boolean) { autoSwitch = v; settings.set("autoSwitch", v) }
     fun chooseRemind(v: Boolean) { remind = v; settings.set("remind", v); if (v) checkReminders() }
     fun chooseAutoConnect(v: Boolean) { autoConnect = v; settings.set("autoConnect", v) }

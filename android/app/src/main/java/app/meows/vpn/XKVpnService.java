@@ -118,7 +118,7 @@ public class XKVpnService extends VpnService {
         PendingIntent resume = PendingIntent.getService(this, 3, new Intent(this, XKVpnService.class).setAction(ACTION_START), fl);
         // название приложения система показывает мелко сверху; заголовок — сервер, под ним — состояние
         String title = "Meows";
-        try { List<XKStore.Server> l = st0().servers(); int ix = st0().index(); if (ix < l.size()) title = l.get(ix).title; } catch (Exception ignored) { }
+        try { List<XKStore.Server> l = st0().servers(); int ix = st0().index(); if (ix < l.size()) { XKStore.Server sv = l.get(ix); title = (sv.flag != null && !sv.flag.isEmpty() ? sv.flag + " " : "") + sv.title; } } catch (Exception ignored) { }
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "vpn") : new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
                 .setContentIntent(open).setOngoing(true).setColor(0xFF7CD62B);

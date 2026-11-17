@@ -22,9 +22,9 @@
 ## Открыть Мяус VPN из бота и кабинета
 - Telegram в кнопках принимает только `https://`/`tg://`, **кастомную схему `meows://` в кнопку бота поставить нельзя**. Путь: кнопка бота → https-страница → кнопка «Открыть в приложении» (`docs/cabinet/open-in-app.html`: `intent://…` на Android, `meows://add/<подписка>` на остальных).
 - Страница подписки Remnawave (`sub.me0ws.store` в браузере) может показывать список приложений с кнопками-ссылками: добавить «Мяус VPN» со ссылкой `meows://add/<ссылка подписки>`. Изменений бота не требует.
-- Отдельное правило ответов панели для `User-Agent: ^MeowsVPN` (сейчас приложение шлёт `Happ/3.9.0`). Порядок: сначала правило в панели, потом смена UA в `XKStore.fetch`; иначе приложение получит ответ «Fallback Base64» без шаблона хоста.
+- Отдельное правило ответов панели для `User-Agent: ^Meows` (сейчас приложение шлёт `Happ/3.9.0`). Порядок: сначала правило в панели, потом смена UA в `XKStore.fetch`; иначе приложение получит ответ «Fallback Base64» без шаблона хоста.
 ## Правило ответов в панели для Meows
-Приложение шлёт `User-Agent: MeowsVPN/<версия>` (если панель вернула ссылки вместо JSON — повторяет запрос как Happ). Правило — копия «Happ Clients», добавить в `rules` перед «Xray Base64 Clients»:
+Приложение шлёт `User-Agent: Meows/<версия>` (до версий Android 1.4.x / Windows 1.0.1 включительно — `MeowsVPN/<версия>`; правило `^Meows` ловит оба) (если панель вернула ссылки вместо JSON — повторяет запрос как Happ). Правило — копия «Happ Clients», добавить в `rules` перед «Xray Base64 Clients»:
 
 ```json
 {
@@ -33,9 +33,11 @@
   "enabled": true,
   "operator": "AND",
   "conditions": [
-    { "headerName": "user-agent", "operator": "REGEX", "value": "^MeowsVPN", "caseSensitive": false }
+    { "headerName": "user-agent", "operator": "REGEX", "value": "^Meows", "caseSensitive": false }
   ],
   "responseType": "XRAY_BASE64"
 }
 ```
 Без правила панель отдаёт ответ по «Fallback Base64» (JSON благодаря `serveJsonAtBaseSubscription`), но заголовки могут отличаться (замечено: другой `profile-title`). Если приложение перестанет видеть заголовок `routing` (гео-автообновление) — продублировать его в `responseModifications.headers`, как у правила INCY.
+
+**Значение правила — `^Meows`** (а не `^MeowsVPN`): так в панели имя приложения читается просто «Meows» и в статистике User-Agent видно `Meows/<версия>`; старые установки с `MeowsVPN/…` под него тоже подходят. Заголовок `x-app-name` теперь тоже `Meows`.

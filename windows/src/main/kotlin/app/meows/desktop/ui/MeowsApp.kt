@@ -40,7 +40,7 @@ fun MeowsApp(app: AppModel) {
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { pad ->
         Row(Modifier.fillMaxSize().padding(pad)) {
-            MeowsRail(page, { page = it }, onAdd = { adding = true })
+            MeowsRail(page, { page = it }, onAdd = { adding = true }, expanded = app.railExpanded, onToggle = app::toggleRail)
             when (page) {
                 Page.Home -> HomeScreen(app, onAdd = { adding = true })
                 Page.Settings -> Centered { SettingsScreen(app) { page = Page.Home } }

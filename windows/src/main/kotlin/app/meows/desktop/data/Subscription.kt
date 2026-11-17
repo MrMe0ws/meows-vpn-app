@@ -36,13 +36,13 @@ class SubscriptionData(val url: String, val body: String, val headers: Map<Strin
     }
 }
 
-/** Загрузка подписки. Сначала представляемся как MeowsVPN; если панель отдала ссылки вместо JSON — повторяем как Happ. */
+/** Загрузка подписки. Сначала представляемся как Meows; если панель отдала ссылки вместо JSON — повторяем как Happ. */
 object SubscriptionClient {
     fun fetch(raw: String, version: String): Result<SubscriptionData> {
         val link = LinkNormalizer.normalize(raw)
         if (!LinkNormalizer.isHttpLink(link)) return Result.failure(Exception("Это не похоже на ссылку подписки."))
         var last: Exception? = null
-        for (ua in listOf("MeowsVPN/$version", "Happ/3.9.0")) {
+        for (ua in listOf("Meows/$version", "Happ/3.9.0")) {
             val r = runCatching { request(link, ua) }
             if (r.isSuccess) return r
             last = r.exceptionOrNull() as? Exception
@@ -61,7 +61,7 @@ object SubscriptionClient {
             c.setRequestProperty("x-device-os", "Windows")
             c.setRequestProperty("x-ver-os", System.getProperty("os.version"))
             c.setRequestProperty("x-device-model", System.getenv("COMPUTERNAME") ?: "PC")
-            c.setRequestProperty("x-app-name", "MeowsVPN")
+            c.setRequestProperty("x-app-name", "Meows")
             val code = try { c.responseCode } catch (e: Exception) { throw Exception("Нет связи с сервером подписки.\n${e.message}") }
             if (code >= 400) throw Exception(
                 "Сервер ответил $code. " + if (code == 404) "Подписка не найдена — проверьте ссылку."

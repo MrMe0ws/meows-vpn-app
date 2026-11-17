@@ -370,9 +370,9 @@ public final class XKStore {
         }
         pool.execute(new Runnable() { public void run() {
             String err = null;
-            // сначала представляемся как MeowsVPN (правило в панели Remnawave); если панель его ещё не знает и отдаёт ссылки,
+            // сначала представляемся как Meows (правило в панели Remnawave); если панель его ещё не знает и отдаёт ссылки,
             // повторяем запрос как Happ — тогда подписка работает в любом случае
-            String[] uas = {"MeowsVPN/" + appVersion(), "Happ/3.9.0"};
+            String[] uas = {"Meows/" + appVersion(), "Happ/3.9.0"};
             for (int attempt = 0; attempt < uas.length; attempt++) {
             err = null;
             try {
@@ -384,7 +384,7 @@ public final class XKStore {
                 c.setRequestProperty("x-device-os", "Android");
                 c.setRequestProperty("x-ver-os", Build.VERSION.RELEASE);
                 c.setRequestProperty("x-device-model", Build.MANUFACTURER + " " + Build.MODEL);
-                c.setRequestProperty("x-app-name", "MeowsVPN");
+                c.setRequestProperty("x-app-name", "Meows");
                 int code = c.getResponseCode();
                 if (code >= 400) {
                     err = "Сервер ответил " + code + ". " + (code == 404 ? "Подписка не найдена — проверьте ссылку."
