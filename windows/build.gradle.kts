@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "app.meows"
-version = "1.0.1"
+version = "1.0.2"
 
 // Сборка вне OneDrive (build.ps1 задаёт MEOWS_WIN_BUILD_DIR)
 System.getenv("MEOWS_WIN_BUILD_DIR")?.let { layout.buildDirectory.set(file(it)) }
@@ -30,7 +30,7 @@ compose.desktop {
         nativeDistributions {
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             packageName = "Meows"
-            packageVersion = "1.0.1"
+            packageVersion = "1.0.2"
             description = "Meows VPN client"
             vendor = "Meows"
             modules("java.net.http", "jdk.unsupported", "java.naming")
