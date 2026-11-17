@@ -89,14 +89,6 @@ fun SubscriptionHeader(vm: MeowsViewModel, expanded: Boolean, onExpand: () -> Un
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2,
                     )
                 }
-                val inf = rememberInfiniteTransition(label = "refresh")
-                val rot by inf.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "rot")
-                IconButton(onClick = { vm.refresh(false) }, enabled = !vm.refreshing) {
-                    Icon(Icons.Rounded.Refresh, "Обновить подписку", Modifier.rotate(if (vm.refreshing) rot else 0f))
-                }
-                IconButton(onClick = vm::ping, enabled = !vm.pinging) {
-                    if (vm.pinging) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.Speed, "Пинг всех серверов")
-                }
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {

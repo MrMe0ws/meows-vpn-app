@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,11 +45,12 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     var supportSheet by remember { mutableStateOf(false) }
     var configOf by remember { mutableIntStateOf(-1) }
 
+    Box(Modifier.fillMaxSize()) {
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(bottom = 24.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
+        contentPadding = PaddingValues(bottom = 112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
     ) {
-        item { HomeTopBar(vm, openSettings, onScanQr, onManual = { manualEntry = true }) }
+        item { HomeTopBar() }
         item {
             Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 CatConnectButton(vm.vpnState, size = 200.dp, onClick = onToggle)
@@ -93,6 +95,11 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
                 }
             }
         }
+    }
+    HomeToolbar(
+        vm, hasSub = vm.hasSub, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
+        modifier = Modifier.align(Alignment.BottomCenter),
+    )
     }
 
     if (manualEntry) AddSubscriptionSheet(vm) { manualEntry = false }

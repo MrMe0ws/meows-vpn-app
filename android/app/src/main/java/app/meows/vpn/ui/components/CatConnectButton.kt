@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -103,15 +104,16 @@ fun CatConnectButton(state: Int, size: Dp, onClick: () -> Unit) {
                     Zzz(Modifier.align(Alignment.TopEnd).padding(top = size * 0.12f, end = size * 0.16f))
                 }
             } else {
-                Image(
-                    painter = painterResource(R.drawable.logo_cat),
-                    contentDescription = "Подключение Мяус VPN",
-                    modifier = Modifier
-                        .padding(size * 0.1f)
-                        .fillMaxSize()
-                        .scale(if (state == XKVpnService.CONNECTED) pulse else 1f)
-                        .clip(CircleShape),
-                )
+                Box(Modifier.fillMaxSize().padding(size * 0.09f).clip(CircleShape).background(plate), contentAlignment = Alignment.Center) {
+                    // лапка красится в цвет выбранной темы (primary)
+                    Image(
+                        painter = painterResource(R.drawable.paw),
+                        contentDescription = "Подключение Мяус VPN",
+                        colorFilter = ColorFilter.tint(primary),
+                        alpha = if (state == XKVpnService.CONNECTED) 1f else 0.45f + glow,
+                        modifier = Modifier.fillMaxSize().padding(size * 0.22f).scale(if (state == XKVpnService.CONNECTED) pulse else 1f),
+                    )
+                }
             }
         }
     }
