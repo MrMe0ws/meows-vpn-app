@@ -18,6 +18,7 @@ docs/
   features/       как работает каждая фича
   build.md        сборка и подпись
   release.md      выпуск релиза на GitHub (для автообновления)
+  business-context.md  магазин Мяус VPN и связь с приложением
   roadmap.md      что дальше
   decisions.md    журнал решений
 ```

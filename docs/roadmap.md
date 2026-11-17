@@ -1,8 +1,8 @@
 # Дорожная карта
 
 ## Ближайшее
-- [ ] **NDK и остальные ABI** — пользователь разрешил скачать NDK (~0,7–1 ГБ) и собрать ядро под `armeabi-v7a`, `x86`, `x86_64` → универсальный APK. **Напоминать пользователю**, когда приложение «отточено». Шаги: `sdkmanager "ndk;<версия>"`; для каждого ABI `CGO_ENABLED=1 GOOS=android GOARCH=<arm|386|amd64> CC=<ndk>\…\<triple>24-clang`; из `libxk/` убрать `main.go` и `measure_cgo.go`, у `android_main.go` убрать тег `!cgo`; `.so` → `jniLibs/<abi>/`; добавить ABI в `ndk.abiFilters`.
-- [ ] Создать репозиторий на GitHub (сейчас в `AppLinks.kt` — `MrMe0ws/meows-vpn-android`), выложить код, выпустить первый релиз (`release.md`).
+- [x] NDK и остальные ABI — сделано в 1.1.0 (`core/build-android.ps1`). Остаётся проверить armeabi-v7a / x86_64 на реальном устройстве или эмуляторе.
+- [x] Репозиторий `MrMe0ws/meows-vpn-app` и релизы (`release.md`).
 - [ ] Проверка на устройстве: свайп-пинг, QR, `meows://add/`, автообновление, тема из обоев.
 
 ## Идеи

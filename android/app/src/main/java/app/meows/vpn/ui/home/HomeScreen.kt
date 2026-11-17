@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.ui.components.CatConnectButton
@@ -36,6 +40,7 @@ import app.meows.vpn.ui.components.CatConnectButton
  * Главная: всё на одном экране — кнопка подключения, подписка и список серверов.
  * Настройки — отдельный экран (шестерёнка), добавление подписки — меню «+».
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Unit, onScanQr: () -> Unit) {
     val servers = vm.servers
@@ -45,7 +50,9 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     var supportSheet by remember { mutableStateOf(false) }
     var configOf by remember { mutableIntStateOf(-1) }
 
-    Box(Modifier.fillMaxSize()) {
+    // панель уезжает вниз при прокрутке списка и возвращается при прокрутке вверх
+    val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
+    Box(Modifier.fillMaxSize().nestedScroll(toolbarScroll)) {
     LazyColumn(
         Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(bottom = 112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
@@ -98,7 +105,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     }
     HomeToolbar(
         vm, hasSub = vm.hasSub, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
-        modifier = Modifier.align(Alignment.BottomCenter),
+        scrollBehavior = toolbarScroll, modifier = Modifier.align(Alignment.BottomCenter),
     )
     }
 

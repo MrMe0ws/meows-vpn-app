@@ -24,4 +24,4 @@
 ## Ядро
 
 Исходники обёртки — `core/*.go`. Сборка: см. `docs/build.md` (раздел «Ядро»). Версия Xray-core зафиксирована коммитом `a52db8f6ed19`.
-Сейчас только `arm64-v8a`. Остальные ABI — `docs/roadmap.md`.
+Все ABI (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`), сборка — `core/build-android.ps1`, см. `docs/build.md`.

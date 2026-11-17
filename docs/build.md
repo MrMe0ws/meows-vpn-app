@@ -8,7 +8,7 @@ Android Studio не нужна.
 ```
 
 ## Инструменты (вне проекта и OneDrive)
-`C:\MeowsTools`: `jdk17`, `gradle-8.14.3`, `android-sdk` (platform 36, build-tools 36.0.0), `meows.keystore`.
+`C:\MeowsTools`: `jdk17`, `gradle-8.14.3`, `android-sdk` (platform 36, build-tools 36.0.0, NDK 29.0.14206865), `meows.keystore`.
 Если инструментов нет — скачать JDK 17 (Temurin), Gradle 8.14.3, Android cmdline-tools, затем
 `sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"` и принять лицензии.
 
@@ -24,10 +24,11 @@ Keystore `C:\MeowsTools\meows.keystore`, alias `meows`; пароль — в `C:\
 AGP 8.11.1 · Kotlin 2.2.0 · Compose BOM 2025.10.00 · **material3 1.5.0-alpha04** (Expressive API) · material-kolor 3.0.1 · zxing-android-embedded 4.3.0.
 
 ## Ядро (Xray)
-```
-git clone https://github.com/XTLS/Xray-core ; git checkout a52db8f6ed19
-скопировать core\*.go (кроме xk_test.go) в Xray-core\libxk\
-$env:CGO_ENABLED=0; $env:GOOS="android"; $env:GOARCH="arm64"
-go build -trimpath -ldflags "-s -w -checklinkname=0" -o libxkcore.so ./libxk
-```
-Результат — `android/app/src/main/jniLibs/<abi>/libxkcore.so`. Для armeabi-v7a/x86/x86_64 нужен Android NDK (cgo): см. `roadmap.md`.
+Универсальная APK: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86` (`ndk.abiFilters` в `app/build.gradle.kts`). Ядро — Go-бинарник `libxkcore.so` из Xray-core `a52db8f6ed19` + обёртка `core/`.
+
+Пересборка всех ABI: `.\core\build-android.ps1` (нужны Go, git и Android NDK: `sdkmanager "ndk;29.0.14206865"`).
+- `arm64-v8a` — чистый Go (`CGO_ENABLED=0`), как исходное ядро Breeze.
+- `armeabi-v7a`, `x86`, `x86_64` — cgo через NDK clang, `-buildmode=pie`. Из обёртки убираются `main.go`/`measure_cgo.go` (c-shared) и тег `!cgo`.
+- Флаг `-checklinkname=0` нужен из-за `wlynxg/anet`.
+
+Проверено на устройстве: **только arm64** (Pixel 10 — 64-битный). Остальные ABI собраны и проверены по ELF-заголовкам (тип PIE, архитектура, загрузчик), но не запускались.

@@ -21,6 +21,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.FloatingToolbarScrollBehavior
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,12 +44,16 @@ import app.meows.vpn.MeowsViewModel
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeToolbar(vm: MeowsViewModel, hasSub: Boolean, openSettings: () -> Unit, onScanQr: () -> Unit, onManual: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeToolbar(
+    vm: MeowsViewModel, hasSub: Boolean, openSettings: () -> Unit, onScanQr: () -> Unit, onManual: () -> Unit,
+    scrollBehavior: FloatingToolbarScrollBehavior, modifier: Modifier = Modifier,
+) {
     var menu by remember { mutableStateOf(false) }
     // vibrant: контейнер цвета темы (primaryContainer) — панель отделяется от списка, а не сливается с ним
     HorizontalFloatingToolbar(
         expanded = true,
         colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
+        scrollBehavior = scrollBehavior,
         modifier = modifier.navigationBarsPadding().padding(bottom = 12.dp),
     ) {
         IconButton(onClick = openSettings) { Icon(Icons.Rounded.Settings, "Настройки") }
