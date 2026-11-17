@@ -56,7 +56,7 @@ fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, onSe
 }
 
 @Composable
-private fun PingChip(ms: Int) {
+fun PingChip(ms: Int) {
     val cs = MaterialTheme.colorScheme
     val (text, bg, fg) = when {
         ms <= 0 -> Triple("—", cs.errorContainer, cs.onErrorContainer)
@@ -68,7 +68,7 @@ private fun PingChip(ms: Int) {
 }
 /** Windows не умеет рисовать эмодзи-флаги — показываем картинки флагов из Noto (как на Android); нет картинки — плашка с кодом. */
 @Composable
-private fun FlagBadge(flag: String?) {
+fun FlagBadge(flag: String?) {
     val code = flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('a'.code + it - 0x1F1E6).toChar() }?.joinToString("")
     val img = remember(code) { code?.let { runCatching { Res.bitmap("flags/$it.png") }.getOrNull() } }
     if (img != null) {

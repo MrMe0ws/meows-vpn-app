@@ -10,10 +10,12 @@ import app.meows.desktop.data.SettingsStore
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.system.Autostart
+import app.meows.desktop.system.Elevation
 import app.meows.desktop.update.UpdateController
 import app.meows.desktop.vpn.CoreProcess
 import app.meows.desktop.vpn.PingRunner
 import app.meows.desktop.vpn.SystemProxy
+import app.meows.desktop.vpn.VpnMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,7 +28,7 @@ enum class ConnState { Idle, Connecting, Connected }
 object AppInfo { val VERSION: String = System.getProperty("jpackage.app-version") ?: "1.0.0" }
 
 /** Состояние и команды приложения: подписка, серверы, подключение (ядро + системный прокси), пинг, настройки. */
-class AppModel(startHidden: Boolean = false) {
+class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val settings = SettingsStore()
     private val core = CoreProcess()
@@ -38,6 +40,8 @@ class AppModel(startHidden: Boolean = false) {
     var connectedAt by mutableLongStateOf(0)
     var refreshing by mutableStateOf(false)
     var pinging by mutableStateOf(false)
+    var pingingSelected by mutableStateOf(false)
+    var mode by mutableStateOf(VpnMode.of(settings.str("mode", "tun")))
     val pings = mutableStateMapOf<Int, Int>()
     var error by mutableStateOf<Pair<String, String>?>(null)
     var toast by mutableStateOf<String?>(null)
@@ -60,7 +64,7 @@ class AppModel(startHidden: Boolean = false) {
         proxy.restore()   // прошлый запуск мог закончиться аварийно с включённым прокси
         if (sub != null && System.currentTimeMillis() - (sub?.updated ?: 0) > 60_000) refresh(silent = true)
         updates.checkOnLaunch()
-        if (autoConnect && sub != null) connect()
+        if ((autoConnect || connectOnStart) && sub != null) connect()
     }
 
     /** Сообщение от второго запуска: ссылка meows://add/<подписка> или «SHOW» — показать окно. */
@@ -105,16 +109,31 @@ class AppModel(startHidden: Boolean = false) {
 
     fun connect() {
         val s = sub ?: return
+        if (mode == VpnMode.Tun && !Elevation.isAdmin()) { elevateAndConnect(); return }
         state = ConnState.Connecting
         scope.launch {
-            core.start(s, selected, opts()) { tail ->
+            core.start(s, selected, opts(), mode.key) { tail ->
                 proxy.restore(); state = ConnState.Idle; connectedAt = 0
                 error = "Подключение прервано" to (tail ?: "Ядро остановилось")
             }.onSuccess {
-                runCatching { proxy.enable(CoreProcess.HTTP_PORT) }.onFailure { error = "Системный прокси" to (it.message ?: "Не удалось включить") }
+                if (mode == VpnMode.Proxy) runCatching { proxy.enable(CoreProcess.HTTP_PORT) }.onFailure { error = "Системный прокси" to (it.message ?: "Не удалось включить") }
                 connectedAt = System.currentTimeMillis(); state = ConnState.Connected
             }.onFailure { state = ConnState.Idle; error = "Не подключилось" to (it.message ?: "Ошибка ядра") }
         }
+    }
+
+    /** TUN требует администратора: перезапускаемся с правами (окно UAC) и подключаемся уже там. */
+    private fun elevateAndConnect() {
+        if (Elevation.relaunch(listOf("--connect"))) { shutdown(); exitRequested = true }
+        else error = "Нужны права администратора" to "Режим «Все программы» создаёт виртуальную сетевую карту — подтвердите запрос Windows. Или выберите «Системный прокси»: он работает без администратора."
+    }
+
+    fun chooseMode(m: VpnMode) {
+        if (m == mode) return
+        val was = state != ConnState.Idle
+        if (was) { proxy.restore(); core.stop(); state = ConnState.Idle; connectedAt = 0 }
+        mode = m; settings.set("mode", m.key)
+        if (was) connect()
     }
 
     fun disconnect() {
@@ -131,6 +150,14 @@ class AppModel(startHidden: Boolean = false) {
             PingRunner.measure(s.body, s.servers.indices.toList()) { i, ms -> pings[i] = ms }
             pinging = false
         }
+    }
+
+    /** Пинг только выбранного сервера (панель справа). */
+    fun pingSelected() {
+        val s = sub ?: return
+        if (pingingSelected) return
+        pingingSelected = true; val i = selected; pings.remove(i)
+        scope.launch { PingRunner.measure(s.body, listOf(i)) { k, ms -> pings[k] = ms }; pingingSelected = false }
     }
 
     fun setTheme(m: Int) { themeMode = m; settings.set("theme", m) }

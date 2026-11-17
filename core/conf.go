@@ -140,6 +140,34 @@ func buildTunConfig(obj map[string]any) ([]byte, error) {
 	return json.Marshal(obj)
 }
 
+// buildWinTunConfig — TUN для Windows (wintun.dll рядом с exe, нужны права администратора): тот же конфиг, что и на Android,
+// но адаптер создаёт и настраивает само ядро: маршруты в TUN, свои сокеты привязаны к физическому интерфейсу (autoOutboundsInterface).
+func buildWinTunConfig(obj map[string]any) ([]byte, error) {
+	raw, err := buildTunConfig(obj)
+	if err != nil {
+		return nil, err
+	}
+	var cfg map[string]any
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		return nil, err
+	}
+	ins, _ := cfg["inbounds"].([]any)
+	if len(ins) == 1 {
+		if in, ok := ins[0].(map[string]any); ok {
+			in["settings"] = map[string]any{
+				"name":                   "MeowsTun",
+				"desc":                   "Meows",
+				"mtu":                    1500,
+				"gateway":                []any{"10.255.0.1/30"},
+				"dns":                    []any{"1.1.1.1", "8.8.8.8"},
+				"autoSystemRoutingTable": []any{"0.0.0.0/0"},
+				"autoSystemWfpBlockLeak": []any{"dns"},
+			}
+		}
+	}
+	return json.Marshal(cfg)
+}
+
 // buildProxyConfig rewrites a client config for desktop use: inbounds -> local SOCKS5 + HTTP on 127.0.0.1
 // (the app switches the system proxy to the HTTP one), no API/stats.
 func buildProxyConfig(obj map[string]any, socksPort, httpPort int) ([]byte, error) {

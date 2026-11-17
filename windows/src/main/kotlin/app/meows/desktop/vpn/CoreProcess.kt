@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
-/** Ядро Xray (meows-core.exe) как дочерний процесс: локальные SOCKS5/HTTP прокси на 127.0.0.1. */
+/** Ядро Xray (meows-core.exe) как дочерний процесс: режим proxy — локальные SOCKS5/HTTP на 127.0.0.1, режим tun — адаптер wintun (процесс наследует права администратора). */
 class CoreProcess {
     companion object { const val SOCKS_PORT = 10808; const val HTTP_PORT = 10809 }
 
@@ -18,12 +18,12 @@ class CoreProcess {
     val running: Boolean get() = proc?.isAlive == true
 
     /** Запускает ядро и ждёт `XKOK` (до 20 с). [onExit] вызывается, если ядро завершилось не по нашей просьбе. */
-    fun start(sub: SubscriptionData, index: Int, opts: String, onExit: (String?) -> Unit): Result<Unit> = runCatching {
+    fun start(sub: SubscriptionData, index: Int, opts: String, mode: String, onExit: (String?) -> Unit): Result<Unit> = runCatching {
         stop()
         require(AppDirs.coreExe.exists()) { "Не найден meows-core.exe (${AppDirs.coreExe})" }
         syncGeo()
         val cfg = JSONObject().put("sub", sub.body).put("index", index).put("opts", opts)
-            .put("socksPort", SOCKS_PORT).put("httpPort", HTTP_PORT)
+            .put("socksPort", SOCKS_PORT).put("httpPort", HTTP_PORT).put("mode", mode)
         val f = AppDirs.file("core.json").apply { writeText(cfg.toString()) }
         stopping = false
         val p = ProcessBuilder(AppDirs.coreExe.absolutePath, f.absolutePath, AppDirs.geo.absolutePath).redirectErrorStream(true).start()

@@ -1,6 +1,6 @@
 //go:build !android && !cgo
 
-// Desktop (Windows): вместо TUN — локальный SOCKS5 + HTTP прокси на 127.0.0.1; приложение включает системный прокси.
+// Desktop (Windows): режим "tun" (wintun, админ) или "proxy" — локальный SOCKS5 + HTTP на 127.0.0.1 (приложение включает системный прокси).
 //   meows-core.exe <config.json> <asset-dir>                      запуск ядра
 //   meows-core.exe measure <sub-file> <url> <timeout-ms> <i,j,k>  реальный пинг серверов
 // Родитель держит stdin открытым: закрылся stdin (приложение закрыто/упало) — ядро завершается само.
@@ -26,6 +26,7 @@ type desktopCfg struct {
 	Opts      string `json:"opts"`
 	SocksPort int    `json:"socksPort"`
 	HttpPort  int    `json:"httpPort"`
+	Mode      string `json:"mode"` // "tun" — адаптер wintun (нужен админ), иначе локальные прокси
 }
 
 func main() {
@@ -60,7 +61,12 @@ func main() {
 	}
 	addRouting(obj, parseOpts(dc.Opts))
 	sanitizeGeo(obj, os.Args[2])
-	cfg, err := buildProxyConfig(obj, dc.SocksPort, dc.HttpPort)
+	var cfg []byte
+	if dc.Mode == "tun" {
+		cfg, err = buildWinTunConfig(obj)
+	} else {
+		cfg, err = buildProxyConfig(obj, dc.SocksPort, dc.HttpPort)
+	}
 	if err != nil {
 		fail(err.Error())
 	}

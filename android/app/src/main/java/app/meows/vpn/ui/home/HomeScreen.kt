@@ -104,7 +104,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
         }
     }
     HomeToolbar(
-        vm, hasSub = vm.hasSub, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
+        vm, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
         scrollBehavior = toolbarScroll, modifier = Modifier.align(Alignment.BottomCenter),
     )
     }
