@@ -280,7 +280,8 @@ public class XKVpnService extends VpnService {
 
     /**
      * Раз в 30 с проверяет текущий сервер «реальным пингом» (трафик приложения идёт мимо VPN — проверяется сам сервер).
-     * Два сбоя подряд при живой сети → пингуем все серверы; есть рабочий — переключаемся на лучший.
+     * Три сбоя подряд (каждый — таймаут 10 с, на медленной сети сервер может отвечать 3–5 с) при живой сети → пингуем все серверы;
+     * есть рабочий — переключаемся на лучший.
      * Если не отвечает никто — скорее всего нет интернета, ничего не меняем. Настройка: «Подключение → Автопереключение серверов».
      */
     private void watchLoop() {
@@ -297,8 +298,8 @@ public class XKVpnService extends VpnService {
                 Integer ms = st.pings.get(cur);
                 if (ms != null && ms == -2) continue;            // UDP-протокол: честно проверить нельзя
                 if (ms != null && ms > 0) { fails = 0; continue; }
-                if (++fails < 2) continue;
-                pingBlocking(st, null, 90_000);
+                if (++fails < 3) continue;
+                pingBlocking(st, null, 120_000);
                 List<XKStore.Server> list = st.servers();
                 int best = -1, bestMs = Integer.MAX_VALUE;
                 for (int i = 0; i < list.size(); i++) {

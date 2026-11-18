@@ -46,8 +46,9 @@ public final class XKStore {
     public static final String P_SITES = "bypassSites";
     public static final String P_PING_MODE = "pingMode";      // 0 real (through the server), 1 TCP
     public static final String P_PING_URL = "pingUrl";        // 0 Google, 1 Cloudflare, 2 Apple
-    public static final String P_PING_TO = "pingTimeout";     // seconds, default PING_TO_DEFAULT
-    public static final int PING_TO_DEFAULT = 5;              // 3 s was too short on slow roaming / weak LTE: every server showed "no answer"
+    // The user does not pick a timeout: 3 s was too short on slow roaming / weak LTE (every server showed "no answer").
+    public static final int REAL_PING_TO_SEC = 10;            // real ping: full request through the server (like v2rayN)
+    public static final int TCP_PING_TO_MS = 5000;            // TCP connect only
     public static final String P_PING_LAUNCH = "pingOnLaunch";// default false
     public static final String P_PING_KEEP = "pingKeep";      // seconds to show results, 0 = always; default 60
     public static final String P_AUTOCONN = "autoConnect";    // default false
@@ -579,14 +580,11 @@ public final class XKStore {
     private static void w16(java.io.ByteArrayOutputStream o, int v) { o.write((v >> 8) & 255); o.write(v & 255); }
 
     /** Ping by tap: either a real request through every server (default) or a TCP connect. */
-    public void pingAll(final Runnable progress, final Runnable done) { pingSome(null, progress, done, true); }
+    public void pingAll(final Runnable progress, final Runnable done) { pingSome(null, progress, done); }
 
-    /** Ping only the given server indexes (null = all). Other servers keep their previous result. No retry: used by the watchdog. */
-    public void pingSome(final int[] only, final Runnable progress, final Runnable done) { pingSome(only, progress, done, false); }
-
-    /** @param retry real mode only: if nothing answered, measure once more (slow roaming / weak LTE often fails the first round). */
-    public void pingSome(final int[] only, final Runnable progress, final Runnable done, boolean retry) {
-        if (pref(P_PING_MODE, 0) == 1) tcpPingSome(only, progress, done); else realPingSome(only, progress, done, retry);
+    /** Ping only the given server indexes (null = all). Other servers keep their previous result. */
+    public void pingSome(final int[] only, final Runnable progress, final Runnable done) {
+        if (pref(P_PING_MODE, 0) == 1) tcpPingSome(only, progress, done); else realPingSome(only, progress, done);
     }
 
     private int[] targets(int[] only, int size) {
@@ -598,20 +596,43 @@ public final class XKStore {
 
     /** Real delay: the core builds each server's outbound and fetches the test URL through it (like INCY / v2rayN). */
     private volatile Process measureProc;
-    private void realPingSome(final int[] only, final Runnable progress, final Runnable done, final boolean retry) {
+    private void realPingSome(final int[] only, final Runnable progress, final Runnable done) {
         final List<Server> list = servers();
         if (list.isEmpty()) { done.run(); return; }
         final int[] tg = targets(only, list.size());
         for (int i : tg) pings.remove(i);
-        final int to = Math.max(1, pref(P_PING_TO, PING_TO_DEFAULT)) * 1000;
+        final int to = REAL_PING_TO_SEC * 1000;
         int ui = pref(P_PING_URL, 0);
         final String url = PING_URLS[ui >= 0 && ui < PING_URLS.length ? ui : 0];
         final String body = body();
+        final int n = tg.length;
         pool.execute(new Runnable() { public void run() {
             final java.util.Set<Integer> got = new java.util.HashSet<>();
-            // first round: failures are not shown yet if a second round may follow
-            boolean ok = measureRound(body, url, to, tg, got, progress, !retry);
-            if (retry && !ok) measureRound(body, url, to, tg, got, progress, true);
+            try {
+                java.io.File f = new java.io.File(ctx.getFilesDir(), "measure.json");
+                java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
+                fo.write(body.getBytes("UTF-8")); fo.close();
+                StringBuilder idx = new StringBuilder();
+                for (int k = 0; k < n; k++) { if (k > 0) idx.append(','); idx.append(tg[k]); }
+                String exe = new java.io.File(ctx.getApplicationInfo().nativeLibraryDir, "libxkcore.so").getAbsolutePath();
+                ProcessBuilder pb = new ProcessBuilder(exe, "measure", f.getAbsolutePath(), url, String.valueOf(to), idx.toString());
+                pb.redirectErrorStream(true);
+                final Process p = pb.start();
+                measureProc = p;
+                final long limit = (long) (to * 2 + 2500) * ((n + 3) / 4) + 3000;
+                main.postDelayed(new Runnable() { public void run() { try { p.destroy(); } catch (Exception ignored) { } } }, limit);
+                java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream(), "UTF-8"));
+                String line;
+                while ((line = r.readLine()) != null) {
+                    if (!line.startsWith("XKMS ")) continue;
+                    String[] a = line.trim().split(" ");
+                    if (a.length < 3) continue;
+                    final int i = Integer.parseInt(a[1]); final int ms = Integer.parseInt(a[2]);
+                    got.add(i);
+                    main.post(new Runnable() { public void run() { pings.put(i, ms > 0 ? ms : -1); progress.run(); } });
+                }
+                try { p.waitFor(); } catch (Exception ignored) { }
+            } catch (Exception ignored) { }
             main.post(new Runnable() { public void run() {
                 for (int i : tg) if (!got.contains(i)) pings.put(i, -1);
                 done.run();
@@ -619,43 +640,9 @@ public final class XKStore {
         }});
     }
 
-    /** One run of the core's `measure`; returns true if at least one server answered. Results go to `pings` as they arrive. */
-    private boolean measureRound(String body, String url, int to, int[] tg, java.util.Set<Integer> got,
-                                 final Runnable progress, final boolean showFails) {
-        final int n = tg.length;
-        boolean any = false;
-        try {
-            java.io.File f = new java.io.File(ctx.getFilesDir(), "measure.json");
-            java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
-            fo.write(body.getBytes("UTF-8")); fo.close();
-            StringBuilder idx = new StringBuilder();
-            for (int k = 0; k < n; k++) { if (k > 0) idx.append(','); idx.append(tg[k]); }
-            String exe = new java.io.File(ctx.getApplicationInfo().nativeLibraryDir, "libxkcore.so").getAbsolutePath();
-            ProcessBuilder pb = new ProcessBuilder(exe, "measure", f.getAbsolutePath(), url, String.valueOf(to), idx.toString());
-            pb.redirectErrorStream(true);
-            final Process p = pb.start();
-            measureProc = p;
-            final long limit = (long) (to * 2 + 2500) * ((n + 3) / 4) + 3000;
-            main.postDelayed(new Runnable() { public void run() { try { p.destroy(); } catch (Exception ignored) { } } }, limit);
-            java.io.BufferedReader r = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream(), "UTF-8"));
-            String line;
-            while ((line = r.readLine()) != null) {
-                if (!line.startsWith("XKMS ")) continue;
-                String[] a = line.trim().split(" ");
-                if (a.length < 3) continue;
-                final int i = Integer.parseInt(a[1]); final int ms = Integer.parseInt(a[2]);
-                if (ms > 0) { any = true; got.add(i); } else if (showFails) got.add(i);
-                if (ms > 0 || showFails) main.post(new Runnable() { public void run() { pings.put(i, ms > 0 ? ms : -1); progress.run(); } });
-            }
-            try { p.waitFor(); } catch (Exception ignored) { }
-        } catch (Exception ignored) { }
-        return any;
-    }
-
     /** App UID is excluded from the VPN, so pings are honest even while connected. */
-    static volatile int pingTimeoutMs = PING_TO_DEFAULT * 1000;
+    static final int pingTimeoutMs = TCP_PING_TO_MS;
     private void tcpPingSome(final int[] only, final Runnable progress, final Runnable done) {
-        pingTimeoutMs = Math.max(1, pref(P_PING_TO, PING_TO_DEFAULT)) * 1000;
         final List<Server> list = servers();
         if (list.isEmpty()) { done.run(); return; }
         final int[] tg = targets(only, list.size());
