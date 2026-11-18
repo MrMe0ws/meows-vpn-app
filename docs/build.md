@@ -5,6 +5,7 @@ Android Studio не нужна.
 ```powershell
 .\android\build.ps1            # release (подписанный, R8) -> android\dist\MeowsVPN-release.apk
 .\android\build.ps1 -Debug     # debug                     -> android\dist\MeowsVPN-debug.apk (applicationId с суффиксом .debug)
+.\android\build.ps1 -Play      # Google Play (flavor play)  -> android\dist\MeowsVPN-play.aab, см. docs/play.md
 ```
 
 ## Инструменты (вне проекта и OneDrive)
