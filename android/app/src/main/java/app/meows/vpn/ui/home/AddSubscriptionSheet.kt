@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
 
@@ -41,7 +42,7 @@ fun AddSubscriptionSheet(vm: MeowsViewModel, replace: XKStore? = null, onDismiss
             Text(if (replace != null) "Заменить ссылку" else "Ссылка подписки", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
             Text(
-                "Вставьте ссылку из бота или личного кабинета Meows.",
+                if (Edition.isPlay) "Вставьте ссылку подписки от вашего VPN-сервиса." else "Вставьте ссылку из бота или личного кабинета Meows.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))

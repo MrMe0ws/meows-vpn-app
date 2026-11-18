@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
+import app.meows.vpn.Edition
 import app.meows.vpn.shop.ShopLinks
 
 /**
@@ -30,7 +31,8 @@ fun AccountActions(vm: MeowsViewModel, st: XKStore, onSupport: () -> Unit) {
     vm.rev
     val renew = ShopLinks.needsRenewal(st)
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (renew) {
+        if (Edition.isPlay) Unit
+        else if (renew) {
             Button(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.Autorenew, null); Spacer(Modifier.width(8.dp)); Text("Продлить")
             }

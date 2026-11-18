@@ -13,6 +13,7 @@ import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.shop.ShopLinks
 import app.meows.vpn.ui.settings.SettingsGroup
@@ -37,7 +38,7 @@ fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit) {
         }
         SettingsGroup {
             ValueRow(Icons.Rounded.SupportAgent, "Поддержка", summary = ShopLinks.support(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.support(vm.st)) })
-            ValueRow(Icons.Rounded.AccountCircle, "Личный кабинет", summary = ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
+            if (!Edition.isPlay) ValueRow(Icons.Rounded.AccountCircle, "Личный кабинет", summary = ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
         }
     }
 }

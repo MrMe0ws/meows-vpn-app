@@ -55,6 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
 import app.meows.vpn.ui.components.formatBytesRu
@@ -121,7 +122,7 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
                             onClick = { menu = false; onReplace() },
                         )
                         val web = st.webUrl()
-                        if (!web.isNullOrBlank()) DropdownMenuItem(
+                        if (!Edition.isPlay && !web.isNullOrBlank()) DropdownMenuItem(
                             text = { Text("Личный кабинет") }, leadingIcon = { Icon(Icons.Rounded.OpenInBrowser, null) },
                             onClick = { menu = false; openUrl(ctx, web) },
                         )

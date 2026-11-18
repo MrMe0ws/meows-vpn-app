@@ -28,6 +28,7 @@
 | Собрать, подписать, выпустить релиз | `docs/build.md`, `docs/release.md` |
 | Что делать дальше | `docs/roadmap.md` |
 | Устройство репозитория, iOS | `docs/platforms.md` |
+| Google Play (AAB, flavor `play`, консоль, политика) | `docs/play.md`, `docs/play-listing.md` |
 | Windows-версия | `docs/windows/overview.md` |
 | Что за магазин и как с ним связано приложение | `docs/business-context.md` |
 | Почему сделано именно так | `docs/decisions.md` |

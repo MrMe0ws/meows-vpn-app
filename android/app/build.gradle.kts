@@ -19,6 +19,20 @@ android {
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86") }
     }
 
+    // direct — APK для GitHub/сайта (с автообновлением и ссылками магазина); play — AAB для Google Play (без них, см. docs/play.md)
+    flavorDimensions += "store"
+    productFlavors {
+        create("direct") {
+            dimension = "store"
+            buildConfigField("boolean", "PLAY", "false")
+        }
+        create("play") {
+            dimension = "store"
+            targetSdk = 36   // Google Play требует API 36 для новых приложений с 31.08.2026
+            buildConfigField("boolean", "PLAY", "true")
+        }
+    }
+
     signingConfigs {
         create("meows") {
             val ks = System.getenv("MEOWS_KEYSTORE")
@@ -49,7 +63,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 
     // Ядро запускается как процесс прямо из nativeLibraryDir, поэтому .so должны быть распакованы на диск
     packaging {

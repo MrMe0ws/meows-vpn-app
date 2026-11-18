@@ -49,7 +49,7 @@ fun MeowsApp(vm: MeowsViewModel, onToggle: () -> Unit, onScanQr: () -> Unit) {
         }
     }
 
-    UpdateDialog(vm)
+    if (!Edition.isPlay) UpdateDialog(vm)
 
     val title = vm.dialogTitle
     if (title != null) {

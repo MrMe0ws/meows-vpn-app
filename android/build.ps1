@@ -1,8 +1,9 @@
 ﻿# Сборка МЯУС VPN без Android Studio.
 #   .\build.ps1            -> release APK (подписанный), универсальный
 #   .\build.ps1 -Debug     -> debug APK
+#   .\build.ps1 -Play      -> AAB для Google Play (dist\MeowsVPN-play.aab)
 # Инструменты лежат в C:\MeowsTools (JDK 17, Gradle, Android SDK) — вне OneDrive и без кириллицы в пути.
-param([switch]$Debug, [string]$Task = "")
+param([switch]$Debug, [switch]$Play, [string]$Task = "")
 
 $ErrorActionPreference = "Continue"   # нативные программы пишут инфо в stderr; ошибки ловим по $LASTEXITCODE
 $T = "C:\MeowsTools"
@@ -32,12 +33,20 @@ $work = "C:\MeowsBuild\src"
 New-Item -ItemType Directory -Force $work | Out-Null
 robocopy $PSScriptRoot $work /MIR /XD .gradle build dist .toolchain .git .idea /XF *.keystore /NFL /NDL /NJH /NJS /NP | Out-Null
 Set-Location $work
-$gradleTask = if ($Task) { $Task } elseif ($Debug) { "assembleDebug" } else { "assembleRelease" }
+$gradleTask = if ($Task) { $Task } elseif ($Play) { "bundlePlayRelease" } elseif ($Debug) { "assembleDirectDebug" } else { "assembleDirectRelease" }
 gradle $gradleTask --no-daemon --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Gradle завершился с ошибкой" }
 
+if ($Play) {
+    $aab = Get-ChildItem "$env:MEOWS_BUILD_DIR\app\outputs\bundle\playRelease" -Filter *.aab | Select-Object -First 1
+    if (-not $aab) { throw "AAB не найден" }
+    New-Item -ItemType Directory -Force "$PSScriptRoot\dist" | Out-Null
+    Copy-Item $aab.FullName "$PSScriptRoot\dist\MeowsVPN-play.aab" -Force
+    Write-Host ("AAB: $PSScriptRoot\dist\MeowsVPN-play.aab ({0:N1} МБ)" -f ((Get-Item "$PSScriptRoot\dist\MeowsVPN-play.aab").Length / 1MB))
+    return
+}
 $kind = if ($Debug) { "debug" } else { "release" }
-$apk = Get-ChildItem "$env:MEOWS_BUILD_DIR\app\outputs\apk\$kind" -Filter *.apk | Select-Object -First 1
+$apk = Get-ChildItem "$env:MEOWS_BUILD_DIR\app\outputs\apk\direct\$kind" -Filter *.apk | Select-Object -First 1
 if ($apk) {
     New-Item -ItemType Directory -Force "$PSScriptRoot\dist" | Out-Null
     $dest = "$PSScriptRoot\dist\MeowsVPN-$kind.apk"

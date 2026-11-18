@@ -61,7 +61,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         XKAppHolder.ctx = app.applicationContext
         XKVpnService.addListener(this)
         st.scheduleReminders()
-        updates.checkOnLaunch()
+        if (!Edition.isPlay) updates.checkOnLaunch()
         if (st.url().isNotEmpty() && (st.updateOnLaunch() || st.needsAutoUpdate())) refresh(true)
         else autoPing()
     }
@@ -97,7 +97,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     /** Ошибка загрузки подписки; если похоже на лимит устройств — сразу предлагаем кабинет. */
     private fun fetchError(title: String, error: String) {
-        if (error.contains("лимит", ignoreCase = true)) {
+        if (!Edition.isPlay && error.contains("лимит", ignoreCase = true)) {
             alert(title, error, "Открыть кабинет") { openLink(app.meows.vpn.shop.ShopLinks.cabinet(st)) }
         } else alert(title, error)
     }

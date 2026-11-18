@@ -27,6 +27,7 @@ import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
 import app.meows.vpn.ui.settings.pages.autoUpdateTitle
 import app.meows.vpn.ui.theme.Palettes
+import app.meows.vpn.Edition
 import app.meows.vpn.update.AppLinks
 import androidx.compose.foundation.layout.Arrangement
 
@@ -58,7 +59,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
                 summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else "Реальный") + " · ${st.pref(XKStore.P_PING_TO, 3)} с",
             ) { open(SettingsPage.Ping) }
             ValueRow(Icons.Rounded.Timeline, "Статистика", summary = "Скорость и трафик за подключение") { open(SettingsPage.Stats) }
-            ValueRow(
+            if (!Edition.isPlay) ValueRow(
                 Icons.Rounded.SystemUpdate, "Обновления приложения",
                 summary = if (vm.updates.autoCheck) "Проверять автоматически" else "Проверка выключена",
             ) { open(SettingsPage.Updates) }
@@ -68,7 +69,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
         SettingsGroup {
             ValueRow(Icons.Rounded.Share, "Рассказать друзьям", summary = "Отправить ссылку на приложение") {
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, "Meows — быстрый и удобный VPN. Скачать приложение для Android: ${AppLinks.RELEASES_URL}")
+                    .putExtra(Intent.EXTRA_TEXT, "Meows — быстрый и удобный VPN. Скачать приложение для Android: ${if (Edition.isPlay) Edition.PLAY_URL else AppLinks.RELEASES_URL}")
                 runCatching { ctx.startActivity(Intent.createChooser(send, "Рассказать друзьям").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }
         }
