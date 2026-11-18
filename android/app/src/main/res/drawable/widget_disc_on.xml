@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Включено: диск «загорается» — яркая заливка и ореол -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/w_disc_on" />
+    <stroke android:width="3dp" android:color="@color/w_halo" />
+</shape>

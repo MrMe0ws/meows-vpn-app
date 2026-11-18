@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Цвета виджета подключения. Динамические цвета системы (Material You), тёмная -->
+<resources>
+    <color name="w_bg_off">@android:color/system_neutral1_800</color>
+    <color name="w_bg_on">@android:color/system_accent1_700</color>
+    <color name="w_fg_off">@android:color/system_neutral2_200</color>
+    <color name="w_fg_on">@android:color/system_accent1_100</color>
+    <color name="w_disc_off">@android:color/system_neutral1_700</color>
+    <color name="w_disc_on">@android:color/system_accent1_200</color>
+    <color name="w_icon_off">@android:color/system_neutral2_400</color>
+    <color name="w_icon_on">@android:color/system_accent1_800</color>
+    <color name="w_halo">@android:color/system_accent1_400</color>
+    <color name="w_pill_off">@android:color/system_neutral1_700</color>
+    <color name="w_pill_on">@android:color/system_accent1_600</color>
+</resources>

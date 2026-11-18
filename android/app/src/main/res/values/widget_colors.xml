@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Цвета виджета подключения. Запасные (Android до 12, светлая) -->
+<resources>
+    <color name="w_bg_off">#EEF1F1</color>
+    <color name="w_bg_on">#BFF0EE</color>
+    <color name="w_fg_off">#5B6565</color>
+    <color name="w_fg_on">#002020</color>
+    <color name="w_disc_off">#D9DFDF</color>
+    <color name="w_disc_on">#00696A</color>
+    <color name="w_icon_off">#6B7676</color>
+    <color name="w_icon_on">#FFFFFF</color>
+    <color name="w_halo">#5FD5D4</color>
+    <color name="w_pill_off">#DDE3E3</color>
+    <color name="w_pill_on">#9FE5E3</color>
+</resources>

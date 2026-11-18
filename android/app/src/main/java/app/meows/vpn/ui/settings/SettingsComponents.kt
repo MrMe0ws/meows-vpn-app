@@ -1,8 +1,19 @@
 package app.meows.vpn.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -71,24 +82,60 @@ fun SettingsPageScaffold(title: String, onBack: () -> Unit, content: @Composable
     }
 }
 
-/** Группа настроек в скруглённой карточке, с необязательным заголовком и пояснением под ней. */
+/**
+ * Группа настроек, как в системных настройках Android: каждый пункт — своя плитка, между плитками крошечный зазор.
+ * Внешние углы группы крупные, внутренние — мелкие. Плиткой становится каждый верхний элемент [content].
+ */
 @Composable
 fun SettingsGroup(title: String? = null, footer: String? = null, content: @Composable () -> Unit) {
+    val tile = MaterialTheme.colorScheme.surfaceContainer
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
         if (title != null) Text(
             title.uppercase(), Modifier.padding(start = 12.dp, bottom = 8.dp),
             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
         )
-        Card(
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        ) { Column(Modifier.padding(vertical = 4.dp)) { content() } }
+        val tiles = remember { ArrayList<Rect>() }
+        Layout(
+            content,
+            Modifier.fillMaxWidth().drawBehind {
+                tiles.forEachIndexed { i, r ->
+                    val top = if (i == 0) TILE_OUTER else TILE_INNER
+                    val bottom = if (i == tiles.lastIndex) TILE_OUTER else TILE_INNER
+                    val t = CornerRadius(top.toPx()); val b = CornerRadius(bottom.toPx())
+                    drawPath(Path().apply { addRoundRect(RoundRect(r, t, t, b, b)) }, tile)
+                }
+            },
+        ) { measurables, constraints ->
+            val gap = TILE_GAP.roundToPx()
+            val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+            val shown = placeables.filter { it.height > 0 }   // пустые узлы (например, диалоги) плитками не считаем
+            val height = shown.sumOf { it.height } + gap * (shown.size - 1).coerceAtLeast(0)
+            layout(constraints.maxWidth, height) {
+                tiles.clear()
+                var y = 0
+                placeables.forEach { p ->
+                    if (p.height == 0) { p.place(0, y); return@forEach }
+                    val i = tiles.size
+                    val shape = RoundedCornerShape(
+                        if (i == 0) TILE_OUTER else TILE_INNER, if (i == 0) TILE_OUTER else TILE_INNER,
+                        if (i == shown.lastIndex) TILE_OUTER else TILE_INNER, if (i == shown.lastIndex) TILE_OUTER else TILE_INNER,
+                    )
+                    tiles.add(Rect(0f, y.toFloat(), constraints.maxWidth.toFloat(), (y + p.height).toFloat()))
+                    p.placeWithLayer(0, y) { this.shape = shape; clip = true }
+                    y += p.height + gap
+                }
+            }
+        }
         if (footer != null) Text(
             footer, Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
+
+private val TILE_OUTER = 28.dp
+private val TILE_INNER = 4.dp
+private val TILE_GAP = 2.dp
 
 @Composable
 fun RowIcon(icon: ImageVector) {
@@ -109,22 +156,46 @@ fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: Stri
     )
 }
 
+/** Строка с переходом и отдельным тумблером (как «Wi‑Fi» в настройках Android): текст открывает подробности, тумблер включает. */
+@Composable
+fun SplitSwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: String?, onOpen: () -> Unit, onChange: (Boolean) -> Unit) {
+    Row(Modifier.height(IntrinsicSize.Min)) {
+        // текст и стрелка — одна нажимаемая область: нажатие подсвечивает их вместе
+        Row(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onOpen), verticalAlignment = Alignment.CenterVertically) {
+            ListItem(
+                modifier = Modifier.weight(1f),
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                leadingContent = { RowIcon(icon) },
+                headlineContent = { Text(title) },
+                supportingContent = subtitle?.let { { Text(it) } },
+            )
+            Icon(Icons.Rounded.ChevronRight, null, Modifier.padding(end = 16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        VerticalDivider(Modifier.padding(vertical = 12.dp))
+        Box(Modifier.fillMaxHeight().clickable { onChange(!checked) }.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+            Switch(checked, onChange)
+        }
+    }
+}
+
 /** Строка «название — значение». Со стрелкой, если есть переход ([onClick]). */
 @Composable
 fun ValueRow(icon: ImageVector, title: String, value: String? = null, summary: String? = null, onClick: (() -> Unit)? = null) {
-    ListItem(
-        modifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        leadingContent = { RowIcon(icon) },
-        headlineContent = { Text(title) },
-        supportingContent = summary?.let { { Text(it) } },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (value != null) Text(value, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-                if (onClick != null) Icon(Icons.Rounded.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        },
-    )
+    Row(
+        (if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier).height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ListItem(
+            modifier = Modifier.weight(1f),
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+            leadingContent = { RowIcon(icon) },
+            headlineContent = { Text(title) },
+            supportingContent = summary?.let { { Text(it) } },
+        )
+        // справа — вне ListItem: внутри него значок прижимается к верху, когда подпись в несколько строк
+        if (value != null) Text(value, Modifier.padding(end = if (onClick != null) 0.dp else 16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        if (onClick != null) Icon(Icons.Rounded.ChevronRight, null, Modifier.padding(end = 16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
 
 /** Строка с выбором одного значения из списка в диалоге; значение хранится в prefs по [key]. */

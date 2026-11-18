@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -36,6 +43,10 @@ import app.meows.desktop.ui.components.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,14 +57,52 @@ import app.meows.desktop.ui.components.hand
 import app.meows.desktop.ui.home.openUrl
 import app.meows.desktop.ui.theme.Palettes
 
+/**
+ * Группа настроек, как в системных настройках Android: каждый пункт — своя плитка, между плитками крошечный зазор.
+ * Внешние углы группы крупные, внутренние — мелкие. Плиткой становится каждый верхний элемент [content].
+ */
 @Composable
 internal fun Group(title: String, footer: String? = null, content: @Composable () -> Unit) {
+    val tile = MaterialTheme.colorScheme.surfaceContainer
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
         Text(title.uppercase(), Modifier.padding(start = 12.dp, bottom = 8.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        Card(shape = MaterialTheme.shapes.extraLarge, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) { Column(Modifier.padding(vertical = 4.dp)) { content() } }
+        val tiles = remember { ArrayList<Rect>() }
+        Layout(
+            content,
+            Modifier.fillMaxWidth().drawBehind {
+                tiles.forEachIndexed { i, r ->
+                    val t = CornerRadius((if (i == 0) TILE_OUTER else TILE_INNER).toPx())
+                    val b = CornerRadius((if (i == tiles.lastIndex) TILE_OUTER else TILE_INNER).toPx())
+                    drawPath(Path().apply { addRoundRect(RoundRect(r, t, t, b, b)) }, tile)
+                }
+            },
+        ) { measurables, constraints ->
+            val gap = TILE_GAP.roundToPx()
+            val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+            val shown = placeables.filter { it.height > 0 }   // пустые узлы (например, диалоги) плитками не считаем
+            val height = shown.sumOf { it.height } + gap * (shown.size - 1).coerceAtLeast(0)
+            layout(constraints.maxWidth, height) {
+                tiles.clear()
+                var y = 0
+                placeables.forEach { p ->
+                    if (p.height == 0) { p.place(0, y); return@forEach }
+                    val i = tiles.size
+                    val top = if (i == 0) TILE_OUTER else TILE_INNER
+                    val bottom = if (i == shown.lastIndex) TILE_OUTER else TILE_INNER
+                    val shape = RoundedCornerShape(top, top, bottom, bottom)
+                    tiles.add(Rect(0f, y.toFloat(), constraints.maxWidth.toFloat(), (y + p.height).toFloat()))
+                    p.placeWithLayer(0, y) { this.shape = shape; clip = true }
+                    y += p.height + gap
+                }
+            }
+        }
         if (footer != null) Text(footer, Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
+
+private val TILE_OUTER = 28.dp
+private val TILE_INNER = 4.dp
+private val TILE_GAP = 2.dp
 
 @Composable
 internal fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = ListItem(
@@ -71,6 +120,8 @@ private fun Swatch(color: Color, selected: Boolean, onClick: () -> Unit) = Surfa
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
+    var autoSwitchOpen by remember { mutableStateOf(false) }
+    if (autoSwitchOpen) { AutoSwitchScreen(app) { autoSwitchOpen = false }; return }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = { TopAppBar(title = { Text("Настройки") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } }) },
@@ -96,7 +147,7 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
                 SwitchRow("Блокировать рекламу", null, app.blockAds, app::chooseBlockAds)
                 SwitchRow("Все российские сайты напрямую", "Расширенно, поверх правил подписки", app.ruDirect, app::chooseRuDirect)
             }
-            SystemGroup(app)
+            SystemGroup(app) { autoSwitchOpen = true }
             UpdatesGroup(app)
             Group("О приложении") {
                 ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Версия") }, trailingContent = { Text(AppInfo.VERSION) })

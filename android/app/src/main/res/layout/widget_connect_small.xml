@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="9dp">
+
+        <!-- диск: выключенный слой снизу, «горящий» (w_lit + w_paw_on) поверх с прозрачностью по уровню -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_disc_off">
+            <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_paw_off" />
+            <ImageView
+                android:id="@+id/w_lit"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY"
+                android:src="@drawable/widget_disc_on" />
+            <ImageView
+                android:id="@+id/w_paw_on"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_paw_on" />
+        </FrameLayout>
+
+        <!-- флаг сервера, виден при подключении -->
+        <TextView
+            android:id="@+id/w_flag"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/widget_badge"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </FrameLayout>
+</FrameLayout>

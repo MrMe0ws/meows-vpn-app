@@ -10,22 +10,27 @@ import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import app.meows.vpn.MeowsViewModel
+import app.meows.vpn.SwitchFilter
 import app.meows.vpn.XKStore
 import app.meows.vpn.ui.settings.SettingsGroup
 import app.meows.vpn.ui.settings.SettingsPageScaffold
+import app.meows.vpn.ui.settings.SplitSwitchRow
 import app.meows.vpn.ui.settings.SwitchRow
 import app.meows.vpn.ui.settings.ValueRow
 
 /** Автозапуск, автопереключение серверов, локальная сеть, системная «защита от обрыва» (Always-on VPN / Kill switch). */
 @Composable
-fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit) {
+fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit, openAutoSwitch: () -> Unit) {
     val ctx = LocalContext.current
     SettingsPageScaffold("Подключение", onBack) {
         SettingsGroup {
             SwitchRow(Icons.Rounded.PlayArrow, "Подключаться при запуске", vm.flag(XKStore.P_AUTOCONN, false)) { vm.setFlag(XKStore.P_AUTOCONN, it) }
-            SwitchRow(Icons.Rounded.SwapHoriz, "Автопереключение серверов", vm.flag(XKStore.P_AUTOSWITCH, true), "Если сервер перестал отвечать, Meows подключится к ближайшему рабочему. Выключите, если нужна конкретная страна") {
-                vm.setFlag(XKStore.P_AUTOSWITCH, it)
-            }
+            val on = vm.flag(XKStore.P_AUTOSWITCH, true)
+            SplitSwitchRow(
+                Icons.Rounded.SwapHoriz, "Автопереключение серверов", on,
+                if (on) SwitchFilter.summary(vm.st.prefs(), vm.servers) else "Выключено",
+                onOpen = openAutoSwitch,
+            ) { vm.setFlag(XKStore.P_AUTOSWITCH, it) }
             SwitchRow(Icons.Rounded.Router, "Локальная сеть мимо VPN", vm.flag(XKStore.P_LAN, true), "Роутер, принтеры, Chromecast") {
                 vm.setFlag(XKStore.P_LAN, it, reconnect = true)
             }

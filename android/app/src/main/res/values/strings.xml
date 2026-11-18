@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Meows</string>
+    <string name="widget_description">Сервер и кнопка включения VPN</string>
+    <string name="widget_small_description">Круг с лапкой: включить или выключить VPN</string>
+    <string name="widget_off">Выключен</string>
+    <string name="widget_connecting">Подключение…</string>
+    <string name="widget_on">Подключено</string>
+    <string name="widget_connect">Включить</string>
+    <string name="widget_disconnect">Отключить</string>
+    <string name="widget_no_server">Сервер не выбран</string>
 </resources>

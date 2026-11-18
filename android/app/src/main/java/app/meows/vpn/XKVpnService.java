@@ -80,6 +80,7 @@ public class XKVpnService extends VpnService {
             synchronized (listeners) { copy = new ArrayList<>(listeners); }
             for (Listener l : copy) l.onState(s);
             XKTileService.refresh(XKAppHolder.ctx);
+            app.meows.vpn.widget.Widgets.refresh(XKAppHolder.ctx);
         }});
     }
 
@@ -302,7 +303,7 @@ public class XKVpnService extends VpnService {
                 int best = -1, bestMs = Integer.MAX_VALUE;
                 for (int i = 0; i < list.size(); i++) {
                     Integer p = st.pings.get(i);
-                    if (i != cur && p != null && p > 0 && p < bestMs) { bestMs = p; best = i; }
+                    if (i != cur && p != null && p > 0 && p < bestMs && SwitchFilter.allowed(st.prefs(), list, list.get(i))) { bestMs = p; best = i; }
                 }
                 fails = 0;
                 if (best < 0 || !allowSwitch()) continue;

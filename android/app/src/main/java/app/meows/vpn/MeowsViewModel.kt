@@ -271,6 +271,9 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     fun setDynamic(on: Boolean) { dynamicColors = on; st.prefs().edit().putBoolean("dynamic", on).apply() }
     fun chooseAmoled(on: Boolean) { amoled = on; st.prefs().edit().putBoolean("amoled", on).apply() }
 
+    fun setSwitchMode(m: Int) { SwitchFilter.setMode(st.prefs(), m); bump() }
+    fun toggleSwitchTarget(title: String) { SwitchFilter.toggle(st.prefs(), st.servers(), title); bump() }
+
     fun setBypassCats(s: Set<String>) { st.setBypassCats(s); bump(); reconnectIfNeeded() }
     fun setBypassSites(s: Collection<String>) { st.setBypassSites(s); bump(); reconnectIfNeeded() }
     fun setExcludedApps(s: Set<String>) { st.setExcludedApps(s); bump(); reconnectIfNeeded() }

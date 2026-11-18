@@ -11,6 +11,7 @@ XKVpnService.java        VpnService, запуск ядра                   (л
 XKTileService.java       плитка быстрых настроек                   (легаси)
 XKReceiver.java          напоминания о сроке, автозапуск           (легаси)
 XKAppHolder.java         глобальный Context для плитки/сервиса     (легаси)
+widget/          ConnectWidgetSmall.kt (1x1), ConnectWidgetBig.kt (2x2), Widgets.kt (касание, сервер, обновление), WidgetAnimator.kt (плавность) — features/widget.md
 
 ui/theme/        Theme.kt (MeowsTheme), Palettes.kt
 ui/components/   CatConnectButton.kt, PingChip.kt, Format.kt — общие виджеты и форматирование
