@@ -28,6 +28,7 @@
 | Собрать, подписать, выпустить релиз | `docs/build.md`, `docs/release.md` |
 | Что делать дальше | `docs/roadmap.md` |
 | Устройство репозитория, iOS | `docs/platforms.md` |
+| **Какие бывают сборки** (GitHub-APK / Play / Windows) — читать перед правками | `docs/editions.md` |
 | Google Play (AAB, flavor `play`, консоль, политика) | `docs/play.md`, `docs/play-listing.md` |
 | Windows-версия | `docs/windows/overview.md` |
 | Что за магазин и как с ним связано приложение | `docs/business-context.md` |
@@ -35,7 +36,8 @@
 
 ## Быстрые факты
 
-- Пакет `app.meows.vpn`, minSdk 24, targetSdk 35, compileSdk 36. Сборка: `.\android\build.ps1` (см. `docs/build.md`).
+- **Три продукта:** Android GitHub-APK (`direct`), Android Google Play (`play`, AAB, без оплаты и самообновления), Windows — различия в `docs/editions.md`.
+- Пакет `app.meows.vpn`, minSdk 24, targetSdk 35 (у Play-варианта 36), compileSdk 36. Сборка: `.\android\build.ps1` (см. `docs/build.md`).
 - APK универсальная: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86` (ядро: `core/build-android.ps1`). На устройстве проверен только arm64.
 - Репозиторий проекта указан в одном месте: `android/.../update/AppLinks.kt`. Релизы Android — теги `android-vX.Y.Z`.
 - Проект лежит в папке с кириллицей — Gradle собирает из зеркала `C:\MeowsBuild\src` (скрипт делает сам).
