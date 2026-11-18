@@ -30,6 +30,10 @@ Copy-Item "$wix\light.exe.config" "$wix\light-real.exe.config" -Force   # .NET-�
 $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 & $csc /nologo /target:exe /out:"$wix\light.exe" "$PSScriptRoot\tools\LightShim.cs"
 if ($LASTEXITCODE -ne 0) { throw "Не удалось собрать обёртку light.exe" }
+# русская сборка установщика: обёртка light.exe соберёт ещё и русский MSI (для языкового перехода Setup.exe)
+$env:MEOWS_RU_WXL = "$work\tools\installer\MsiInstallerStrings_ru.wxl"
+$env:MEOWS_RU_MSI = "C:\MeowsBuild\msi_ru\Meows-ru.msi"
+if (Test-Path $env:MEOWS_RU_MSI) { [IO.File]::Delete($env:MEOWS_RU_MSI) }
 gradle packageMsi -x unzipWix --no-daemon --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Gradle (packageMsi) завершился с ошибкой" }
 
@@ -42,6 +46,11 @@ Compress-Archive -Path $app.FullName -DestinationPath $zip
 "ZIP: {0} ({1:N1} МБ)" -f $zip, ((Get-Item $zip).Length / 1MB)
 $msi = Get-ChildItem "$env:MEOWS_WIN_BUILD_DIR\compose\binaries\main\msi" -Filter *.msi -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($msi) {
+    # галочка «Запустить Meows» на последней странице + русский язык (Meows-Setup.exe выбирает язык по Windows)
+    if (Test-Path $env:MEOWS_RU_MSI) {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File "$PSScriptRoot\tools\postprocess-msi.ps1" -EnMsi $msi.FullName -RuMsi $env:MEOWS_RU_MSI -OutExe "$PSScriptRoot\dist\Meows-Setup-$ver.exe" -ShimSource "$PSScriptRoot\tools\SetupShim.cs" -Torch "$wix\torch.exe"
+        if ($LASTEXITCODE -ne 0) { throw "Доработка установщика не удалась" }
+    } else { Write-Warning "Русский MSI не собран — Setup.exe не создан" }
     $dst = "$PSScriptRoot\dist\Meows-$ver.msi"
     Copy-Item $msi.FullName $dst -Force
     "MSI: {0} ({1:N1} МБ)" -f $dst, ((Get-Item $dst).Length / 1MB)

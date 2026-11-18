@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Русские строки установщика (то же, что jpackage кладёт в MsiInstallerStrings_en.wxl). Стандартные окна WiX переводит сам WixUIExtension (ru-ru). -->
+<WixLocalization Culture="ru-ru" xmlns="http://schemas.microsoft.com/wix/2006/localization" Codepage="1251">
+  <String Id="message.install.dir.exist">Папка [INSTALLDIR] уже существует. Всё равно установить в эту папку?</String>
+  <String Id="MainFeatureTitle">Основной компонент</String>
+  <String Id="DowngradeErrorMessage">Уже установлена более новая версия [ProductName]. Установка более старой версии отключена. Программа установки будет закрыта.</String>
+  <String Id="DisallowUpgradeErrorMessage">Уже установлена более старая версия [ProductName]. Обновление отключено. Программа установки будет закрыта.</String>
+
+  <String Id="ShortcutPromptDlg_Title">Установка [ProductName]</String>
+  <String Id="ShortcutPromptDlgTitle">{\WixUI_Font_Title}Ярлыки</String>
+  <String Id="ShortcutPromptDlgBannerBitmap">WixUI_Bmp_Banner</String>
+  <String Id="ShortcutPromptDlgDescription">Выберите ярлыки, которые нужно создать.</String>
+  <String Id="ShortcutPromptDlgDesktopShortcutControlLabel">Создать ярлык на рабочем столе</String>
+  <String Id="ShortcutPromptDlgStartMenuShortcutControlLabel">Создать ярлык в меню «Пуск»</String>
+  <String Id="InstallDirNotEmptyDlg_Title">Установка [ProductName]</String>
+</WixLocalization>

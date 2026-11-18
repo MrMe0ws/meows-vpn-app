@@ -35,4 +35,19 @@ try {
     }
     gh release upload $floating $file --repo $Repo --clobber
     "OK: $floating -> $fixed ($version)"
+
+    # Windows: рядом лежит установщик с выбором языка (Meows-Setup-X.Y.Z.exe) — он же под постоянным именем Meows-Setup.exe
+    if ($platform -eq "windows") {
+        $sdir = Join-Path $tmp "setup"; New-Item -ItemType Directory $sdir | Out-Null
+        $ErrorActionPreference = "Continue"
+        gh release download $Tag --repo $Repo --pattern "Meows-Setup-*.exe" --dir $sdir *> $null
+        $ErrorActionPreference = "Stop"
+        $setup = Get-ChildItem $sdir -File -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($setup) {
+            $setupFile = Join-Path $tmp "Meows-Setup.exe"; Move-Item $setup.FullName $setupFile
+            $ErrorActionPreference = "Continue"; gh release delete-asset $floating "Meows-Setup.exe" --repo $Repo --yes *> $null; $ErrorActionPreference = "Stop"
+            gh release upload $floating $setupFile --repo $Repo --clobber
+            "OK: $floating -> Meows-Setup.exe ($version)"
+        }
+    }
 } finally { Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue }

@@ -17,7 +17,7 @@
   - Режим «Все программы» (TUN, по умолчанию) просит права администратора при запуске приложения (окно UAC) — это нормально, надо сказать «нажмите Да».
 - **Прямые постоянные ссылки на свежую сборку** (без номера версии; всегда указывают на последний релиз, обновляются автоматически):
   - Android: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/android-latest/Meows.apk`
-  - Windows: `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows.msi`
+  - Windows (установщик с выбором языка по системе, предлагает запустить приложение после установки): `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows-Setup.exe` (запасной вариант — чистый MSI: `.../windows-latest/Meows.msi`)
   Используй их в кнопках «Скачать» (кнопка сразу качает файл). Страница релизов — `https://github.com/MrMe0ws/meows-vpn-app/releases` — запасная ссылка «все версии». Ссылку вида `/releases/latest/download/<файл>` использовать **нельзя**: «latest» — самый свежий релиз репозитория вообще (Android или Windows), а имена файлов в обычных релизах содержат версию.
 - Deep link: `meows://add/<ссылка подписки>` — ссылка **без кодирования и без base64** (как у `happ://add/` и `incy://add/`). Приложение принимает и URL-кодированную, и сырую. Шифрования deep link у Meows **нет**.
 - Android + Chrome: ссылку на пользовательскую схему Chrome часто не открывает. Надёжнее `intent://add/<ссылка>#Intent;scheme=meows;package=app.meows.vpn;S.browser_fallback_url=<url-encoded страница релизов>;end` — при отсутствии приложения откроется страница загрузки. Готовый пример страницы: `docs/cabinet/open-in-app.html` в репозитории приложения. Посмотри, как кабинет уже решает это для других приложений (комментарий в `useConnectionGuide.ts` про обход Telegram WebView), и сделай так же; отдельную страницу заводить не надо, если существующий механизм справляется.
@@ -43,7 +43,7 @@ Android:
 
 Windows:
 - installationStep.description: «Скачайте установщик Meows (файл .msi из последнего релиза Windows) и запустите. Права администратора для установки не нужны. Windows может показать предупреждение SmartScreen — нажмите «Подробнее» → «Выполнить в любом случае».»
-- installationStep.buttons: «Скачать с GitHub» → `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows.msi` (прямая загрузка).
+- installationStep.buttons: «Скачать с GitHub» → `https://github.com/MrMe0ws/meows-vpn-app/releases/download/windows-latest/Meows-Setup.exe` (прямая загрузка).
 - addSubscriptionStep.description: «Нажмите кнопку ниже — Meows откроется и добавит подписку сам. Если нет — скопируйте ссылку подписки, в Meows нажмите «Добавить» слева и вставьте её.»
 - connectAndUseStep.description: «При запуске Meows попросит права администратора — нажмите «Да»: это нужно, чтобы весь интернет компьютера шёл через VPN. Нажмите большую кнопку справа — когда появится «Подключено», всё работает.»
 
