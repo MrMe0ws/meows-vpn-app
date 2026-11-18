@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Google Play: приложение не ставит APK само, поэтому убираем разрешение на установку и FileProvider обновлений -->
+<!-- Google Play: приложение не ставит APK само, поэтому убираем разрешение на установку и FileProvider обновлений.
+     QUERY_ALL_PACKAGES тоже убираем (Play просит обоснование, наш сценарий — выбор приложений для обхода VPN — в разрешённый список не входит):
+     вместо него видны только приложения с иконкой в лаунчере, а их и показывает AppsPage. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:node="remove" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application>
         <provider android:name="androidx.core.content.FileProvider" tools:node="remove" />
     </application>
