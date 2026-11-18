@@ -20,7 +20,7 @@ fun PingPage(vm: MeowsViewModel, onBack: () -> Unit) {
         SettingsGroup(footer = "«Реальный» — настоящий запрос через каждый сервер: честная задержка до сайта. «TCP» — только время соединения с сервером.") {
             PickRow(vm, Icons.Rounded.Speed, "Способ", XKStore.P_PING_MODE, 0, listOf("Реальный (через VPN)", "TCP"), listOf(0, 1))
             PickRow(vm, Icons.Rounded.Public, "Адрес проверки", XKStore.P_PING_URL, 0, listOf("Google", "Cloudflare", "Apple"), listOf(0, 1, 2))
-            PickRow(vm, Icons.Rounded.Timer, "Таймаут", XKStore.P_PING_TO, 3, listOf("2 с", "3 с", "5 с", "8 с"), listOf(2, 3, 5, 8))
+            PickRow(vm, Icons.Rounded.Timer, "Таймаут", XKStore.P_PING_TO, XKStore.PING_TO_DEFAULT, listOf("2 с", "3 с", "5 с", "8 с"), listOf(2, 3, 5, 8))
         }
         SettingsGroup {
             PickRow(vm, Icons.Rounded.Info, "Показывать результат", XKStore.P_PING_KEEP, 60, listOf("30 с", "1 мин", "3 мин", "5 мин", "Всегда"), listOf(30, 60, 180, 300, 0))

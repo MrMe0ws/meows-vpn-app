@@ -56,7 +56,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
             ) { open(SettingsPage.Connection) }
             ValueRow(
                 Icons.Rounded.Speed, "Пинг",
-                summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else "Реальный") + " · ${st.pref(XKStore.P_PING_TO, 3)} с",
+                summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else "Реальный") + " · ${st.pref(XKStore.P_PING_TO, XKStore.PING_TO_DEFAULT)} с",
             ) { open(SettingsPage.Ping) }
             ValueRow(Icons.Rounded.Timeline, "Статистика", summary = "Скорость и трафик за подключение") { open(SettingsPage.Stats) }
             if (!Edition.isPlay) ValueRow(
