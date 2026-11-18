@@ -7,3 +7,4 @@ dist/
 .idea/
 *.iml
 captures/
+docs/play-assets/*.mp4
