@@ -26,7 +26,13 @@ static class LightShim
         string rest = i > 0 && i < cl.Length ? cl.Substring(i).TrimStart() : "";
         // -sval только для настоящей линковки (есть -out); проверка версии (`light.exe -?`) jpackage оставляем как есть
         bool link = rest.Contains("-out");
-        int code = Run(real, link ? "-sval " + rest : rest);
+        // фирменные картинки установщика (баннер и боковая панель с лапкой) — переменные WiX, их задаёт build.ps1
+        string banner = Environment.GetEnvironmentVariable("MEOWS_BANNER_BMP");
+        string dialogBmp = Environment.GetEnvironmentVariable("MEOWS_DIALOG_BMP");
+        string art = "";
+        if (link && !string.IsNullOrEmpty(banner) && File.Exists(banner)) art += " -dWixUIBannerBmp=" + banner;
+        if (link && !string.IsNullOrEmpty(dialogBmp) && File.Exists(dialogBmp)) art += " -dWixUIDialogBmp=" + dialogBmp;
+        int code = Run(real, link ? "-sval" + art + " " + rest : rest);
 
         string ruWxl = Environment.GetEnvironmentVariable("MEOWS_RU_WXL");
         string ruOut = Environment.GetEnvironmentVariable("MEOWS_RU_MSI");
@@ -36,7 +42,7 @@ static class LightShim
             string ru = Regex.Replace(rest, @"-out\s+\S+", "-out " + ruOut);
             ru = ru.Replace("-cultures:en-us", "-cultures:ru-ru");
             ru = Regex.Replace(ru, @"-loc\s+\S+MsiInstallerStrings_en\.wxl", "-loc " + ruWxl);
-            int c2 = Run(real, "-sval " + ru);
+            int c2 = Run(real, "-sval" + art + " " + ru);
             if (c2 != 0) Console.Error.WriteLine("WARN: русская сборка установщика не получилась, код " + c2);
         }
         return code;

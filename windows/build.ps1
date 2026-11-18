@@ -33,6 +33,8 @@ if ($LASTEXITCODE -ne 0) { throw "Не удалось собрать обёрт�
 # русская сборка установщика: обёртка light.exe соберёт ещё и русский MSI (для языкового перехода Setup.exe)
 $env:MEOWS_RU_WXL = "$work\tools\installer\MsiInstallerStrings_ru.wxl"
 $env:MEOWS_RU_MSI = "C:\MeowsBuild\msi_ru\Meows-ru.msi"
+$env:MEOWS_BANNER_BMP = "$work\tools\installer\banner.bmp"
+$env:MEOWS_DIALOG_BMP = "$work\tools\installer\dialog.bmp"
 if (Test-Path $env:MEOWS_RU_MSI) { [IO.File]::Delete($env:MEOWS_RU_MSI) }
 gradle packageMsi -x unzipWix --no-daemon --console=plain
 if ($LASTEXITCODE -ne 0) { throw "Gradle (packageMsi) завершился с ошибкой" }
