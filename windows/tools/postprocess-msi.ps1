@@ -66,6 +66,7 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path $mst)) { throw "torch не смог 
 # --- 3. Meows-Setup.exe
 $csc = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (Test-Path $OutExe) { [IO.File]::Delete($OutExe) }
-& $csc /nologo /target:winexe /out:$OutExe "/resource:$EnMsi,meows.msi" "/resource:$mst,ru.mst" $ShimSource
+$ico = Join-Path $PSScriptRoot "..\icons\meows.ico"   # значок лапки у файла установщика
+& $csc /nologo /target:winexe /out:$OutExe "/win32icon:$ico" "/resource:$EnMsi,meows.msi" "/resource:$mst,ru.mst" $ShimSource
 if ($LASTEXITCODE -ne 0) { throw "Не удалось собрать Meows-Setup.exe" }
 "Setup: {0} ({1:N1} МБ)" -f $OutExe, ((Get-Item $OutExe).Length / 1MB)
