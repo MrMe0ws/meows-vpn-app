@@ -164,7 +164,7 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
             }
 
             val ann = st.announce()
-            if (!ann.isNullOrBlank()) {
+            if (!Edition.isPlay && !ann.isNullOrBlank()) {
                 Text(
                     ann, Modifier.fillW().background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
                         .padding(horizontal = 16.dp, vertical = 10.dp),
