@@ -35,6 +35,11 @@ class MainActivity : ComponentActivity() {
         if (text.isNotEmpty()) vm.addSubscription(text)
     }
 
+    override fun onStop() {
+        super.onStop()
+        AppIcon.applyPending(this)   // смена иконки вступает в силу, когда приложение свёрнуто
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)

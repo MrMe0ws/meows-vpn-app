@@ -1,6 +1,10 @@
 package app.meows.vpn.ui.settings.pages
 
 import app.meows.vpn.i18n.tr
+import androidx.compose.material.icons.rounded.AppShortcut
+import androidx.compose.ui.platform.LocalContext
+import app.meows.vpn.AppIcon
+import app.meows.vpn.ui.settings.ValueRow
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -40,7 +44,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 /** Тема (авто/светлая/тёмная), цвет (из обоев или палитра), AMOLED. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
+fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit, openAppIcon: () -> Unit) {
     SettingsPageScaffold(tr("Оформление"), onBack) {
         SettingsGroup(tr("Тема")) {
             val modes = listOf(tr("Авто"), tr("Светлая"), tr("Тёмная"))
@@ -70,9 +74,11 @@ fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
                 )
             }
         }
-        SettingsGroup(tr("Иконка приложения")) { AppIconPicker() }
         SettingsGroup {
             SwitchRow(Icons.Rounded.Lock, tr("Чёрный фон (AMOLED)"), vm.amoled, tr("Для тёмной темы: экономит заряд на OLED-экранах")) { vm.chooseAmoled(it) }
+        }
+        SettingsGroup {
+            ValueRow(Icons.Rounded.AppShortcut, tr("Иконка приложения"), summary = tr(AppIcon.current(LocalContext.current).title), onClick = openAppIcon)
         }
     }
 }

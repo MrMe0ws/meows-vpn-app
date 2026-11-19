@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.ui.settings.pages.AboutPage
+import app.meows.vpn.ui.settings.pages.AppIconPage
 import app.meows.vpn.ui.settings.pages.AppearancePage
 import app.meows.vpn.ui.settings.pages.AppsPage
 import app.meows.vpn.ui.settings.pages.AutoSwitchPage
@@ -30,7 +31,7 @@ import app.meows.vpn.ui.settings.pages.UpdatesPage
 enum class SettingsPage(val parent: SettingsPage?, val depth: Int) {
     Home(null, 0),
     Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1),
-    Bypass(Routing, 2), Apps(Routing, 2), AutoSwitch(Connection, 2),
+    Bypass(Routing, 2), Apps(Routing, 2), AutoSwitch(Connection, 2), AppIcon(Appearance, 2),
 }
 
 /** Роутер настроек: главная со свёрнутыми разделами → страница раздела. */
@@ -52,7 +53,8 @@ fun SettingsScreen(vm: MeowsViewModel, onBack: () -> Unit) {
     ) { p ->
         when (p) {
             SettingsPage.Home -> SettingsHome(vm, onBack = onBack, open = { page = it })
-            SettingsPage.Appearance -> AppearancePage(vm, back)
+            SettingsPage.Appearance -> AppearancePage(vm, back, openAppIcon = { page = SettingsPage.AppIcon })
+            SettingsPage.AppIcon -> AppIconPage(back)
             SettingsPage.Language -> LanguagePage(vm, back)
             SettingsPage.Routing -> RoutingPage(vm, back, openBypass = { page = SettingsPage.Bypass }, openApps = { page = SettingsPage.Apps })
             SettingsPage.Subscription -> SubscriptionPage(vm, back)

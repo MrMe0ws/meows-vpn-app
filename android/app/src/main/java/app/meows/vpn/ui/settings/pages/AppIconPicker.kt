@@ -47,7 +47,7 @@ fun AppIconPicker() {
         FlowRow(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppIcon.entries.forEach { icon ->
                     val on = icon == selected
-                    Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).clickable { selected = icon; AppIcon.apply(ctx, icon) }) {
+                    Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).clickable { selected = icon; AppIcon.pending = if (icon == AppIcon.currentApplied(ctx)) null else icon }) {
                         Surface(
                             Modifier.size(72.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             border = BorderStroke(if (on) 2.dp else 1.dp, if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),

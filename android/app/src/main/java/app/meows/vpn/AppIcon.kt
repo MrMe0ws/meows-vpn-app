@@ -14,7 +14,18 @@ enum class AppIcon(val alias: String, val title: String, val preview: Int) {
     private fun component(ctx: Context) = ComponentName(ctx.packageName, "app.meows.vpn.$alias")
 
     companion object {
-        fun current(ctx: Context): AppIcon {
+        /** Выбранная, но ещё не применённая иконка: смена компонента во время работы приложения выкидывает его на рабочий стол, поэтому применяем при сворачивании. */
+        var pending: AppIcon? = null
+
+        fun applyPending(ctx: Context) {
+            val p = pending ?: return
+            pending = null
+            apply(ctx, p)
+        }
+
+        fun current(ctx: Context): AppIcon = pending ?: currentApplied(ctx)
+
+        fun currentApplied(ctx: Context): AppIcon {
             val pm = ctx.packageManager
             return entries.firstOrNull { icon ->
                 when (pm.getComponentEnabledSetting(icon.component(ctx))) {
