@@ -31,23 +31,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.AppIcon
-import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.i18n.tr
-import app.meows.vpn.ui.settings.SettingsPageScaffold
 
-/** «В разработке» → «Иконка приложения»: сверху предпросмотр выбранной, ниже сетка вариантов; выбор применяется сразу. */
+/** Выбор иконки приложения (внутри «Оформления»): сверху предпросмотр выбранной, ниже сетка вариантов; выбор применяется сразу. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AppIconPage(vm: MeowsViewModel, onBack: () -> Unit) {
+fun AppIconPicker() {
     val ctx = LocalContext.current
     var selected by remember { mutableStateOf(AppIcon.current(ctx)) }
-    SettingsPageScaffold(tr("Иконка приложения"), onBack) {
+    Column {
         Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Image(painterResource(selected.preview), tr(selected.title), Modifier.size(112.dp).clip(CircleShape))
             Text(tr(selected.title), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleMedium)
         }
-        Surface(Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-            FlowRow(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        FlowRow(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppIcon.entries.forEach { icon ->
                     val on = icon == selected
                     Box(Modifier.size(72.dp).clip(RoundedCornerShape(20.dp)).clickable { selected = icon; AppIcon.apply(ctx, icon) }) {
@@ -61,6 +58,5 @@ fun AppIconPage(vm: MeowsViewModel, onBack: () -> Unit) {
                     }
                 }
             }
-        }
     }
 }

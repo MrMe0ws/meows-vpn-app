@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
 import app.meows.vpn.ui.settings.pages.autoUpdateTitle
-import app.meows.vpn.AppIcon
 import app.meows.vpn.ui.theme.Palettes
 import app.meows.vpn.Edition
 import app.meows.vpn.update.AppLinks
@@ -70,11 +69,6 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
                 summary = if (vm.updates.autoCheck) tr("Проверять автоматически") else tr("Проверка выключена"),
             ) { open(SettingsPage.Updates) }
             ValueRow(Icons.Rounded.Info, tr("О приложении"), summary = "${tr("Версия")} ${vm.updates.currentVersion}") { open(SettingsPage.About) }
-        }
-
-        if (vm.flag(DEV_FLAG, false)) SettingsGroup(footer = tr("Скрытый раздел: функции, которые ещё дорабатываются.")) {
-            ValueRow(Icons.Rounded.Palette, tr("Иконка приложения"), summary = tr(AppIcon.current(ctx).title)) { open(SettingsPage.AppIcon) }
-            ValueRow(Icons.Rounded.Info, tr("Скрыть раздел «В разработке»")) { vm.setFlag(DEV_FLAG, false) }
         }
 
         SettingsGroup {

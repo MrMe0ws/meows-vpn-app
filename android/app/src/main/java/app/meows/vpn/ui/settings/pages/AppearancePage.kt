@@ -70,6 +70,7 @@ fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
                 )
             }
         }
+        SettingsGroup(tr("Иконка приложения")) { AppIconPicker() }
         SettingsGroup {
             SwitchRow(Icons.Rounded.Lock, tr("Чёрный фон (AMOLED)"), vm.amoled, tr("Для тёмной темы: экономит заряд на OLED-экранах")) { vm.chooseAmoled(it) }
         }

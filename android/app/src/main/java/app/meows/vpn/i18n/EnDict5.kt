@@ -62,9 +62,5 @@ internal val enDict5 = mapOf(
     "Свечение" to "Glow",
     "Лайм" to "Lime",
     "Классика" to "Classic",
-    "Скрытый раздел: функции, которые ещё дорабатываются." to "Hidden section: features that are still in development.",
-    "Скрыть раздел «В разработке»" to "Hide the “In development” section",
-    "Раздел «В разработке» скрыт" to "The “In development” section is hidden",
-    "Открыт раздел «В разработке» в настройках" to "“In development” section unlocked in settings",
     "Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически." to "You can get the subscription link in the bot or your account. Servers will appear automatically.",
 )
