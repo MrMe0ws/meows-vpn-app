@@ -12,7 +12,11 @@ import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import app.meows.vpn.ui.settings.DEV_FLAG
 import androidx.compose.ui.platform.LocalContext
 import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
@@ -26,11 +30,20 @@ import app.meows.vpn.ui.settings.ValueRow
 fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val hwid = remember { vm.st.hwid() }
+    var taps by remember { mutableIntStateOf(0) }
     val device = "Android ${Build.VERSION.RELEASE} · ${Build.MANUFACTURER} ${Build.MODEL} · ${Build.SUPPORTED_ABIS.firstOrNull() ?: "?"}"
     fun open(url: String) { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
     SettingsPageScaffold(tr("О приложении"), onBack) {
         SettingsGroup(footer = tr("HWID отправляется в панель при обновлении подписки, чтобы считать устройства. Он не меняется при переустановке. Нажмите, чтобы скопировать.")) {
-            ValueRow(Icons.Rounded.Info, tr("Версия приложения"), vm.updates.currentVersion)
+            ValueRow(Icons.Rounded.Info, tr("Версия приложения"), vm.updates.currentVersion, onClick = {
+                val dev = vm.flag(DEV_FLAG, false)
+                taps++
+                if (taps >= 7) {
+                    taps = 0
+                    vm.setFlag(DEV_FLAG, !dev)
+                    vm.toast = if (dev) tr("Раздел «В разработке» скрыт") else tr("Открыт раздел «В разработке» в настройках")
+                }
+            })
             ValueRow(Icons.Rounded.Memory, tr("Ядро"), summary = CORE)
             ValueRow(Icons.Rounded.PhoneAndroid, tr("Устройство"), summary = device)
             ValueRow(Icons.Rounded.Fingerprint, tr("ID устройства (HWID)"), summary = hwid, onClick = {

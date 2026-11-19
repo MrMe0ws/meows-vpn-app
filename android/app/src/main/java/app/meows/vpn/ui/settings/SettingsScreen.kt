@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.ui.settings.pages.AboutPage
+import app.meows.vpn.ui.settings.pages.AppIconPage
 import app.meows.vpn.ui.settings.pages.AppearancePage
 import app.meows.vpn.ui.settings.pages.AppsPage
 import app.meows.vpn.ui.settings.pages.AutoSwitchPage
@@ -26,10 +27,13 @@ import app.meows.vpn.ui.settings.pages.StatsPage
 import app.meows.vpn.ui.settings.pages.SubscriptionPage
 import app.meows.vpn.ui.settings.pages.UpdatesPage
 
+/** Ключ настройки: показан ли скрытый раздел «В разработке» (открывается 7 нажатиями на версию в «О приложении»). */
+const val DEV_FLAG = "devMode"
+
 /** Страницы настроек. [parent] — куда ведёт «назад». Новая страница = новый элемент + файл в pages/. */
 enum class SettingsPage(val parent: SettingsPage?, val depth: Int) {
     Home(null, 0),
-    Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1),
+    Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1), AppIcon(Home, 1),
     Bypass(Routing, 2), Apps(Routing, 2), AutoSwitch(Connection, 2),
 }
 
@@ -62,6 +66,7 @@ fun SettingsScreen(vm: MeowsViewModel, onBack: () -> Unit) {
             SettingsPage.Updates -> UpdatesPage(vm, back)
             SettingsPage.About -> AboutPage(vm, back)
             SettingsPage.Stats -> StatsPage(vm, back)
+            SettingsPage.AppIcon -> AppIconPage(vm, back)
             SettingsPage.Bypass -> BypassPage(vm, back)
             SettingsPage.Apps -> AppsPage(vm, back)
         }
