@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,8 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.HorizontalDivider
+import app.meows.desktop.ui.components.Switch
 import app.meows.desktop.ui.components.DropdownMenuItem
 import androidx.compose.material3.Icon
 import app.meows.desktop.ui.components.IconButton
@@ -31,7 +34,7 @@ import app.meows.desktop.vpn.VpnMode
 
 /** Выбор режима (TUN / системный прокси) с кнопкой «что это?». Сменить можно и во время подключения — переподключимся. */
 @Composable
-fun ModePicker(mode: VpnMode, enabled: Boolean, onPick: (VpnMode) -> Unit) {
+fun ModePicker(mode: VpnMode, allVpn: Boolean, enabled: Boolean, onPick: (VpnMode) -> Unit, onAllVpn: (Boolean) -> Unit) {
     var open by remember { mutableStateOf(false) }
     var info by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -42,7 +45,7 @@ fun ModePicker(mode: VpnMode, enabled: Boolean, onPick: (VpnMode) -> Unit) {
             ) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Режим", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(tr("Режим"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(mode.title, style = MaterialTheme.typography.titleMedium)
                     }
                     Icon(Icons.Rounded.ExpandMore, null)
@@ -52,14 +55,20 @@ fun ModePicker(mode: VpnMode, enabled: Boolean, onPick: (VpnMode) -> Unit) {
                 VpnMode.entries.forEach { m ->
                     DropdownMenuItem(
                         text = { Column { Text(m.title, style = MaterialTheme.typography.titleSmall); Text(m.hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
-                        trailingIcon = { if (m == mode) Icon(Icons.Rounded.Check, "Выбран", tint = MaterialTheme.colorScheme.primary) },
+                        trailingIcon = { if (m == mode) Icon(Icons.Rounded.Check, tr("Выбран"), tint = MaterialTheme.colorScheme.primary) },
                         onClick = { open = false; onPick(m) },
                     )
                 }
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text(tr("Весь трафик через VPN"), style = MaterialTheme.typography.titleSmall) },
+                    trailingIcon = { Switch(allVpn, null) },
+                    onClick = { onAllVpn(!allVpn) },
+                )
             }
         }
         Spacer(Modifier.width(4.dp))
-        IconButton(onClick = { info = true }) { Icon(Icons.Rounded.Info, "Что такое режимы") }
+        IconButton(onClick = { info = true }) { Icon(Icons.Rounded.Info, tr("Что такое режимы")) }
     }
     if (info) ModeInfoDialog { info = false }
 }

@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,27 +38,27 @@ fun StatsPage(vm: MeowsViewModel, onBack: () -> Unit) {
     val now = samples.lastOrNull()
     val cs = MaterialTheme.colorScheme
     vm.rev
-    SettingsPageScaffold("Статистика", onBack) {
+    SettingsPageScaffold(tr("Статистика"), onBack) {
         if (vm.vpnState != XKVpnService.CONNECTED) {
-            Card2 { Text("Подключитесь — здесь появятся скорость и график трафика.", Modifier.padding(20.dp), color = cs.onSurfaceVariant) }
+            Card2 { Text(tr("Подключитесь — здесь появятся скорость и график трафика."), Modifier.padding(20.dp), color = cs.onSurfaceVariant) }
             return@SettingsPageScaffold
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Speed("Получение", now?.down ?: 0, cs.primary, Modifier.weight(1f))
-            Speed("Отправка", now?.up ?: 0, cs.tertiary, Modifier.weight(1f))
+            Speed(tr("Получение"), now?.down ?: 0, cs.primary, Modifier.weight(1f))
+            Speed(tr("Отправка"), now?.up ?: 0, cs.tertiary, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Card2 {
             Column(Modifier.padding(16.dp)) {
-                Text("Последние 2 минуты", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                Text(tr("Последние 2 минуты"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
                 SpeedChart(samples, Modifier.fillMaxWidth().height(140.dp))
             }
         }
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Totals("Через VPN", t.vpnDown, t.vpnUp, Modifier.weight(1f))
-            Totals("Напрямую", t.directDown, t.directUp, Modifier.weight(1f))
+            Totals(tr("Через VPN"), t.vpnDown, t.vpnUp, Modifier.weight(1f))
+            Totals(tr("Напрямую"), t.directDown, t.directUp, Modifier.weight(1f))
         }
     }
 }
@@ -72,7 +73,7 @@ private fun Speed(title: String, bytesPerSec: Long, color: Color, modifier: Modi
     Surface(modifier, shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(formatBytesRu(bytesPerSec) + "/с", style = MaterialTheme.typography.titleLarge, color = color)
+            Text(formatBytesRu(bytesPerSec) + tr("/с"), style = MaterialTheme.typography.titleLarge, color = color)
         }
     }
 }

@@ -1,5 +1,7 @@
 package app.meows.desktop.update
 
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -62,9 +64,9 @@ class UpdateController(private val settings: SettingsStore, private val scope: C
                     }
                 } }
                 c.disconnect()
-                if (total > 0 && done != total) { out.delete(); error("Файл скачан не полностью") }
+                if (total > 0 && done != total) { out.delete(); error(tr("Файл скачан не полностью")) }
                 UpdateState.Downloaded(info, out.absolutePath)
-            }.getOrElse { UpdateState.Error("Не удалось скачать: ${it.message}") }
+            }.getOrElse { UpdateState.Error(trf("Не удалось скачать: %s", it.message)) }
         }
     }
 

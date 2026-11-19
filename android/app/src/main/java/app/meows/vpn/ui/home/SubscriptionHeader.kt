@@ -1,5 +1,7 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
@@ -79,55 +81,55 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
 
     Surface(modifier.fillMaxWidth(), shape = shape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column {
-            Row(Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onExpand) { Icon(Icons.Rounded.ExpandMore, "Свернуть список", Modifier.rotate(chevron)) }
+            Row(Modifier.padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onExpand) { Icon(Icons.Rounded.ExpandMore, tr("Свернуть список"), Modifier.rotate(chevron)) }
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(st.title(), Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (st.isPinned()) Icon(Icons.Rounded.PushPin, "Закреплена", Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(st.title(), Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (st.isPinned()) Icon(Icons.Rounded.PushPin, tr("Закреплена"), Modifier.padding(start = 6.dp).size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     val upd = st.updated()
                     val auto = st.autoUpdateHours()
                     Text(
                         (if (upd > 0) SimpleDateFormat("dd.MM.yyyy HH:mm", RU).format(Date(upd)) else "—") +
-                            if (auto > 0) " · автообновление $auto ч" else "",
+                            if (auto > 0) trf(" · автообновление %d ч", auto) else "",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2,
                     )
                 }
                 val inf = rememberInfiniteTransition(label = "refresh")
                 val rot by inf.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "rot")
                 IconButton(onClick = { vm.refresh(st, false) }, enabled = !vm.isRefreshing(st)) {
-                    Icon(Icons.Rounded.Refresh, "Обновить подписку", Modifier.rotate(if (vm.isRefreshing(st)) rot else 0f))
+                    Icon(Icons.Rounded.Refresh, tr("Обновить подписку"), Modifier.rotate(if (vm.isRefreshing(st)) rot else 0f))
                 }
                 IconButton(onClick = { vm.ping(st) }, enabled = !vm.isPinging(st)) {
-                    if (vm.isPinging(st)) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.Speed, "Пинг серверов подписки")
+                    if (vm.isPinging(st)) LoadingIndicator(Modifier.size(24.dp)) else Icon(Icons.Rounded.Speed, tr("Пинг серверов подписки"))
                 }
                 Box {
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню подписки") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, tr("Меню подписки")) }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
-                            text = { Text(if (st.isPinned()) "Открепить" else "Закрепить сверху") }, leadingIcon = { Icon(Icons.Rounded.PushPin, null) },
+                            text = { Text(if (st.isPinned()) tr("Открепить") else tr("Закрепить сверху")) }, leadingIcon = { Icon(Icons.Rounded.PushPin, null) },
                             onClick = { menu = false; vm.togglePin(st) },
                         )
                         DropdownMenuItem(
-                            text = { Text("Выбрать быстрейший") }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
+                            text = { Text(tr("Выбрать быстрейший")) }, leadingIcon = { Icon(Icons.Rounded.Bolt, null) },
                             onClick = { menu = false; vm.selectFastest(st) },
                         )
                         DropdownMenuItem(
-                            text = { Text("Скопировать ссылку") }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) },
-                            onClick = { menu = false; vm.copy(st.url()); vm.toast = "Ссылка скопирована" },
+                            text = { Text(tr("Скопировать ссылку")) }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) },
+                            onClick = { menu = false; vm.copy(st.url()); vm.toast = tr("Ссылка скопирована") },
                         )
                         DropdownMenuItem(
-                            text = { Text("Заменить ссылку") }, leadingIcon = { Icon(Icons.Rounded.Edit, null) },
+                            text = { Text(tr("Заменить ссылку")) }, leadingIcon = { Icon(Icons.Rounded.Edit, null) },
                             onClick = { menu = false; onReplace() },
                         )
                         val web = st.webUrl()
                         if (!Edition.isPlay && !web.isNullOrBlank()) DropdownMenuItem(
-                            text = { Text("Личный кабинет") }, leadingIcon = { Icon(Icons.Rounded.OpenInBrowser, null) },
+                            text = { Text(tr("Личный кабинет")) }, leadingIcon = { Icon(Icons.Rounded.OpenInBrowser, null) },
                             onClick = { menu = false; openUrl(ctx, web) },
                         )
                         DropdownMenuItem(
-                            text = { Text("Удалить подписку", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(tr("Удалить подписку"), color = MaterialTheme.colorScheme.error) },
                             leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
                             onClick = { menu = false; vm.deleteSubscription(st) },
                         )
@@ -137,26 +139,26 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
 
             Row(
                 Modifier.fillW().background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val frac = if (total > 0) (used.toFloat() / total).coerceIn(0f, 1f) else 0f
                 Box(
-                    Modifier.weight(1f).height(30.dp).clip(RoundedCornerShape(15.dp))
+                    Modifier.weight(1f).height(24.dp).clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(Modifier.align(Alignment.CenterStart).fillW(frac).fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer))
                     Text(
                         formatBytesRu(used) + " / " + (if (total > 0) formatBytesRu(total) else "∞"),
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 }
                 if (expire > 0) {
                     Spacer(Modifier.width(12.dp))
                     val low = expire < System.currentTimeMillis() + 3 * 86_400_000L
                     Text(
-                        "Истекает: " + SimpleDateFormat("dd.MM.yyyy", RU).format(Date(expire)),
+                        tr("Истекает: ") + SimpleDateFormat("dd.MM.yyyy", RU).format(Date(expire)),
                         style = MaterialTheme.typography.labelLarge,
                         color = if (low) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                     )

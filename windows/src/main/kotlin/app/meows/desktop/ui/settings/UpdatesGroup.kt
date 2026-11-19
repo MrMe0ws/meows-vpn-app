@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.settings
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,8 +29,8 @@ import app.meows.desktop.update.UpdateState
 fun UpdatesGroup(app: AppModel) {
     val u = app.updates
     var auto by remember { mutableStateOf(u.autoCheck) }
-    Group("Обновления", "Приложение обновляется через GitHub: скачивает установщик и ставит его сам. Проверка — не чаще раза в 12 часов.") {
-        SwitchRow("Искать обновления", "При запуске приложения", auto) { auto = it; u.autoCheck = it }
+    Group(tr("Обновления"), tr("Приложение обновляется через GitHub: скачивает установщик и ставит его сам. Проверка — не чаще раза в 12 часов.")) {
+        SwitchRow(tr("Искать обновления"), tr("При запуске приложения"), auto) { auto = it; u.autoCheck = it }
         UpdateBlock(app)
     }
 }

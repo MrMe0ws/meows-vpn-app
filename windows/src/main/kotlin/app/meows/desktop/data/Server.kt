@@ -1,5 +1,6 @@
 package app.meows.desktop.data
 
+import app.meows.desktop.i18n.trf
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Base64
@@ -20,18 +21,23 @@ object ServerParser {
         val arr = configs(body)
         return (0 until arr.length()).mapNotNull { i ->
             val cfg = arr.optJSONObject(i) ?: return@mapNotNull null
-            val remarks = cfg.optString("remarks").ifBlank { "Сервер ${i + 1}" }
+            val remarks = cfg.optString("remarks").ifBlank { trf("Сервер %d", i + 1) }
             val (flag, title) = splitFlag(remarks)
             Server(title.ifBlank { remarks }, flag, protoLine(cfg))
         }
     }
 
-    /** Флаг — два региональных индикатора в начале названия (после невидимых символов). */
+    /** Флаг — два региональных индикатора (или пиратский флаг) в начале названия (после невидимых символов). */
     private fun splitFlag(s: String): Pair<String?, String> {
         val cps = s.trimStart(' ', '\t', '\u200B', '\u200C', '\u200D', '\uFE0F', '\u2060', '\u00A0').codePoints().toArray()
         if (cps.size >= 2 && cps[0] in 0x1F1E6..0x1F1FF && cps[1] in 0x1F1E6..0x1F1FF) {
             val flag = String(cps, 0, 2)
             return flag to String(cps, 2, cps.size - 2).trim()
+        }
+        // пиратский флаг 🏴‍☠️: U+1F3F4 + ZWJ + U+2620 (+ VS16)
+        if (cps.size >= 3 && cps[0] == 0x1F3F4 && cps[1] == 0x200D && cps[2] == 0x2620) {
+            val n = if (cps.size > 3 && cps[3] == 0xFE0F) 4 else 3
+            return String(cps, 0, n) to String(cps, n, cps.size - n).trim()
         }
         return null to s.trim()
     }

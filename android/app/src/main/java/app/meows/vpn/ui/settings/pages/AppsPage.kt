@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -79,8 +80,8 @@ fun AppsPage(vm: MeowsViewModel, onBack: () -> Unit) {
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                title = { Text("Приложения без VPN") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
+                title = { Text(tr("Приложения без VPN")) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Назад")) } },
             )
         },
         contentWindowInsets = WindowInsets(0),
@@ -88,7 +89,7 @@ fun AppsPage(vm: MeowsViewModel, onBack: () -> Unit) {
         Column(Modifier.padding(pad).fillMaxSize()) {
             OutlinedTextField(
                 query, { query = it }, Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                singleLine = true, placeholder = { Text("Поиск приложения") },
+                singleLine = true, placeholder = { Text(tr("Поиск приложения")) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
             )
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())) {

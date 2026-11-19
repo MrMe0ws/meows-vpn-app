@@ -58,3 +58,17 @@ func TestNoVV(t *testing.T){
   if strings.Contains(s,"vkusvill") { t.Fatal("vv present") }
   if _,err:=core.LoadConfig("json",bytes.NewReader(b)); err!=nil{t.Fatal(err)}
 }
+
+func TestAllVpn(t *testing.T){
+  obj,_,_:=pickConfig([]byte(sample))
+  addRouting(obj, xkOpts{AllVpn:true, Cats:[]string{"ru"}, Domains:[]string{"example.com"}})
+  sanitizeGeo(obj,"/root/ios/assets-trim")
+  b,err:=buildTunConfig(obj); if err!=nil{t.Fatal(err)}
+  s:=string(b)
+  for _,bad:=range []string{"vkusvill","category-ru","geoip:ru","example.com","77.88.8.8"}{
+    if strings.Contains(s,bad){ t.Fatalf("rule %q must be dropped in all-VPN mode", bad) }
+  }
+  if !strings.Contains(s,"bittorrent"){ t.Fatal("torrents must stay direct") }
+  if !strings.Contains(s,`"balancerTag":"bal"`){ t.Fatal("no catch-all to proxy") }
+  if _,err:=core.LoadConfig("json",bytes.NewReader(b)); err!=nil{t.Fatal(err)}
+}

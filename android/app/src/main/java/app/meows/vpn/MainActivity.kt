@@ -1,5 +1,7 @@
 package app.meows.vpn
 
+import app.meows.vpn.i18n.Lang
+import app.meows.vpn.i18n.tr
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -24,7 +26,7 @@ class MainActivity : ComponentActivity() {
 
     private val vpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         if (r.resultCode == RESULT_OK) vm.startVpn()
-        else vm.alert("VPN не разрешён", "Разрешите Meows создать VPN-подключение.")
+        else vm.alert(tr("VPN не разрешён"), tr("Разрешите Meows создать VPN-подключение."))
     }
     private val notifPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
 
+        Lang.init(this)
         setContent {
             MeowsTheme(vm.themeMode, vm.palette, vm.dynamicColors, vm.amoled) {
                 MeowsApp(vm, onToggle = ::toggle, onScanQr = ::scanQr)
@@ -73,7 +76,7 @@ class MainActivity : ComponentActivity() {
 
     private fun toggle() {
         if (vm.vpnState != XKVpnService.IDLE) { vm.stopVpn(); return }
-        if (!vm.st.hasSubscription()) { vm.alert("Сначала подписка", "Добавьте ссылку подписки, чтобы подключиться."); return }
+        if (!vm.st.hasSubscription()) { vm.alert(tr("Сначала подписка"), tr("Добавьте ссылку подписки, чтобы подключиться.")); return }
         val prep = VpnService.prepare(this)
         if (prep != null) vpnPermission.launch(prep) else vm.startVpn()
     }
@@ -82,7 +85,7 @@ class MainActivity : ComponentActivity() {
         qrScanner.launch(
             ScanOptions()
                 .setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                .setPrompt("Наведите камеру на QR-код подписки")
+                .setPrompt(tr("Наведите камеру на QR-код подписки"))
                 .setBeepEnabled(false)
                 .setOrientationLocked(false),
         )

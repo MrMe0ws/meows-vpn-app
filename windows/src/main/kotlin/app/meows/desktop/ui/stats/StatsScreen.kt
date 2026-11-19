@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.stats
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,29 +45,29 @@ fun StatsScreen(app: AppModel) {
     val cs = MaterialTheme.colorScheme
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-        Text("Статистика", Modifier.padding(start = 8.dp, top = 20.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(tr("Статистика"), Modifier.padding(start = 8.dp, top = 20.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineMedium)
         if (app.state != ConnState.Connected) {
             Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = cs.surfaceContainer) {
-                Text("Подключитесь — здесь появятся скорость и график трафика.", Modifier.padding(24.dp), color = cs.onSurfaceVariant)
+                Text(tr("Подключитесь — здесь появятся скорость и график трафика."), Modifier.padding(24.dp), color = cs.onSurfaceVariant)
             }
             return@Column
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Speed("Получение", now?.down ?: 0, cs.primary, Modifier.weight(1f))
-            Speed("Отправка", now?.up ?: 0, cs.tertiary, Modifier.weight(1f))
+            Speed(tr("Получение"), now?.down ?: 0, cs.primary, Modifier.weight(1f))
+            Speed(tr("Отправка"), now?.up ?: 0, cs.tertiary, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = cs.surfaceContainer) {
             Column(Modifier.padding(20.dp)) {
-                Text("Последние 2 минуты", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                Text(tr("Последние 2 минуты"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
                 SpeedChart(samples, Modifier.fillMaxWidth().height(160.dp))
             }
         }
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Totals("Через VPN", t.vpnDown, t.vpnUp, Modifier.weight(1f))
-            Totals("Напрямую", t.directDown, t.directUp, Modifier.weight(1f))
+            Totals(tr("Через VPN"), t.vpnDown, t.vpnUp, Modifier.weight(1f))
+            Totals(tr("Напрямую"), t.directDown, t.directUp, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         TopDomains(tick)
@@ -79,7 +80,7 @@ private fun Speed(title: String, bytesPerSec: Long, color: androidx.compose.ui.g
     Surface(modifier, shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(20.dp)) {
             Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(formatBytesRu(bytesPerSec) + "/с", style = MaterialTheme.typography.headlineMedium, color = color)
+            Text(formatBytesRu(bytesPerSec) + tr("/с"), style = MaterialTheme.typography.headlineMedium, color = color)
         }
     }
 }
@@ -90,8 +91,8 @@ private fun Totals(title: String, down: Long, up: Long, modifier: Modifier) {
         Column(Modifier.padding(20.dp)) {
             Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(6.dp))
-            Text("Получено: " + formatBytesRu(down), style = MaterialTheme.typography.bodyLarge)
-            Text("Отправлено: " + formatBytesRu(up), style = MaterialTheme.typography.bodyLarge)
+            Text(tr("Получено: ") + formatBytesRu(down), style = MaterialTheme.typography.bodyLarge)
+            Text(tr("Отправлено: ") + formatBytesRu(up), style = MaterialTheme.typography.bodyLarge)
         }
     }
 }
@@ -106,15 +107,15 @@ private fun TopDomains(tick: Int) {
     }
     Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = cs.surfaceContainer) {
         Column(Modifier.padding(20.dp)) {
-            Text("Куда чаще ходили", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            Text(tr("Куда чаще ходили"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            if (top.isEmpty()) Text("Пока нет данных.", color = cs.onSurfaceVariant)
+            if (top.isEmpty()) Text(tr("Пока нет данных."), color = cs.onSurfaceVariant)
             top.forEach { (host, n, route) ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(host, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text("$n", Modifier.padding(horizontal = 12.dp), color = cs.onSurfaceVariant)
                     Box(Modifier.width(96.dp)) {
-                        Text(when (route) { Route.Direct -> "напрямую"; Route.Vpn -> "через VPN"; Route.Block -> "блок" }, color = if (route == Route.Vpn) cs.primary else cs.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
+                        Text(when (route) { Route.Direct -> tr("напрямую"); Route.Vpn -> tr("через VPN"); Route.Block -> tr("блок") }, color = if (route == Route.Vpn) cs.primary else cs.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

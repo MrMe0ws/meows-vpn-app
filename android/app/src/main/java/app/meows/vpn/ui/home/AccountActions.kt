@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,15 +35,15 @@ fun AccountActions(vm: MeowsViewModel, st: XKStore, onSupport: () -> Unit) {
         if (Edition.isPlay) Unit
         else if (renew) {
             Button(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Rounded.Autorenew, null); Spacer(Modifier.width(8.dp)); Text("Продлить")
+                Icon(Icons.Rounded.Autorenew, null); Spacer(Modifier.width(8.dp)); Text(tr("Продлить"))
             }
         } else {
             FilledTonalButton(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Rounded.AccountCircle, null); Spacer(Modifier.width(8.dp)); Text("Кабинет")
+                Icon(Icons.Rounded.AccountCircle, null); Spacer(Modifier.width(8.dp)); Text(tr("Кабинет"))
             }
         }
         FilledTonalButton(onClick = onSupport, modifier = Modifier.weight(1f)) {
-            Icon(Icons.Rounded.SupportAgent, null); Spacer(Modifier.width(8.dp)); Text("Поддержка")
+            Icon(Icons.Rounded.SupportAgent, null); Spacer(Modifier.width(8.dp)); Text(tr("Поддержка"))
         }
     }
 }

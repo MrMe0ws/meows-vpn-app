@@ -26,6 +26,7 @@
 | Дизайн: принципы, цвет, раскладка, UX, тексты | `docs/design/material-you.md`, `color-and-theme.md`, `layout-and-ux.md`, `copy-and-tone.md` |
 | Как работает конкретная фича | `docs/features/*.md` |
 | Собрать, подписать, выпустить релиз | `docs/build.md`, `docs/release.md` |
+| Язык интерфейса (ru/en/авто), как добавлять строки | `docs/features/localization.md` |
 | Что делать дальше | `docs/roadmap.md` |
 | Устройство репозитория, iOS | `docs/platforms.md` |
 | **Какие бывают сборки** (GitHub-APK / Play / Windows) — читать перед правками | `docs/editions.md` |

@@ -1,11 +1,11 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -28,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -59,15 +58,13 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
     Box(Modifier.fillMaxSize().nestedScroll(toolbarScroll)) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-    // кнопка подключения закреплена вверху: при прокрутке списка не уезжает, а плавно уменьшается
+    // шапка с кнопкой подключения закреплена и не меняется при прокрутке: скроллится только список подписок и серверов
     val listState = rememberLazyListState()
-    val scrolled by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 24 } }
-    val btn by animateDpAsState(if (scrolled) 112.dp else 200.dp, label = "btn")
-    Column(Modifier.fillMaxWidth().padding(top = if (scrolled) 8.dp else 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        CatConnectButton(vm.vpnState, size = btn, onClick = onToggle)
-        Spacer(Modifier.height(if (scrolled) 4.dp else 12.dp))
+    Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        CatConnectButton(vm.vpnState, size = 200.dp, onClick = onToggle)
+        Spacer(Modifier.height(12.dp))
         StatusText(vm.vpnState)
-        Spacer(Modifier.height(if (scrolled) 8.dp else 16.dp))
+        Spacer(Modifier.height(16.dp))
     }
     LazyColumn(
         Modifier.weight(1f).fillMaxWidth(), state = listState,
@@ -88,7 +85,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
                 val allOpen = collapsed.isEmpty()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
                     Text(
-                        if (allOpen) "Скрыть все" else "Показать все",
+                        if (allOpen) tr("Скрыть все") else tr("Показать все"),
                         Modifier.clickable { if (allOpen) { collapsed.clear(); collapsed.addAll(subs.map { it.id() }) } else collapsed.clear() }.padding(vertical = 6.dp),
                         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

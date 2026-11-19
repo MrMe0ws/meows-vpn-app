@@ -1,5 +1,7 @@
 package app.meows.vpn.update
 
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
@@ -20,11 +22,11 @@ object UpdateChecker {
         when (val code = c.responseCode) {
             404 -> Result.NoReleases
             in 200..299 -> parse(c.inputStream.bufferedReader().use { it.readText() })
-            403, 429 -> Result.Failed("GitHub временно ограничил запросы. Попробуйте позже.")
-            else -> Result.Failed("GitHub ответил $code")
+            403, 429 -> Result.Failed(tr("GitHub временно ограничил запросы. Попробуйте позже."))
+            else -> Result.Failed(trf("GitHub ответил %d", code))
         }.also { c.disconnect() }
     } catch (e: Exception) {
-        Result.Failed("Нет связи с GitHub: ${e.message ?: e.javaClass.simpleName}")
+        Result.Failed(trf("Нет связи с GitHub: %s", e.message ?: e.javaClass.simpleName))
     }
 
     /** Берёт самый свежий не-черновик с тегом `android-vX.Y.Z` и APK в ассетах (GitHub отдаёт список от новых к старым). */
@@ -52,6 +54,6 @@ object UpdateChecker {
                 }
             }
         }
-        return if (sawAndroid) Result.Failed("В последнем релизе нет APK-файла.") else Result.NoReleases
+        return if (sawAndroid) Result.Failed(tr("В последнем релизе нет APK-файла.")) else Result.NoReleases
     }
 }

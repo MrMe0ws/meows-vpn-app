@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -40,9 +41,9 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
-    SettingsPageScaffold("Оформление", onBack) {
-        SettingsGroup("Тема") {
-            val modes = listOf("Авто", "Светлая", "Тёмная")
+    SettingsPageScaffold(tr("Оформление"), onBack) {
+        SettingsGroup(tr("Тема")) {
+            val modes = listOf(tr("Авто"), tr("Светлая"), tr("Тёмная"))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
                 modes.forEachIndexed { i, m ->
                     SegmentedButton(
@@ -52,7 +53,7 @@ fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
                 }
             }
         }
-        SettingsGroup("Цвет", "Цвета из обоев меняются вместе с обоями (Android 12+). Остальные палитры — фиксированные.") {
+        SettingsGroup(tr("Цвет"), tr("Цвета из обоев меняются вместе с обоями (Android 12+). Остальные палитры — фиксированные.")) {
             Column(Modifier.padding(16.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (Build.VERSION.SDK_INT >= 31) {
@@ -64,13 +65,13 @@ fun AppearancePage(vm: MeowsViewModel, onBack: () -> Unit) {
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    if (vm.dynamicColors) "Цвета из обоев" else Palettes.names[vm.palette.coerceIn(0, Palettes.names.lastIndex)],
+                    if (vm.dynamicColors) tr("Цвета из обоев") else Palettes.names[vm.palette.coerceIn(0, Palettes.names.lastIndex)],
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         SettingsGroup {
-            SwitchRow(Icons.Rounded.Lock, "Чёрный фон (AMOLED)", vm.amoled, "Для тёмной темы: экономит заряд на OLED-экранах") { vm.chooseAmoled(it) }
+            SwitchRow(Icons.Rounded.Lock, tr("Чёрный фон (AMOLED)"), vm.amoled, tr("Для тёмной темы: экономит заряд на OLED-экранах")) { vm.chooseAmoled(it) }
         }
     }
 }
@@ -82,7 +83,7 @@ private fun Swatch(color: Color, selected: Boolean, icon: androidx.compose.ui.gr
         border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (selected) Icon(Icons.Rounded.Check, "Выбрано", tint = Color.Black.copy(alpha = 0.75f))
+            if (selected) Icon(Icons.Rounded.Check, tr("Выбрано"), tint = Color.Black.copy(alpha = 0.75f))
             else if (icon != null) Icon(icon, null, tint = Color.Black.copy(alpha = 0.6f))
         }
     }

@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.about
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -46,17 +47,17 @@ private fun InfoRow(title: String, value: String, onClick: (() -> Unit)? = null,
 fun AboutScreen(app: AppModel) {
     val os = "${System.getProperty("os.name")} ${System.getProperty("os.version")} · ${System.getProperty("os.arch")}"
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-        Text("О программе", Modifier.padding(start = 8.dp, top = 20.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(tr("О программе"), Modifier.padding(start = 8.dp, top = 20.dp, bottom = 16.dp), style = MaterialTheme.typography.headlineMedium)
         Card(shape = MaterialTheme.shapes.extraLarge, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
             Column(Modifier.padding(vertical = 4.dp)) {
-                InfoRow("Версия программы", AppInfo.VERSION)
-                InfoRow("Ядро", "Xray-core 26.10.31 (a52db8f)")
-                InfoRow("Режим", app.mode.title + if (Elevation.isAdmin()) " · запущено от администратора" else "")
-                InfoRow("Устройство", os)
-                InfoRow("HWID", Hwid.value) { IconButton(onClick = { copyText(Hwid.value) }) { Icon(Icons.Rounded.ContentCopy, "Скопировать HWID") } }
+                InfoRow(tr("Версия программы"), AppInfo.VERSION)
+                InfoRow(tr("Ядро"), "Xray-core 26.10.31 (a52db8f)")
+                InfoRow(tr("Режим"), app.mode.title + if (Elevation.isAdmin()) tr(" · запущено от администратора") else "")
+                InfoRow(tr("Устройство"), os)
+                InfoRow("HWID", Hwid.value) { IconButton(onClick = { copyText(Hwid.value) }) { Icon(Icons.Rounded.ContentCopy, tr("Скопировать HWID")) } }
                 InfoRow("Telegram", "@VPNmeows_bot", { openUrl("https://t.me/VPNmeows_bot") })
-                InfoRow("Личный кабинет", "cabinet.me0ws.store", { openUrl("https://cabinet.me0ws.store") })
-                InfoRow("Проект на GitHub", "github.com/MrMe0ws/meows-vpn-app", { openUrl(GITHUB) })
+                InfoRow(tr("Личный кабинет"), "cabinet.me0ws.store", { openUrl("https://cabinet.me0ws.store") })
+                InfoRow(tr("Проект на GitHub"), "github.com/MrMe0ws/meows-vpn-app", { openUrl(GITHUB) })
             }
         }
         Spacer(Modifier.height(16.dp))

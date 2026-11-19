@@ -1,5 +1,7 @@
 package app.meows.vpn.ui.update
 
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,11 +43,11 @@ fun UpdateDialog(vm: MeowsViewModel) {
 
     AlertDialog(
         onDismissRequest = { if (!busy) u.dismissDialog() },
-        title = { Text("Доступна версия ${info.version}") },
+        title = { Text(trf("Доступна версия %s", info.version)) },
         text = {
             Column {
                 Text(
-                    "Сейчас установлена ${u.currentVersion}" + if (info.apkSize > 0) " · ${formatBytesRu(info.apkSize)}" else "",
+                    trf("Сейчас установлена %s", u.currentVersion) + if (info.apkSize > 0) " · ${formatBytesRu(info.apkSize)}" else "",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (info.notes.isNotBlank()) {
@@ -58,7 +60,7 @@ fun UpdateDialog(vm: MeowsViewModel) {
                 }
                 if (s is UpdateState.Downloading) {
                     Spacer(Modifier.height(16.dp))
-                    Text("Скачиваем… ${s.percent}%", style = MaterialTheme.typography.labelLarge)
+                    Text(trf("Скачиваем… %d%%", s.percent), style = MaterialTheme.typography.labelLarge)
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(progress = { s.percent / 100f }, modifier = Modifier.fillMaxWidth())
                 }
@@ -68,12 +70,12 @@ fun UpdateDialog(vm: MeowsViewModel) {
             when (s) {
                 is UpdateState.Downloaded -> Button(onClick = {
                     if (u.install()) u.dismissDialog()
-                    else vm.toast = "Разрешите установку из этого источника и нажмите «Установить» ещё раз"
-                }) { Text("Установить") }
-                is UpdateState.Available -> Button(onClick = u::download) { Text("Скачать") }
+                    else vm.toast = tr("Разрешите установку из этого источника и нажмите «Установить» ещё раз")
+                }) { Text(tr("Установить")) }
+                is UpdateState.Available -> Button(onClick = u::download) { Text(tr("Скачать")) }
                 else -> {}
             }
         },
-        dismissButton = { if (!busy) TextButton(onClick = u::dismissDialog) { Text("Позже") } },
+        dismissButton = { if (!busy) TextButton(onClick = u::dismissDialog) { Text(tr("Позже")) } },
     )
 }

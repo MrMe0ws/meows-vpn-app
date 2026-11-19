@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +32,7 @@ import app.meows.desktop.ConnState
 fun ConnectPane(app: AppModel, modifier: Modifier = Modifier) {
     Surface(modifier, shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxSize().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            ModePicker(app.mode, enabled = app.state != ConnState.Connecting, onPick = app::chooseMode)
+            ModePicker(app.mode, app.allVpn, enabled = app.state != ConnState.Connecting, onPick = app::chooseMode, onAllVpn = app::chooseAllVpn)
             Spacer(Modifier.weight(1f))
             ConnectButton(app.state, 240.dp) { app.toggle() }
             Spacer(Modifier.height(16.dp))
@@ -59,7 +60,7 @@ private fun SelectedServer(app: AppModel) {
             Spacer(Modifier.height(12.dp))
             FilledTonalButton(onClick = { app.pingServer(app.selected) }, enabled = !app.pingingSelected, modifier = Modifier.fillMaxWidth()) {
                 if (app.pingingSelected) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Icon(Icons.Rounded.Speed, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp)); Text("Проверить пинг")
+                Spacer(Modifier.width(8.dp)); Text(tr("Проверить пинг"))
             }
         }
     }

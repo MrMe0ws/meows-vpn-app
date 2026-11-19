@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.material.icons.Icons
@@ -22,23 +23,23 @@ import app.meows.vpn.ui.settings.ValueRow
 @Composable
 fun ConnectionPage(vm: MeowsViewModel, onBack: () -> Unit, openAutoSwitch: () -> Unit) {
     val ctx = LocalContext.current
-    SettingsPageScaffold("Подключение", onBack) {
+    SettingsPageScaffold(tr("Подключение"), onBack) {
         SettingsGroup {
-            SwitchRow(Icons.Rounded.PlayArrow, "Подключаться при запуске", vm.flag(XKStore.P_AUTOCONN, false)) { vm.setFlag(XKStore.P_AUTOCONN, it) }
+            SwitchRow(Icons.Rounded.PlayArrow, tr("Подключаться при запуске"), vm.flag(XKStore.P_AUTOCONN, false)) { vm.setFlag(XKStore.P_AUTOCONN, it) }
             val on = vm.flag(XKStore.P_AUTOSWITCH, true)
             SplitSwitchRow(
-                Icons.Rounded.SwapHoriz, "Автопереключение серверов", on,
-                if (on) SwitchFilter.summary(vm.st.prefs(), vm.servers) else "Выключено",
+                Icons.Rounded.SwapHoriz, tr("Автопереключение серверов"), on,
+                if (on) SwitchFilter.summary(vm.st.prefs(), vm.servers) else tr("Выключено"),
                 onOpen = openAutoSwitch,
             ) { vm.setFlag(XKStore.P_AUTOSWITCH, it) }
-            SwitchRow(Icons.Rounded.Router, "Локальная сеть мимо VPN", vm.flag(XKStore.P_LAN, true), "Роутер, принтеры, Chromecast") {
+            SwitchRow(Icons.Rounded.Router, tr("Локальная сеть мимо VPN"), vm.flag(XKStore.P_LAN, true), tr("Роутер, принтеры, Chromecast")) {
                 vm.setFlag(XKStore.P_LAN, it, reconnect = true)
             }
         }
-        SettingsGroup(footer = "Включается в настройках Android (по умолчанию выключено). «Блокировать соединения без VPN» включайте осторожно: тогда интернета не будет и у приложений, которые мы намеренно пускаем напрямую (российские приложения, обновления Meows).") {
-            ValueRow(Icons.Rounded.Shield, "Защита от обрыва VPN", summary = "VPN включается сам и не даёт трафику уйти открыто при обрыве") {
+        SettingsGroup(footer = tr("Включается в настройках Android (по умолчанию выключено). «Блокировать соединения без VPN» включайте осторожно: тогда интернета не будет и у приложений, которые мы намеренно пускаем напрямую (российские приложения, обновления Meows).")) {
+            ValueRow(Icons.Rounded.Shield, tr("Защита от обрыва VPN"), summary = tr("VPN включается сам и не даёт трафику уйти открыто при обрыве")) {
                 runCatching { ctx.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)) }
-                vm.toast = "Нажмите ⚙ рядом с Meows → «Постоянная VPN»"
+                vm.toast = tr("Нажмите ⚙ рядом с Meows → «Постоянная VPN»")
             }
         }
     }

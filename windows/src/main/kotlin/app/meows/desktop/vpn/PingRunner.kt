@@ -7,7 +7,7 @@ object PingRunner {
     const val TEST_URL = "https://www.gstatic.com/generate_204"
 
     /** Блокирующий вызов. [onResult] получает (индекс сервера, мс; -1 — нет ответа). */
-    fun measure(body: String, indexes: List<Int>, timeoutMs: Int = 3000, onResult: (Int, Int) -> Unit) {
+    fun measure(body: String, indexes: List<Int>, timeoutMs: Int = 6000, onResult: (Int, Int) -> Unit) {
         if (indexes.isEmpty() || !AppDirs.coreExe.exists()) return
         val f = AppDirs.file("measure.json").apply { writeText(body) }
         val got = HashSet<Int>()

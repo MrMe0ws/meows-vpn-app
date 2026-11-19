@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.logs
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +34,7 @@ import app.meows.desktop.log.AppLog
 import app.meows.desktop.ui.home.copyText
 
 private const val TRAFFIC = "TRAFFIC"
-private val filters = listOf("Всё" to null, "Трафик" to TRAFFIC, "VPN" to "VPN", "Ядро" to "CORE", "Подписка" to "SUB")
+private fun filters() = listOf(tr("Всё") to null, tr("Трафик") to TRAFFIC, "VPN" to "VPN", tr("Ядро") to "CORE", tr("Подписка") to "SUB")
 
 /** Логи: события приложения, вывод ядра и «Трафик» (куда и как пошло каждое соединение); фильтр по разделу, копирование для поддержки, очистка. Ссылка подписки в логи не попадает. */
 @Composable
@@ -46,20 +47,20 @@ fun LogsScreen() {
     LaunchedEffect(shown.size, tag) { if (shown.isNotEmpty()) list.scrollToItem(shown.lastIndex) }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Text("Логи", Modifier.padding(start = 8.dp, top = 20.dp, bottom = 12.dp), style = MaterialTheme.typography.headlineMedium)
+        Text(tr("Логи"), Modifier.padding(start = 8.dp, top = 20.dp, bottom = 12.dp), style = MaterialTheme.typography.headlineMedium)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            filters.forEach { (title, t) -> FilterChip(selected = tag == t, onClick = { tag = t }, label = { Text(title) }) }
+            filters().forEach { (title, t) -> FilterChip(selected = tag == t, onClick = { tag = t }, label = { Text(title) }) }
             Spacer(Modifier.weight(1f))
             FilledTonalButton(
                 onClick = { copyText(if (showTraffic) traffic.joinToString("\n") { AppLog.format(it) } else shown.joinToString("\n") { AppLog.format(it) }) },
                 enabled = shown.isNotEmpty() || traffic.isNotEmpty() && showTraffic,
-            ) { Text("Скопировать") }
-            OutlinedButton(onClick = AppLog::clear, enabled = shown.isNotEmpty() || traffic.isNotEmpty()) { Text("Очистить") }
+            ) { Text(tr("Скопировать")) }
+            OutlinedButton(onClick = AppLog::clear, enabled = shown.isNotEmpty() || traffic.isNotEmpty()) { Text(tr("Очистить")) }
         }
         Spacer(Modifier.height(12.dp))
         Surface(Modifier.fillMaxSize().padding(bottom = 16.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
             if (showTraffic) TrafficList(traffic)
-            else if (shown.isEmpty()) Text("Пока пусто. Здесь появятся события подключения, подписки и ядра.", Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else if (shown.isEmpty()) Text(tr("Пока пусто. Здесь появятся события подключения, подписки и ядра."), Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             else SelectionContainer {
                 LazyColumn(Modifier.fillMaxSize().padding(12.dp), state = list) {
                     itemsIndexed(shown) { _, l ->

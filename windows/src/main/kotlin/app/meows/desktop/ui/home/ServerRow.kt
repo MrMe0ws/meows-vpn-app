@@ -1,7 +1,10 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -16,13 +19,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,17 +51,19 @@ fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, busy
     Box(Modifier.fillMaxWidth().secondaryClick { menuAt = it }) {
     Surface(Modifier.fillMaxWidth().padding(horizontal = 12.dp).clickable(onClick = onSelect).hand(), color = bg, shape = shape) {
         Column {
-            Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                FlagBadge(server.flag)
-                Spacer(Modifier.width(14.dp))
+            Row(Modifier.heightIn(min = 48.dp).padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                // выбранный сервер — вертикальная линия слева от флага
+                Box(Modifier.width(4.dp).height(24.dp).clip(RoundedCornerShape(2.dp)).background(if (selected) cs.primary else Color.Transparent))
+                Spacer(Modifier.width(12.dp))
+                FlagBadge(server.flag, compact = true)
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(server.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer else cs.onSurface)
-                    Text(server.subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onSurfaceVariant)
+                    Text(server.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer else cs.onSurface)
+                    Text(server.subtitle, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onPrimaryContainer.copy(alpha = 0.8f) else cs.onSurfaceVariant)
                 }
-                if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else if (ping != null) PingChip(ping)
-                if (selected) { Spacer(Modifier.width(8.dp)); Icon(Icons.Rounded.CheckCircle, "Выбран", tint = cs.primary) }
+                if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp) else if (ping != null) PingChip(ping, onContainer = selected)
             }
-            if (!last) HorizontalDivider(Modifier.padding(start = 60.dp), color = cs.outlineVariant.copy(alpha = 0.4f))
+            if (!last) HorizontalDivider(Modifier.padding(start = 66.dp), color = cs.outlineVariant.copy(alpha = 0.4f))
         }
     }
     ServerMenu(menuAt, server.title, onDismiss = { menuAt = null }, onPing = onPing, onSelect = onSelect)
@@ -67,25 +71,28 @@ fun ServerRow(server: Server, selected: Boolean, last: Boolean, ping: Int?, busy
 }
 
 @Composable
-fun PingChip(ms: Int) {
+fun PingChip(ms: Int, onContainer: Boolean = false) {
     val cs = MaterialTheme.colorScheme
+    // на выбранной строке (фон primaryContainer) плашка — насыщенная, иначе она сливается с фоном
     val (text, bg, fg) = when {
-        ms <= 0 -> Triple("—", cs.errorContainer, cs.onErrorContainer)
-        ms < 150 -> Triple("$ms мс", cs.primaryContainer, cs.onPrimaryContainer)
-        ms < 400 -> Triple("$ms мс", cs.tertiaryContainer, cs.onTertiaryContainer)
-        else -> Triple("$ms мс", cs.errorContainer, cs.onErrorContainer)
+        ms <= 0 -> Triple("—", if (onContainer) cs.error else cs.errorContainer, if (onContainer) cs.onError else cs.onErrorContainer)
+        ms < 150 -> Triple("$ms ${tr("мс")}", if (onContainer) cs.primary else cs.primaryContainer, if (onContainer) cs.onPrimary else cs.onPrimaryContainer)
+        ms < 400 -> Triple("$ms ${tr("мс")}", if (onContainer) cs.tertiary else cs.tertiaryContainer, if (onContainer) cs.onTertiary else cs.onTertiaryContainer)
+        else -> Triple("$ms ${tr("мс")}", if (onContainer) cs.error else cs.errorContainer, if (onContainer) cs.onError else cs.onErrorContainer)
     }
-    Surface(color = bg, contentColor = fg, shape = CircleShape) { Text(text, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge) }
+    Surface(color = bg, contentColor = fg, shape = CircleShape) { Text(text, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium) }
 }
 /** Windows не умеет рисовать эмодзи-флаги — показываем картинки флагов из Noto (как на Android); нет картинки — плашка с кодом. */
 @Composable
-fun FlagBadge(flag: String?) {
-    val code = flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('a'.code + it - 0x1F1E6).toChar() }?.joinToString("")
+fun FlagBadge(flag: String?, compact: Boolean = false) {
+    val w = if (compact) 36.dp else 44.dp; val h = if (compact) 24.dp else 30.dp
+    val code = if (flag?.contains('☠') == true) "pirate" // 🏴‍☠️ — своя картинка flags/pirate.png
+    else flag?.codePoints()?.toArray()?.filter { it in 0x1F1E6..0x1F1FF }?.map { ('a'.code + it - 0x1F1E6).toChar() }?.joinToString("")
     val img = remember(code) { code?.let { runCatching { Res.bitmap("flags/$it.png") }.getOrNull() } }
     if (img != null) {
-        Image(img, code, Modifier.width(44.dp).height(30.dp).clip(RoundedCornerShape(6.dp)), contentScale = ContentScale.Crop)
+        Image(img, code, Modifier.width(w).height(h).clip(RoundedCornerShape(if (compact) 5.dp else 6.dp)), contentScale = ContentScale.Crop)
     } else {
-        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.width(44.dp)) {
+        Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.width(w)) {
             Text(code?.uppercase() ?: "VPN", Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.labelLarge, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }

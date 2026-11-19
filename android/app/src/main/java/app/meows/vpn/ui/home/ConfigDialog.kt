@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
@@ -23,7 +24,7 @@ fun ConfigDialog(vm: MeowsViewModel, st: XKStore, index: Int, onDismiss: () -> U
     val cfg = remember(index) { st.prettyConfig(index) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(st.servers().getOrNull(index)?.title ?: "Конфигурация") },
+        title = { Text(st.servers().getOrNull(index)?.title ?: tr("Конфигурация")) },
         text = {
             Column(Modifier.height(320.dp).verticalScroll(rememberScrollState())) {
                 Text(
@@ -32,7 +33,7 @@ fun ConfigDialog(vm: MeowsViewModel, st: XKStore, index: Int, onDismiss: () -> U
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } },
-        dismissButton = { TextButton(onClick = { vm.copy(cfg, "config"); vm.toast = "Скопировано" }) { Text("Копировать") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Закрыть")) } },
+        dismissButton = { TextButton(onClick = { vm.copy(cfg, "config"); vm.toast = tr("Скопировано") }) { Text(tr("Копировать")) } },
     )
 }

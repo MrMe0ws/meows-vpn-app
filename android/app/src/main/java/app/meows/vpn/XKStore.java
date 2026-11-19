@@ -1,5 +1,7 @@
 package app.meows.vpn;
 
+import app.meows.vpn.i18n.Lang;
+
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -37,6 +39,7 @@ public final class XKStore {
     public static final String P_THEME = "theme";          // 0 auto, 1 light, 2 dark
     public static final String P_RU = "ruDirect";          // default false (расширенное правило; основной split — в шаблоне подписки)
     public static final String P_ADS = "blockAds";
+    public static final String P_ALL_VPN = "allVpn";       // default false: весь трафик через VPN, кроме торрентов и локальной сети
     public static final String P_AUTO = "autoMode";        // 0 by sub, -1 off, N hours
     public static final String P_LAUNCH = "updateOnLaunch";// default true
     public static final String P_REMIND = "remind";        // default true
@@ -46,9 +49,8 @@ public final class XKStore {
     public static final String P_SITES = "bypassSites";
     public static final String P_PING_MODE = "pingMode";      // 0 real (through the server), 1 TCP
     public static final String P_PING_URL = "pingUrl";        // 0 Google, 1 Cloudflare, 2 Apple
-    // The user does not pick a timeout: 3 s was too short on slow roaming / weak LTE (every server showed "no answer").
-    public static final int REAL_PING_TO_SEC = 10;            // real ping: full request through the server (like v2rayN)
-    public static final int TCP_PING_TO_MS = 5000;            // TCP connect only
+    public static final String P_PING_TO = "pingTimeout";     // seconds, default PING_TO_DEFAULT
+    public static final int PING_TO_DEFAULT = 6;              // 3 s was too short on slow roaming / weak LTE: every server showed "no answer"
     public static final String P_PING_LAUNCH = "pingOnLaunch";// default false
     public static final String P_PING_KEEP = "pingKeep";      // seconds to show results, 0 = always; default 60
     public static final String P_AUTOCONN = "autoConnect";    // default false
@@ -187,6 +189,7 @@ public final class XKStore {
     public boolean ruDirect() { return sp.getBoolean(P_RU, false); }
     /** Российские приложения (банки, Госуслуги и т.д.) целиком мимо VPN. По умолчанию включено. */
     public boolean ruApps() { return sp.getBoolean(P_RU_APPS, true); }
+    public boolean allVpn() { return sp.getBoolean(P_ALL_VPN, false); }
     public boolean blockAds() { return sp.getBoolean(P_ADS, false); }
     public boolean remind() { return sp.getBoolean(P_REMIND, true); }
     public boolean updateOnLaunch() { return sp.getBoolean(P_LAUNCH, true); }
@@ -247,6 +250,7 @@ public final class XKStore {
             JSONObject o = new JSONObject();
             o.put("ruDirect", ruDirect());
             o.put("blockAds", blockAds());
+            o.put("allVpn", allVpn());
             o.put("noVV", true);
             o.put("cats", new JSONArray(bypassCats()));
             o.put("domains", new JSONArray(bypassSites()));
@@ -364,7 +368,7 @@ public final class XKStore {
             if (cfg == null) continue;
             Server s = new Server();
             String remarks = cfg.optString("remarks", "");
-            if (remarks.length() == 0) remarks = "Сервер " + (i + 1);
+            if (remarks.length() == 0) remarks = Lang.tr("Сервер ") + (i + 1);
             s.name = remarks;
             // flag emoji at the start (after spaces / invisible chars)
             int st0 = 0;
@@ -375,6 +379,13 @@ public final class XKStore {
                     s.flag = remarks.substring(st0, st0 + 4);
                     s.title = remarks.substring(st0 + 4).trim();
                 }
+            }
+            // пиратский флаг: U+1F3F4 + ZWJ + U+2620 (+ VS16)
+            if (s.flag == null && remarks.startsWith("\uD83C\uDFF4\u200D\u2620", st0)) {
+                int end = st0 + 4;
+                if (end < remarks.length() && remarks.charAt(end) == '\uFE0F') end++;
+                s.flag = remarks.substring(st0, end);
+                s.title = remarks.substring(end).trim();
             }
             if (s.title == null) s.title = remarks.trim();
             if (s.title == null || s.title.length() == 0) s.title = remarks;
@@ -424,13 +435,13 @@ public final class XKStore {
     public void fetch(final String raw, final Callback cb) {
         final String link = LinkNormalizer.normalize(raw);   // meows://add/…, кавычки, %3A%2F%2F, https// и т. п. → https://…
         if (!LinkNormalizer.isHttpLink(link)) {
-            cb.done("Это не похоже на ссылку подписки.");
+            cb.done(Lang.tr("Это не похоже на ссылку подписки."));
             return;
         }
         if (LOCK_HOST.length() > 0) {
             String host = "";
             try { host = android.net.Uri.parse(link).getHost(); } catch (Exception ignored) { }
-            if (host == null || !host.equalsIgnoreCase(LOCK_HOST)) { cb.done("Эта подписка не поддерживается приложением."); return; }
+            if (host == null || !host.equalsIgnoreCase(LOCK_HOST)) { cb.done(Lang.tr("Эта подписка не поддерживается приложением.")); return; }
         }
         pool.execute(new Runnable() { public void run() {
             String err = null;
@@ -451,8 +462,8 @@ public final class XKStore {
                 c.setRequestProperty("x-app-name", "Meows");
                 int code = c.getResponseCode();
                 if (code >= 400) {
-                    err = "Сервер ответил " + code + ". " + (code == 404 ? "Подписка не найдена — проверьте ссылку."
-                            : "Возможно, достигнут лимит устройств. Удалите старое устройство в боте или кабинете.");
+                    err = Lang.tr("Сервер ответил ") + code + ". " + (code == 404 ? Lang.tr("Подписка не найдена — проверьте ссылку.")
+                            : Lang.tr("Возможно, достигнут лимит устройств. Удалите старое устройство в боте или кабинете."));
                 } else {
                     InputStream in = c.getInputStream();
                     ByteArrayOutputStream bo = new ByteArrayOutputStream();
@@ -461,7 +472,7 @@ public final class XKStore {
                     in.close();
                     String body = bo.toString("UTF-8");
                     String tr = body.trim();
-                    if (tr.length() == 0) err = "Подписка пустая. Возможно, превышен лимит устройств.";
+                    if (tr.length() == 0) err = Lang.tr("Подписка пустая. Возможно, превышен лимит устройств.");
                     else {
                         char c0 = tr.charAt(0);
                         if (c0 != '[' && c0 != '{') {
@@ -485,7 +496,7 @@ public final class XKStore {
                 }
                 c.disconnect();
             } catch (Exception e) {
-                err = "Нет связи с сервером подписки.\n" + e.getMessage();
+                err = Lang.tr("Нет связи с сервером подписки.") + "\n" + e.getMessage();
             }
             if (err != null && err.startsWith("Сервер отдал ссылки") && attempt + 1 < uas.length) continue;
             break;
@@ -601,7 +612,7 @@ public final class XKStore {
         if (list.isEmpty()) { done.run(); return; }
         final int[] tg = targets(only, list.size());
         for (int i : tg) pings.remove(i);
-        final int to = REAL_PING_TO_SEC * 1000;
+        final int to = Math.max(1, pref(P_PING_TO, PING_TO_DEFAULT)) * 1000;
         int ui = pref(P_PING_URL, 0);
         final String url = PING_URLS[ui >= 0 && ui < PING_URLS.length ? ui : 0];
         final String body = body();
@@ -641,8 +652,9 @@ public final class XKStore {
     }
 
     /** App UID is excluded from the VPN, so pings are honest even while connected. */
-    static final int pingTimeoutMs = TCP_PING_TO_MS;
+    static volatile int pingTimeoutMs = PING_TO_DEFAULT * 1000;
     private void tcpPingSome(final int[] only, final Runnable progress, final Runnable done) {
+        pingTimeoutMs = Math.max(1, pref(P_PING_TO, PING_TO_DEFAULT)) * 1000;
         final List<Server> list = servers();
         if (list.isEmpty()) { done.run(); return; }
         final int[] tg = targets(only, list.size());

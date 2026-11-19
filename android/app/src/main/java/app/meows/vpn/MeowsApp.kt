@@ -1,5 +1,6 @@
 package app.meows.vpn
 
+import app.meows.vpn.i18n.tr
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -57,7 +58,7 @@ fun MeowsApp(vm: MeowsViewModel, onToggle: () -> Unit, onScanQr: () -> Unit) {
             onDismissRequest = vm::dismissAlert,
             title = { Text(title) },
             text = { Text(vm.dialogText.orEmpty()) },
-            confirmButton = { TextButton(onClick = vm::dismissAlert) { Text("Понятно") } },
+            confirmButton = { TextButton(onClick = vm::dismissAlert) { Text(tr("Понятно")) } },
             dismissButton = vm.dialogActionLabel?.let { label -> { TextButton(onClick = vm::runDialogAction) { Text(label) } } },
         )
     }

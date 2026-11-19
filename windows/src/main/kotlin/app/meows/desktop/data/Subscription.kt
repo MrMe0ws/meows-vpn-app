@@ -1,5 +1,7 @@
 package app.meows.desktop.data
 
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -40,7 +42,7 @@ class SubscriptionData(val url: String, val body: String, val headers: Map<Strin
 object SubscriptionClient {
     fun fetch(raw: String, version: String): Result<SubscriptionData> {
         val link = LinkNormalizer.normalize(raw)
-        if (!LinkNormalizer.isHttpLink(link)) return Result.failure(Exception("Это не похоже на ссылку подписки."))
+        if (!LinkNormalizer.isHttpLink(link)) return Result.failure(Exception(tr("Это не похоже на ссылку подписки.")))
         var last: Exception? = null
         for (ua in listOf("Meows/$version", "Happ/3.9.0")) {
             val r = runCatching { request(link, ua) }
@@ -48,7 +50,7 @@ object SubscriptionClient {
             last = r.exceptionOrNull() as? Exception
             if (last?.message?.startsWith("Сервер отдал ссылки") != true) break
         }
-        return Result.failure(last ?: Exception("Не получилось загрузить подписку."))
+        return Result.failure(last ?: Exception(tr("Не получилось загрузить подписку.")))
     }
 
     private fun request(link: String, ua: String): SubscriptionData {
@@ -62,14 +64,14 @@ object SubscriptionClient {
             c.setRequestProperty("x-ver-os", System.getProperty("os.version"))
             c.setRequestProperty("x-device-model", System.getenv("COMPUTERNAME") ?: "PC")
             c.setRequestProperty("x-app-name", "Meows")
-            val code = try { c.responseCode } catch (e: Exception) { throw Exception("Нет связи с сервером подписки.\n${e.message}") }
+            val code = try { c.responseCode } catch (e: Exception) { throw Exception("${tr("Нет связи с сервером подписки.")}\n${e.message}") }
             if (code >= 400) throw Exception(
-                "Сервер ответил $code. " + if (code == 404) "Подписка не найдена — проверьте ссылку."
-                else "Возможно, достигнут лимит устройств. Удалите старое устройство в боте или кабинете.",
+                trf("Сервер ответил %d. ", code) + if (code == 404) tr("Подписка не найдена — проверьте ссылку.")
+                else tr("Возможно, достигнут лимит устройств. Удалите старое устройство в боте или кабинете."),
             )
             val body = c.inputStream.use { String(it.readBytes(), Charsets.UTF_8) }
             val t = body.trim()
-            if (t.isEmpty()) throw Exception("Подписка пустая. Возможно, превышен лимит устройств.")
+            if (t.isEmpty()) throw Exception(tr("Подписка пустая. Возможно, превышен лимит устройств."))
             if (t[0] != '[' && t[0] != '{') {
                 val dec = runCatching { String(Base64.getMimeDecoder().decode(t), Charsets.UTF_8).trim() }.getOrDefault("")
                 if (!(dec.startsWith("[") || dec.startsWith("{")))

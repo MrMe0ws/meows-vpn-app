@@ -55,8 +55,8 @@ fun FilterChip(selected: Boolean, onClick: () -> Unit, label: @Composable () -> 
     M3FilterChip(selected = selected, onClick = onClick, label = label, modifier = modifier.hand())
 
 @Composable
-fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier) =
-    M3Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier.hand())
+fun Switch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier, enabled: Boolean = true) =
+    M3Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = if (enabled) modifier.hand() else modifier, enabled = enabled)
 
 @Composable
 fun DropdownMenuItem(

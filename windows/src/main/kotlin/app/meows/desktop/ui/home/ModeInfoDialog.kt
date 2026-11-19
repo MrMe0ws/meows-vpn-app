@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -16,18 +17,18 @@ import androidx.compose.ui.unit.dp
 fun ModeInfoDialog(onClose: () -> Unit) {
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("Какой режим выбрать?") },
+        title = { Text(tr("Какой режим выбрать?")) },
         text = {
             Column {
-                Text("Все программы", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                Text("VPN на весь компьютер, как на телефоне: браузеры, игры, мессенджеры — всё идёт через Meows по правилам. Нужны права администратора, Meows попросит их при запуске.")
+                Text(tr("Все программы"), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Text(tr("VPN на весь компьютер, как на телефоне: браузеры, игры, мессенджеры — всё идёт через Meows по правилам. Нужны права администратора, Meows попросит их при запуске."))
                 Spacer(Modifier.height(16.dp))
-                Text("Системный прокси", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                Text("Meows лишь просит Windows направить трафик через VPN. Браузеры слушаются, а игры и многие программы — нет, они идут напрямую. Администратор не нужен.")
+                Text(tr("Системный прокси"), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Text(tr("Meows лишь просит Windows направить трафик через VPN. Браузеры слушаются, а игры и многие программы — нет, они идут напрямую. Администратор не нужен."))
                 Spacer(Modifier.height(16.dp))
-                Text("Не уверены — оставьте «Все программы».", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(tr("Не уверены — оставьте «Все программы»."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        confirmButton = { TextButton(onClick = onClose) { Text("Понятно") } },
+        confirmButton = { TextButton(onClick = onClose) { Text(tr("Понятно")) } },
     )
 }

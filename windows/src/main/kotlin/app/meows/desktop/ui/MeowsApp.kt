@@ -1,5 +1,6 @@
 package app.meows.desktop.ui
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +57,7 @@ fun MeowsApp(app: AppModel) {
         AlertDialog(
             onDismissRequest = { app.error = null },
             title = { Text(title) }, text = { Text(text) },
-            confirmButton = { TextButton(onClick = { app.error = null }) { Text("Понятно") } },
+            confirmButton = { TextButton(onClick = { app.error = null }) { Text(tr("Понятно")) } },
         )
     }
 }

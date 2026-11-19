@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,22 +36,22 @@ fun AutoSwitchPage(vm: MeowsViewModel, onBack: () -> Unit) {
     val servers = vm.servers
     val mode = vm.pref(SwitchFilter.P_MODE, 0)
     val marked = SwitchFilter.marked(sp, servers)
-    SettingsPageScaffold("Автопереключение", onBack) {
-        SettingsGroup(footer = "Если сервер перестал отвечать, Meows подключится к другому рабочему. Выключите, если нужна конкретная страна.") {
-            SwitchRow(Icons.Rounded.SwapHoriz, "Автопереключение серверов", vm.flag(XKStore.P_AUTOSWITCH, true)) { vm.setFlag(XKStore.P_AUTOSWITCH, it) }
+    SettingsPageScaffold(tr("Автопереключение"), onBack) {
+        SettingsGroup(footer = tr("Если сервер перестал отвечать, Meows подключится к другому рабочему. Выключите, если нужна конкретная страна.")) {
+            SwitchRow(Icons.Rounded.SwapHoriz, tr("Автопереключение серверов"), vm.flag(XKStore.P_AUTOSWITCH, true)) { vm.setFlag(XKStore.P_AUTOSWITCH, it) }
         }
         SettingsGroup(
-            "Куда переключаться",
-            footer = if (mode == 1) "Meows переключится только на отмеченные серверы."
-            else "Meows не переключится на отмеченные серверы. Российские исключены по умолчанию: через них не открываются заблокированные сайты. Сервер, выбранный вручную, остаётся как есть.",
+            tr("Куда переключаться"),
+            footer = if (mode == 1) tr("Meows переключится только на отмеченные серверы.")
+            else tr("Meows не переключится на отмеченные серверы. Российские исключены по умолчанию: через них не открываются заблокированные сайты. Сервер, выбранный вручную, остаётся как есть."),
         ) {
-            val modes = listOf("Все, кроме", "Выбранные")
+            val modes = listOf(tr("Все, кроме"), tr("Выбранные"))
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
                 modes.forEachIndexed { i, m ->
                     SegmentedButton(selected = mode == i, onClick = { vm.setSwitchMode(i) }, shape = SegmentedButtonDefaults.itemShape(i, modes.size)) { Text(m, maxLines = 1) }
                 }
             }
-            if (servers.isEmpty()) Text("Добавьте подписку, чтобы выбрать серверы.", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (servers.isEmpty()) Text(tr("Добавьте подписку, чтобы выбрать серверы."), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             servers.forEach { s ->
                 val on = s.title in marked
                 ListItem(
@@ -62,7 +63,7 @@ fun AutoSwitchPage(vm: MeowsViewModel, onBack: () -> Unit) {
                         }
                     },
                     headlineContent = { Text(s.title) },
-                    supportingContent = if (mode == 0 && on) { { Text("Исключён") } } else null,
+                    supportingContent = if (mode == 0 && on) { { Text(tr("Исключён")) } } else null,
                     trailingContent = { Checkbox(on, onCheckedChange = null) },
                 )
             }

@@ -1,5 +1,6 @@
 package app.meows.vpn.update
 
+import app.meows.vpn.i18n.trf
 import android.app.Application
 import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
@@ -69,7 +70,7 @@ class UpdateController(
             }
             state = result.fold(
                 onSuccess = { UpdateState.Downloaded(info, it.absolutePath) },
-                onFailure = { UpdateState.Error("Не удалось скачать: ${it.message ?: it.javaClass.simpleName}") },
+                onFailure = { UpdateState.Error(trf("Не удалось скачать: %s", it.message ?: it.javaClass.simpleName)) },
             )
         }
     }

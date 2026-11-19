@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,14 +32,14 @@ fun ServersPane(app: AppModel, onAdd: () -> Unit, modifier: Modifier = Modifier)
     Column(modifier) {
         if (entries.isEmpty()) {
             Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Добавьте подписку", style = MaterialTheme.typography.titleLarge)
+                Text(tr("Добавьте подписку"), style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически.",
+                    tr("Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически."),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = onAdd) { Text("Добавить подписку") }
+                Button(onClick = onAdd) { Text(tr("Добавить подписку")) }
             }
         } else LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = 16.dp)) {
             entries.forEach { e ->

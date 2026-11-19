@@ -1,5 +1,7 @@
 package app.meows.vpn;
 
+import app.meows.vpn.i18n.Lang;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -15,6 +17,7 @@ public class XKReceiver extends BroadcastReceiver {
     public static final String ACTION_REMIND = "app.meows.vpn.REMIND";
 
     @Override public void onReceive(Context c, Intent i) {
+        Lang.init(c);
         if (Intent.ACTION_BOOT_COMPLETED.equals(i.getAction())) {
             for (XKStore st : XKStore.all(c)) st.scheduleReminders();
             return;
@@ -23,18 +26,18 @@ public class XKReceiver extends BroadcastReceiver {
         int kind = i.getIntExtra("kind", 0);
         XKStore st = XKStore.byId(c, i.getIntExtra("slot", 0));
         String who = XKStore.slotIds(c).size() > 1 ? "«" + st.title() + "»: " : "";   // с несколькими подписками — чья именно
-        String[] titles = {"Подписка скоро закончится", "Завтра заканчивается подписка", "Подписка закончилась"};
+        String[] titles = {Lang.tr("Подписка скоро закончится"), Lang.tr("Завтра заканчивается подписка"), Lang.tr("Подписка закончилась")};
         String[] bodies = {
-                "Через 3 дня подписка закончится. Нажмите, чтобы продлить в личном кабинете.",
-                "Остался 1 день. Продлите подписку, чтобы VPN не отключился.",
-                "Подписка закончилась. Продлите её в личном кабинете и нажмите «Обновить» в приложении."};
+                Lang.tr("Через 3 дня подписка закончится. Нажмите, чтобы продлить в личном кабинете."),
+                Lang.tr("Остался 1 день. Продлите подписку, чтобы VPN не отключился."),
+                Lang.tr("Подписка закончилась. Продлите её в личном кабинете и нажмите «Обновить» в приложении.")};
         if (app.meows.vpn.Edition.isPlay) bodies = new String[]{
-                "Через 3 дня подписка закончится.",
-                "Остался 1 день до конца подписки.",
-                "Подписка закончилась. После продления нажмите «Обновить» в приложении."};
+                Lang.tr("Через 3 дня подписка закончится."),
+                Lang.tr("Остался 1 день до конца подписки."),
+                Lang.tr("Подписка закончилась. После продления нажмите «Обновить» в приложении.")};
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("remind") == null) {
-            nm.createNotificationChannel(new NotificationChannel("remind", "Напоминания о подписке", NotificationManager.IMPORTANCE_HIGH));
+            nm.createNotificationChannel(new NotificationChannel("remind", Lang.tr("Напоминания о подписке"), NotificationManager.IMPORTANCE_HIGH));
         }
         int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         PendingIntent pi = PendingIntent.getActivity(c, 7 + kind + 20 * st.id(), cabinetIntent(c, st), fl);   // нажатие — сразу в кабинет, продлить
@@ -68,12 +71,12 @@ public class XKReceiver extends BroadcastReceiver {
         sp.edit().putString(wk, key).apply();
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("remind") == null) {
-            nm.createNotificationChannel(new NotificationChannel("remind", "Напоминания о подписке", NotificationManager.IMPORTANCE_HIGH));
+            nm.createNotificationChannel(new NotificationChannel("remind", Lang.tr("Напоминания о подписке"), NotificationManager.IMPORTANCE_HIGH));
         }
-        String title = level == 100 ? "Трафик закончился" : "Трафик почти закончился";
+        String title = level == 100 ? Lang.tr("Трафик закончился") : Lang.tr("Трафик почти закончился");
         String body = app.meows.vpn.Edition.isPlay
-                ? (level == 100 ? "Лимит трафика исчерпан." : "Использовано " + pct + "% трафика.")
-                : (level == 100 ? "Лимит исчерпан. Продлите или докупите трафик в личном кабинете." : "Использовано " + pct + "% трафика. Нажмите, чтобы открыть личный кабинет.");
+                ? (level == 100 ? Lang.tr("Лимит трафика исчерпан.") : Lang.tr("Использовано ") + pct + Lang.tr("% трафика."))
+                : (level == 100 ? Lang.tr("Лимит исчерпан. Продлите или докупите трафик в личном кабинете.") : Lang.tr("Использовано ") + pct + Lang.tr("% трафика. Нажмите, чтобы открыть личный кабинет."));
         int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, "remind") : new Notification.Builder(c);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))

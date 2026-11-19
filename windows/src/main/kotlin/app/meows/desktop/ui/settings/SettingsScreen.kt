@@ -1,5 +1,7 @@
 package app.meows.desktop.ui.settings
 
+import app.meows.desktop.i18n.Lang
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.meows.desktop.AppInfo
@@ -105,16 +108,19 @@ private val TILE_INNER = 4.dp
 private val TILE_GAP = 2.dp
 
 @Composable
-internal fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = ListItem(
-    modifier = Modifier.clickable { onChange(!checked) }.hand(), colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-    headlineContent = { Text(title) }, supportingContent = sub?.let { { Text(it) } }, trailingContent = { Switch(checked, onChange) },
+internal fun SwitchRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) = SwitchRow(title, sub, checked, true, onChange)
+
+@Composable
+internal fun SwitchRow(title: String, sub: String?, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) = ListItem(
+    modifier = if (enabled) Modifier.clickable { onChange(!checked) }.hand() else Modifier.alpha(0.5f), colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+    headlineContent = { Text(title) }, supportingContent = sub?.let { { Text(it) } }, trailingContent = { Switch(checked, onChange, enabled = enabled) },
 )
 
 @Composable
 private fun Swatch(color: Color, selected: Boolean, onClick: () -> Unit) = Surface(
     onClick = onClick, shape = CircleShape, color = color, modifier = Modifier.size(44.dp).hand(),
     border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null,
-) { Box(contentAlignment = Alignment.Center) { if (selected) Icon(Icons.Rounded.Check, "Выбрано", tint = Color.Black.copy(alpha = 0.75f)) } }
+) { Box(contentAlignment = Alignment.Center) { if (selected) Icon(Icons.Rounded.Check, tr("Выбрано"), tint = Color.Black.copy(alpha = 0.75f)) } }
 
 /** Настройки: тема и палитра (как на Android), маршрутизация, о приложении. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,16 +130,22 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
     if (autoSwitchOpen) { AutoSwitchScreen(app) { autoSwitchOpen = false }; return }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
-        topBar = { TopAppBar(title = { Text("Настройки") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } }) },
+        topBar = { TopAppBar(title = { Text(tr("Настройки")) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Назад")) } }) },
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())) {
-            Group("Тема") {
-                val modes = listOf("Авто", "Светлая", "Тёмная")
+            Group(tr("Язык")) {
+                val langs = listOf(tr("Авто"), "Русский", "English")
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
+                    langs.forEachIndexed { i, m -> SegmentedButton(selected = Lang.choice == i, onClick = { app.chooseLang(i) }, shape = SegmentedButtonDefaults.itemShape(i, langs.size)) { Text(m) } }
+                }
+            }
+            Group(tr("Тема")) {
+                val modes = listOf(tr("Авто"), tr("Светлая"), tr("Тёмная"))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
                     modes.forEachIndexed { i, m -> SegmentedButton(selected = app.themeMode == i, onClick = { app.setTheme(i) }, shape = SegmentedButtonDefaults.itemShape(i, modes.size)) { Text(m) } }
                 }
             }
-            Group("Цвет", "«Серая» и «Монохром» — спокойные палитры без яркого цвета.") {
+            Group(tr("Цвет"), tr("«Серая» и «Монохром» — спокойные палитры без яркого цвета.")) {
                 Column(Modifier.padding(16.dp)) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Palettes.seeds.forEachIndexed { i, c -> Swatch(c, app.palette == i) { app.choosePalette(i) } }
@@ -141,16 +153,17 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Text(Palettes.names[app.palette.coerceIn(0, Palettes.names.lastIndex)], style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                SwitchRow("Чёрный фон (AMOLED)", "Для тёмной темы", app.amoled, app::chooseAmoled)
+                SwitchRow(tr("Чёрный фон (AMOLED)"), tr("Для тёмной темы"), app.amoled, app::chooseAmoled)
             }
-            Group("Маршрутизация", "Основные правила (российское напрямую, заблокированное через VPN) приходят вместе с подпиской.") {
-                SwitchRow("Блокировать рекламу", null, app.blockAds, app::chooseBlockAds)
-                SwitchRow("Все российские сайты напрямую", "Расширенно, поверх правил подписки", app.ruDirect, app::chooseRuDirect)
+            Group(tr("Маршрутизация"), tr("Основные правила (российское напрямую, заблокированное через VPN) приходят вместе с подпиской.")) {
+                SwitchRow(tr("Весь трафик через VPN"), null, app.allVpn, app::chooseAllVpn)
+                SwitchRow(tr("Блокировать рекламу"), null, app.blockAds, app::chooseBlockAds)
+                SwitchRow(tr("Все российские сайты напрямую"), if (app.allVpn) tr("В режиме «Весь трафик через VPN» не действует") else tr("Расширенно, поверх правил подписки"), app.ruDirect, !app.allVpn, app::chooseRuDirect)
             }
             SystemGroup(app) { autoSwitchOpen = true }
             UpdatesGroup(app)
-            Group("О приложении") {
-                ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text("Версия") }, trailingContent = { Text(AppInfo.VERSION) })
+            Group(tr("О приложении")) {
+                ListItem(colors = ListItemDefaults.colors(containerColor = Color.Transparent), headlineContent = { Text(tr("Версия")) }, trailingContent = { Text(AppInfo.VERSION) })
             }
             Spacer(Modifier.height(24.dp))
         }

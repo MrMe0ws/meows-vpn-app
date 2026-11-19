@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -39,10 +40,10 @@ fun SupportSheet(vm: MeowsViewModel, st: XKStore, onDismiss: () -> Unit) {
     val report = remember { Diagnostics.build(ctx, st, vm.lastError) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text("Поддержка", style = MaterialTheme.typography.titleLarge)
+            Text(tr("Поддержка"), style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
             Text(
-                "Мы скопируем отчёт о вашем устройстве — вставьте его в чат, так поддержка быстрее поймёт, что случилось. Ссылка подписки в отчёт не попадает.",
+                tr("Мы скопируем отчёт о вашем устройстве — вставьте его в чат, так поддержка быстрее поймёт, что случилось. Ссылка подписки в отчёт не попадает."),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
@@ -53,15 +54,15 @@ fun SupportSheet(vm: MeowsViewModel, st: XKStore, onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        vm.copy(report, "support"); vm.toast = "Отчёт скопирован — вставьте его в чат"
+                        vm.copy(report, "support"); vm.toast = tr("Отчёт скопирован — вставьте его в чат")
                         vm.openLink(ShopLinks.support(st)); onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Icon(Icons.Rounded.Send, null); Spacer(Modifier.width(8.dp)); Text("Написать в поддержку") }
+                ) { Icon(Icons.Rounded.Send, null); Spacer(Modifier.width(8.dp)); Text(tr("Написать в поддержку")) }
                 FilledTonalButton(
-                    onClick = { vm.copy(report, "support"); vm.toast = "Отчёт скопирован"; onDismiss() },
+                    onClick = { vm.copy(report, "support"); vm.toast = tr("Отчёт скопирован"); onDismiss() },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Icon(Icons.Rounded.ContentCopy, null); Spacer(Modifier.width(8.dp)); Text("Только скопировать отчёт") }
+                ) { Icon(Icons.Rounded.ContentCopy, null); Spacer(Modifier.width(8.dp)); Text(tr("Только скопировать отчёт")) }
             }
         }
     }

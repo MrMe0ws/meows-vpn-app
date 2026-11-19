@@ -1,5 +1,7 @@
 package app.meows.desktop.vpn
 
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import app.meows.desktop.data.AppDirs
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.log.AppLog
@@ -22,7 +24,7 @@ class CoreProcess {
     /** Запускает ядро и ждёт `XKOK` (до 20 с). [onExit] вызывается, если ядро завершилось не по нашей просьбе. */
     fun start(sub: SubscriptionData, index: Int, opts: String, mode: String, onExit: (String?) -> Unit): Result<Unit> = runCatching {
         stop()
-        require(AppDirs.coreExe.exists()) { "Не найден meows-core.exe (${AppDirs.coreExe})" }
+        require(AppDirs.coreExe.exists()) { trf("Не найден meows-core.exe (%s)", AppDirs.coreExe) }
         syncGeo()
         val cfg = JSONObject().put("sub", sub.body).put("index", index).put("opts", opts)
             .put("socksPort", SOCKS_PORT).put("httpPort", HTTP_PORT).put("mode", mode).put("traffic", true)
@@ -44,7 +46,7 @@ class CoreProcess {
             if (l.startsWith("XKERR")) err.append(l.removePrefix("XKERR").trim())
             if (l == "\u0000EXIT") break
         }
-        if (!ok) { stop(); error(err.toString().ifBlank { "Ядро не запустилось" }) }
+        if (!ok) { stop(); error(err.toString().ifBlank { tr("Ядро не запустилось") }) }
         thread(isDaemon = true, name = "meows-core-watch") {
             val tail = StringBuilder()
             while (true) {

@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings
 
+import app.meows.vpn.ui.settings.pages.LanguagePage
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -28,7 +29,7 @@ import app.meows.vpn.ui.settings.pages.UpdatesPage
 /** Страницы настроек. [parent] — куда ведёт «назад». Новая страница = новый элемент + файл в pages/. */
 enum class SettingsPage(val parent: SettingsPage?, val depth: Int) {
     Home(null, 0),
-    Appearance(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1),
+    Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1),
     Bypass(Routing, 2), Apps(Routing, 2), AutoSwitch(Connection, 2),
 }
 
@@ -52,6 +53,7 @@ fun SettingsScreen(vm: MeowsViewModel, onBack: () -> Unit) {
         when (p) {
             SettingsPage.Home -> SettingsHome(vm, onBack = onBack, open = { page = it })
             SettingsPage.Appearance -> AppearancePage(vm, back)
+            SettingsPage.Language -> LanguagePage(vm, back)
             SettingsPage.Routing -> RoutingPage(vm, back, openBypass = { page = SettingsPage.Bypass }, openApps = { page = SettingsPage.Apps })
             SettingsPage.Subscription -> SubscriptionPage(vm, back)
             SettingsPage.Connection -> ConnectionPage(vm, back, openAutoSwitch = { page = SettingsPage.AutoSwitch })

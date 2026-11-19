@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -25,11 +26,11 @@ fun StatusText(state: ConnState, connectedAt: Long) {
     Column(Modifier.padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         when (state) {
             ConnState.Connected -> {
-                Text("Подключено", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                Text(tr("Подключено"), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                 Text(formatTimer((now - connectedAt).coerceAtLeast(0)), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            ConnState.Connecting -> Text("Подключаемся…", style = MaterialTheme.typography.headlineMedium)
-            ConnState.Idle -> Text("Отключено", style = MaterialTheme.typography.headlineMedium)
+            ConnState.Connecting -> Text(tr("Подключаемся…"), style = MaterialTheme.typography.headlineMedium)
+            ConnState.Idle -> Text(tr("Отключено"), style = MaterialTheme.typography.headlineMedium)
         }
     }
 }

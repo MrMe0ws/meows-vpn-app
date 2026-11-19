@@ -1,5 +1,7 @@
 package app.meows.vpn
 
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -52,7 +54,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     var themeMode by mutableIntStateOf(st.pref(XKStore.P_THEME, 0))
     var palette by mutableIntStateOf(st.pref("palette", 0))
     /** По умолчанию — цвета из обоев (канон Material You, Android 12+); пока пользователь не выбрал палитру сам. */
-    var dynamicColors by mutableStateOf(st.flag("dynamic", android.os.Build.VERSION.SDK_INT >= 31))
+    var dynamicColors by mutableStateOf(st.flag("dynamic", false))
     var amoled by mutableStateOf(st.flag("amoled", false))
 
     private var autoPingDone = false
@@ -75,7 +77,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         vpnState = state
         bump()   // сервис мог сам сменить сервер (автопереключение) — обновляем список и выбранный сервер
         if (state == XKVpnService.IDLE) {
-            XKVpnService.lastError?.let { alert("Не подключилось", it); XKVpnService.lastError = null }
+            XKVpnService.lastError?.let { alert(tr("Не подключилось"), it); XKVpnService.lastError = null }
         }
     }
 
@@ -97,8 +99,8 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     /** Ошибка загрузки подписки; если похоже на лимит устройств — сразу предлагаем кабинет. */
     private fun fetchError(title: String, error: String) {
-        if (!Edition.isPlay && error.contains("лимит", ignoreCase = true)) {
-            alert(title, error, "Открыть кабинет") { openLink(app.meows.vpn.shop.ShopLinks.cabinet(st)) }
+        if (!Edition.isPlay && (error.contains("лимит", ignoreCase = true) || error.contains("limit", ignoreCase = true))) {
+            alert(title, error, tr("Открыть кабинет")) { openLink(app.meows.vpn.shop.ShopLinks.cabinet(st)) }
         } else alert(title, error)
     }
     private fun bump() { rev++ }
@@ -113,7 +115,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     /** Добавить подписку: такая же ссылка уже есть — обновим её, иначе новая карточка. Первая подписка становится активной. */
     fun addSubscription(raw: String) {
         val link = LinkNormalizer.normalize(raw)
-        if (!LinkNormalizer.isHttpLink(link)) { fetchError("Не получилось", "Это не похоже на ссылку подписки."); return }
+        if (!LinkNormalizer.isHttpLink(link)) { fetchError(tr("Не получилось"), tr("Это не похоже на ссылку подписки.")); return }
         val hadActive = st.hasSubscription()
         val s = XKStore.slotFor(getApplication(), link)
         fetchInto(s, raw, replaced = false) { if (!hadActive) XKStore.activate(getApplication(), s.id()) }
@@ -128,10 +130,10 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             refreshingSlots.remove(s.id())
             if (error != null) {
                 if (s.url().isEmpty()) XKStore.removeSlot(getApplication(), s.id())   // новая карточка не получилась — не оставляем пустую
-                bump(); fetchError("Не получилось", error); return@fetch
+                bump(); fetchError(tr("Не получилось"), error); return@fetch
             }
             onOk()
-            toast = if (replaced) "Ссылка заменена" else "Подписка добавлена"
+            toast = if (replaced) tr("Ссылка заменена") else tr("Подписка добавлена")
             if (isActive(s)) { syncGeo(); bump(); autoPing(); reconnectIfNeeded() } else bump()
         }
     }
@@ -145,8 +147,8 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         refreshingSlots.add(s.id())
         s.fetch(s.url()) { error ->
             refreshingSlots.remove(s.id())
-            if (error != null) { if (!silent) fetchError("Не удалось обновить", error); return@fetch }
-            if (!silent) toast = "Подписка обновлена"
+            if (error != null) { if (!silent) fetchError(tr("Не удалось обновить"), error); return@fetch }
+            if (!silent) toast = tr("Подписка обновлена")
             if (isActive(s)) { syncGeo(); bump(); autoPing() } else bump()
         }
     }
@@ -181,7 +183,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     /** «Вставить из буфера обмена»: добавляет подписку, если в буфере ссылка. */
     fun addFromClipboard() {
         val t = clipboardText()
-        if (t.startsWith("http", true) || t.contains("://add/")) addSubscription(t) else toast = "В буфере нет ссылки подписки"
+        if (t.startsWith("http", true) || t.contains("://add/")) addSubscription(t) else toast = tr("В буфере нет ссылки подписки")
     }
 
     // ---------- сервер / пинг ----------
@@ -196,7 +198,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     /** «Выбрать быстрейший»: пингуем все серверы подписки и выбираем лучший по результату. */
     fun selectFastest(s: XKStore = st) {
         if (!s.hasSubscription() || isPinging(s)) return
-        toast = "Измеряем пинг…"
+        toast = tr("Измеряем пинг…")
         pingingSlots.add(s.id()); pingHidden = false
         handler.removeCallbacksAndMessages(PING_TOKEN)
         s.pingAll({ bump() }, { pingingSlots.remove(s.id()); bump(); scheduleHidePing(); pickFastest(s) })
@@ -209,8 +211,8 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             val ms = s.pings[i] ?: continue
             if (ms in 1 until bestMs) { bestMs = ms; best = i }
         }
-        if (best < 0) { toast = "Ни один сервер не ответил"; return }
-        toast = "Быстрейший: ${list[best].title} · $bestMs мс"
+        if (best < 0) { toast = tr("Ни один сервер не ответил"); return }
+        toast = trf("Быстрейший: %s · %d мс", list[best].title, bestMs)
         select(s, best)
     }
 

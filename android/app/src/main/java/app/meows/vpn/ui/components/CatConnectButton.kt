@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.components
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -98,7 +99,7 @@ fun CatConnectButton(state: Int, size: Dp, onClick: () -> Unit) {
                 Box(Modifier.fillMaxSize().padding(size * 0.09f).clip(CircleShape).background(plate), contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(R.drawable.sleep_cat),
-                        contentDescription = "Кот спит — нажмите, чтобы подключиться",
+                        contentDescription = tr("Кот спит — нажмите, чтобы подключиться"),
                         modifier = Modifier.fillMaxSize().padding(size * 0.1f),
                     )
                     Zzz(Modifier.align(Alignment.TopEnd).padding(top = size * 0.12f, end = size * 0.16f))
@@ -108,7 +109,7 @@ fun CatConnectButton(state: Int, size: Dp, onClick: () -> Unit) {
                     // лапка красится в цвет выбранной темы (primary)
                     Image(
                         painter = painterResource(R.drawable.paw),
-                        contentDescription = "Подключение Meows",
+                        contentDescription = tr("Подключение Meows"),
                         colorFilter = ColorFilter.tint(primary),
                         alpha = if (state == XKVpnService.CONNECTED) 1f else 0.45f + glow,
                         modifier = Modifier.fillMaxSize().padding(size * 0.22f).scale(if (state == XKVpnService.CONNECTED) pulse else 1f),

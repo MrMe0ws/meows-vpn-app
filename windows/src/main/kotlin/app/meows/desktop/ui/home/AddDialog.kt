@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentPaste
@@ -25,14 +26,14 @@ fun AddDialog(onAdd: (String) -> Unit, onDismiss: () -> Unit) {
     val clip = LocalClipboardManager.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ссылка подписки") },
+        title = { Text(tr("Ссылка подписки")) },
         text = {
             OutlinedTextField(
                 url, { url = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("https://…") },
-                trailingIcon = { IconButton(onClick = { url = clip.getText()?.text?.trim().orEmpty() }) { Icon(Icons.Rounded.ContentPaste, "Вставить") } },
+                trailingIcon = { IconButton(onClick = { url = clip.getText()?.text?.trim().orEmpty() }) { Icon(Icons.Rounded.ContentPaste, tr("Вставить")) } },
             )
         },
-        confirmButton = { Button(onClick = { onAdd(url); onDismiss() }, enabled = url.isNotBlank()) { Text("Добавить") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        confirmButton = { Button(onClick = { onAdd(url); onDismiss() }, enabled = url.isNotBlank()) { Text(tr("Добавить")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Отмена")) } },
     )
 }

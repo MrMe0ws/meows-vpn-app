@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.logs
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,7 +31,7 @@ fun TrafficList(lines: List<TrafficLine>) {
     val list = rememberLazyListState()
     LaunchedEffect(lines.size) { if (lines.isNotEmpty()) list.scrollToItem(lines.lastIndex) }
     if (lines.isEmpty()) {
-        Text("Пока пусто. Подключитесь и откройте любой сайт — здесь будет видно, куда пошёл каждый запрос: напрямую или через VPN.", Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(tr("Пока пусто. Подключитесь и откройте любой сайт — здесь будет видно, куда пошёл каждый запрос: напрямую или через VPN."), Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         return
     }
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp), state = list) {
@@ -49,9 +50,9 @@ fun TrafficList(lines: List<TrafficLine>) {
 private fun RouteChip(r: Route) {
     val cs = MaterialTheme.colorScheme
     val (text, bg, fg) = when (r) {
-        Route.Direct -> Triple("напрямую", cs.surfaceContainerHighest, cs.onSurfaceVariant)
-        Route.Vpn -> Triple("через VPN", cs.primaryContainer, cs.onPrimaryContainer)
-        Route.Block -> Triple("блок", cs.errorContainer, cs.onErrorContainer)
+        Route.Direct -> Triple(tr("напрямую"), cs.surfaceContainerHighest, cs.onSurfaceVariant)
+        Route.Vpn -> Triple(tr("через VPN"), cs.primaryContainer, cs.onPrimaryContainer)
+        Route.Block -> Triple(tr("блок"), cs.errorContainer, cs.onErrorContainer)
     }
     Surface(color = bg, contentColor = fg, shape = MaterialTheme.shapes.small) {
         Text(text, Modifier.padding(horizontal = 10.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium, color = Color.Unspecified)

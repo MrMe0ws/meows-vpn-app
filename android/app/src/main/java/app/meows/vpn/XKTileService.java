@@ -1,5 +1,7 @@
 package app.meows.vpn;
 
+import app.meows.vpn.i18n.Lang;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +17,7 @@ public class XKTileService extends TileService {
         try { TileService.requestListeningState(c, new ComponentName(c, XKTileService.class)); } catch (Exception ignored) { }
     }
 
-    @Override public void onStartListening() { update(); }
+    @Override public void onStartListening() { Lang.init(this); update(); }
 
     private void update() {
         Tile t = getQsTile();
@@ -23,7 +25,7 @@ public class XKTileService extends TileService {
         int s = XKVpnService.state;
         t.setState(s == XKVpnService.CONNECTED ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
         t.setLabel("Meows");
-        if (Build.VERSION.SDK_INT >= 29) t.setSubtitle(s == XKVpnService.CONNECTED ? "Подключено" : s == XKVpnService.CONNECTING ? "Подключение…" : "Выключен");
+        if (Build.VERSION.SDK_INT >= 29) t.setSubtitle(s == XKVpnService.CONNECTED ? Lang.tr("Подключено") : s == XKVpnService.CONNECTING ? Lang.tr("Подключение…") : Lang.tr("Выключен"));
         t.updateTile();
     }
 

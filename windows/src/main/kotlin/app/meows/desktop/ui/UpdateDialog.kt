@@ -1,5 +1,7 @@
 package app.meows.desktop.ui
 
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,10 +34,10 @@ fun UpdateDialog(app: AppModel) {
     val busy = s is UpdateState.Downloading
     AlertDialog(
         onDismissRequest = { if (!busy) u.dismissDialog() },
-        title = { Text("Доступна версия ${info.version}") },
+        title = { Text(trf("Доступна версия %s", info.version)) },
         text = {
             Column {
-                Text("Сейчас установлена ${AppInfo.VERSION} · ${formatBytesRu(info.size)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(trf("Сейчас установлена %s", AppInfo.VERSION) + " · ${formatBytesRu(info.size)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (info.notes.isNotBlank()) {
                     Spacer(Modifier.height(12.dp))
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -43,18 +45,18 @@ fun UpdateDialog(app: AppModel) {
                     }
                 }
                 if (s is UpdateState.Downloading) {
-                    Spacer(Modifier.height(16.dp)); Text("Скачиваем… ${s.percent}%"); Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(16.dp)); Text(trf("Скачиваем… %d%%", s.percent)); Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(progress = { s.percent / 100f }, modifier = Modifier.fillMaxWidth())
                 }
             }
         },
         confirmButton = {
             when (s) {
-                is UpdateState.Downloaded -> Button(onClick = { app.installUpdate() }) { Text("Установить") }
-                is UpdateState.Available -> Button(onClick = u::download) { Text("Скачать") }
+                is UpdateState.Downloaded -> Button(onClick = { app.installUpdate() }) { Text(tr("Установить")) }
+                is UpdateState.Available -> Button(onClick = u::download) { Text(tr("Скачать")) }
                 else -> {}
             }
         },
-        dismissButton = { if (!busy) TextButton(onClick = u::dismissDialog) { Text("Позже") } },
+        dismissButton = { if (!busy) TextButton(onClick = u::dismissDialog) { Text(tr("Позже")) } },
     )
 }

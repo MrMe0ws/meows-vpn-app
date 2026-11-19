@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,7 +40,7 @@ fun StatusText(state: Int) {
         Column(Modifier.padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             when (s) {
                 XKVpnService.CONNECTED -> {
-                    Text("Подключено", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(tr("Подключено"), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                     Text(
                         formatTimer((now - XKVpnService.connectedAt).coerceAtLeast(0)),
                         style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -48,9 +49,9 @@ fun StatusText(state: Int) {
                 XKVpnService.CONNECTING -> Row(verticalAlignment = Alignment.CenterVertically) {
                     LoadingIndicator(Modifier.size(32.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text("Подключаемся…", style = MaterialTheme.typography.headlineMedium)
+                    Text(tr("Подключаемся…"), style = MaterialTheme.typography.headlineMedium)
                 }
-                else -> Text("Отключено", style = MaterialTheme.typography.headlineMedium)
+                else -> Text(tr("Отключено"), style = MaterialTheme.typography.headlineMedium)
             }
         }
     }

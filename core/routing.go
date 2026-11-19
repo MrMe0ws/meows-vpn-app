@@ -11,6 +11,7 @@ type xkOpts struct {
 	Cats     []string `json:"cats"`    // categories that bypass the VPN
 	Domains  []string `json:"domains"` // user sites that bypass the VPN
 	Apps     []string `json:"apps"`    // desktop: process names that bypass the VPN
+	AllVpn   bool     `json:"allVpn"` // всё через VPN, кроме торрентов и локальной сети (см. allvpn.go)
 	Lite     bool     `json:"lite"`
 	NoVV     bool     `json:"noVV"`    // white-label build: no built-in VkusVill bypass    // iOS: ~50 MB extension limit — skip the heaviest geo lists
 }
@@ -175,6 +176,10 @@ func addRouting(obj map[string]any, o xkOpts) {
 	}
 	if len(proxyRule) == 0 && firstProxy != "" {
 		proxyRule["outboundTag"] = firstProxy
+	}
+	if o.AllVpn {
+		applyAllVpn(obj, routing, o, direct, block, proxyRule)
+		return
 	}
 
 	var pre []any

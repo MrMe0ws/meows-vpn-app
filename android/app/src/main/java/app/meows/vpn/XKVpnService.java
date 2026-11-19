@@ -1,5 +1,7 @@
 package app.meows.vpn;
 
+import app.meows.vpn.i18n.Lang;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -91,7 +93,7 @@ public class XKVpnService extends VpnService {
         if (ACTION_PAUSE.equals(a)) { pauseVpn(); return START_STICKY; }
         if (state != IDLE) return START_STICKY;
         paused = false;
-        Notification n0 = notification("Подключаемся…");
+        Notification n0 = notification(Lang.tr("Подключаемся…"));
         if (Build.VERSION.SDK_INT >= 34) startForeground(1, n0, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
         else startForeground(1, n0);
         broadcast(CONNECTING);
@@ -108,7 +110,7 @@ public class XKVpnService extends VpnService {
     private Notification notification(String text) {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("vpn") == null) {
-            NotificationChannel ch = new NotificationChannel("vpn", "VPN-подключение", NotificationManager.IMPORTANCE_LOW);
+            NotificationChannel ch = new NotificationChannel("vpn", Lang.tr("VPN-подключение"), NotificationManager.IMPORTANCE_LOW);
             ch.setShowBadge(false);
             nm.createNotificationChannel(ch);
         }
@@ -123,9 +125,9 @@ public class XKVpnService extends VpnService {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "vpn") : new Notification.Builder(this);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
                 .setContentIntent(open).setOngoing(true).setColor(0xFF7CD62B);
-        if (paused) b.addAction(new Notification.Action.Builder(null, "Продолжить", resume).build());
-        else if (state == CONNECTED) b.addAction(new Notification.Action.Builder(null, "Пауза", pause).build());
-        b.addAction(new Notification.Action.Builder(null, "Отключить", stop).build());
+        if (paused) b.addAction(new Notification.Action.Builder(null, Lang.tr("Продолжить"), resume).build());
+        else if (state == CONNECTED) b.addAction(new Notification.Action.Builder(null, Lang.tr("Пауза"), pause).build());
+        b.addAction(new Notification.Action.Builder(null, Lang.tr("Отключить"), stop).build());
         return b.build();
     }
 
@@ -169,8 +171,10 @@ public class XKVpnService extends VpnService {
                 
             }
         } catch (Exception ignored) { }
-        if (st.ruApps()) for (String p : RU_APPS) pkgs.add(p);
-        pkgs.addAll(st.excludedApps());
+        if (!st.allVpn()) { // «Весь трафик через VPN»: российские и выбранные приложения тоже идут через VPN
+            if (st.ruApps()) for (String p : RU_APPS) pkgs.add(p);
+            pkgs.addAll(st.excludedApps());
+        }
         for (String p : pkgs) {
             try { b.addDisallowedApplication(p); } catch (PackageManager.NameNotFoundException ignored) { }
         }
@@ -180,7 +184,7 @@ public class XKVpnService extends VpnService {
         stopping = false;
         XKStore st = XKStore.get(this);
         try {
-            if (!st.hasSubscription()) throw new Exception("Нет подписки. Добавьте ссылку в приложении.");
+            if (!st.hasSubscription()) throw new Exception(Lang.tr("Нет подписки. Добавьте ссылку в приложении."));
             // geo files
             File assetDir = new File(getFilesDir(), "geo");
             assetDir.mkdirs();
@@ -210,7 +214,7 @@ public class XKVpnService extends VpnService {
             int fl = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
             b.setConfigureIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl));
             tun = b.establish();
-            if (tun == null) throw new Exception("Android не дал создать VPN. Разрешите подключение.");
+            if (tun == null) throw new Exception(Lang.tr(Lang.tr("Android не дал создать VPN. Разрешите подключение.")));
 
             String sock = "meows_tun_" + android.os.Process.myPid();
             final LocalServerSocket server = new LocalServerSocket(sock);
@@ -241,17 +245,17 @@ public class XKVpnService extends VpnService {
                 if (line.startsWith("XKOK")) { ok = true; break; }
                 if (line.startsWith("XKERR")) err.append(line.substring(5).trim());
             }
-            if (!ok) throw new Exception(err.length() > 0 ? err.toString() : "Ядро VPN не запустилось");
+            if (!ok) throw new Exception(err.length() > 0 ? err.toString() : Lang.tr("Ядро VPN не запустилось"));
             connectedAt = System.currentTimeMillis();
             app.meows.vpn.stats.StatsFeed.reset();
             broadcast(CONNECTED);
-            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключено"));
+            ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(Lang.tr("Подключено")));
             startWatchdog();
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {
                 try { String ln; while ((ln = fr.readLine()) != null) { app.meows.vpn.stats.StatsFeed.accept(ln); } } catch (Exception ignored) { }
-                if (!stopping) stopVpn("Ядро VPN остановилось");
+                if (!stopping) stopVpn(Lang.tr("Ядро VPN остановилось"));
             }}).start();
         } catch (Exception e) {
             stopVpn(e.getMessage());
@@ -308,7 +312,7 @@ public class XKVpnService extends VpnService {
                 }
                 fails = 0;
                 if (best < 0 || !allowSwitch()) continue;
-                String from = cur < list.size() ? list.get(cur).title : "Сервер";
+                String from = cur < list.size() ? list.get(cur).title : Lang.tr("Сервер");
                 String to = list.get(best).title;
                 st.setIndex(best);
                 notifySwitch(from, to);
@@ -348,13 +352,13 @@ public class XKVpnService extends VpnService {
     private void notifySwitch(String from, String to) {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("switch") == null) {
-            nm.createNotificationChannel(new NotificationChannel("switch", "Смена сервера", NotificationManager.IMPORTANCE_DEFAULT));
+            nm.createNotificationChannel(new NotificationChannel("switch", Lang.tr("Смена сервера"), NotificationManager.IMPORTANCE_DEFAULT));
         }
         int fl = Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0;
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, "switch") : new Notification.Builder(this);
-        b.setSmallIcon(R.drawable.ic_stat).setContentTitle("Сервер сменился")
-                .setContentText("«" + from + "» не отвечал — подключились к «" + to + "»")
-                .setStyle(new Notification.BigTextStyle().bigText("«" + from + "» не отвечал — подключились к «" + to + "»"))
+        b.setSmallIcon(R.drawable.ic_stat).setContentTitle(Lang.tr("Сервер сменился"))
+                .setContentText("«" + from + Lang.tr("» не отвечал — подключились к «") + to + "»")
+                .setStyle(new Notification.BigTextStyle().bigText("«" + from + Lang.tr("» не отвечал — подключились к «") + to + "»"))
                 .setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), fl)).setAutoCancel(true).setColor(0xFF7CD62B);
         nm.notify(30, b.build());
     }
@@ -368,7 +372,7 @@ public class XKVpnService extends VpnService {
             connectedAt = 0;
         }
         broadcast(CONNECTING);
-        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Подключаемся…"));
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(Lang.tr("Подключаемся…")));
         try { Thread.sleep(700); } catch (InterruptedException ignored) { }   // даём старому читателю вывода завершиться
         new Thread(new Runnable() { public void run() { startVpn(); } }, "xk-restart").start();
     }
@@ -382,7 +386,7 @@ public class XKVpnService extends VpnService {
         if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
         connectedAt = 0;
         broadcast(IDLE);
-        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification("Приостановлено"));
+        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(Lang.tr("Приостановлено")));
     }
 
     private synchronized void stopVpn(String error) {

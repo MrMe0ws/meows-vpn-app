@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import app.meows.vpn.Edition
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,19 +34,19 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 fun EmptyCard(modifier: Modifier, onPaste: () -> Unit, onScan: () -> Unit, onManual: () -> Unit) {
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.secondaryContainer) {
         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Добавьте подписку", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            Text(tr("Добавьте подписку"), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
             Spacer(Modifier.height(8.dp))
             Text(
-                if (Edition.isPlay) "Вставьте ссылку подписки от вашего VPN-сервиса. Серверы появятся автоматически."
-                else "Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически.",
+                if (Edition.isPlay) tr("Вставьте ссылку подписки от вашего VPN-сервиса. Серверы появятся автоматически.")
+                else tr("Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически."),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer, textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onPaste) { Icon(Icons.Rounded.ContentPaste, null); Spacer(Modifier.width(8.dp)); Text("Вставить из буфера") }
+            Button(onClick = onPaste) { Icon(Icons.Rounded.ContentPaste, null); Spacer(Modifier.width(8.dp)); Text(tr("Вставить из буфера")) }
             Spacer(Modifier.height(8.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-                OutlinedButton(onClick = onScan) { Icon(Icons.Rounded.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text("QR-код") }
-                OutlinedButton(onClick = onManual) { Icon(Icons.Rounded.Keyboard, null); Spacer(Modifier.width(8.dp)); Text("Вручную") }
+                OutlinedButton(onClick = onScan) { Icon(Icons.Rounded.QrCodeScanner, null); Spacer(Modifier.width(8.dp)); Text(tr("QR-код")) }
+                OutlinedButton(onClick = onManual) { Icon(Icons.Rounded.Keyboard, null); Spacer(Modifier.width(8.dp)); Text(tr("Вручную")) }
             }
         }
     }

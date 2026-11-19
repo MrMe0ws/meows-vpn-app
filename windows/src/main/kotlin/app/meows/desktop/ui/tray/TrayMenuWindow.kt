@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.tray
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -64,16 +65,16 @@ fun TrayMenuWindow(app: AppModel, anchor: Point?, onHide: () -> Unit) {
                             Text("Meows", style = MaterialTheme.typography.titleMedium)
                             val on = app.state == ConnState.Connected
                             Text(
-                                if (on) "Подключено" else if (app.state == ConnState.Connecting) "Подключаемся…" else "Отключено",
+                                if (on) tr("Подключено") else if (app.state == ConnState.Connecting) tr("Подключаемся…") else tr("Отключено"),
                                 style = MaterialTheme.typography.bodySmall, color = if (on) cs.primary else cs.onSurfaceVariant,
                             )
                         }
                     }
                     HorizontalDivider(Modifier.padding(vertical = 6.dp), color = cs.outlineVariant)
-                    Item("Открыть Meows") { onHide(); app.windowVisible = true; app.showTick++ }
-                    Item(if (app.state == ConnState.Idle) "Подключить" else "Отключить") { onHide(); app.toggle() }
+                    Item(tr("Открыть Meows")) { onHide(); app.windowVisible = true; app.showTick++ }
+                    Item(if (app.state == ConnState.Idle) tr("Подключить") else tr("Отключить")) { onHide(); app.toggle() }
                     HorizontalDivider(Modifier.padding(vertical = 6.dp), color = cs.outlineVariant)
-                    Item("Выход") { onHide(); app.shutdown(); app.exitRequested = true }
+                    Item(tr("Выход")) { onHide(); app.shutdown(); app.exitRequested = true }
                 }
             }
         }

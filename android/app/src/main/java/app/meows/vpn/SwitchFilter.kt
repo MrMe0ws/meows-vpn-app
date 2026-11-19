@@ -1,5 +1,8 @@
 package app.meows.vpn
 
+import app.meows.vpn.i18n.serversWord
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import android.content.SharedPreferences
 
 /**
@@ -34,8 +37,8 @@ object SwitchFilter {
     fun summary(sp: SharedPreferences, servers: List<XKStore.Server>): String {
         val m = marked(sp, servers)
         val n = servers.map { it.title }.distinct().count { it in m }
-        val word = if (n % 10 == 1 && n % 100 != 11) "сервер" else if (n % 10 in 2..4 && n % 100 !in 12..14) "сервера" else "серверов"
-        return if (mode(sp) == 1) (if (n == 0) "Ничего не выбрано" else "Только $n $word")
-        else (if (n == 0) "Все серверы" else "Все, кроме $n $word")
+        val word = serversWord(n)
+        return if (mode(sp) == 1) (if (n == 0) tr("Ничего не выбрано") else trf("Только %d %s", n, word))
+        else (if (n == 0) tr("Все серверы") else trf("Все, кроме %d %s", n, word))
     }
 }

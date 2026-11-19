@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.settings.pages
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -46,30 +47,30 @@ fun BypassPage(vm: MeowsViewModel, onBack: () -> Unit) {
         }
     }
 
-    SettingsPageScaffold("Мимо VPN", onBack) {
-        SettingsGroup("Категории", "Включённые категории работают через обычный интернет, без VPN.") {
+    SettingsPageScaffold(tr("Мимо VPN"), onBack) {
+        SettingsGroup(tr("Категории"), tr("Включённые категории работают через обычный интернет, без VPN.")) {
             XKStore.CATEGORIES.forEach { c ->
-                SwitchRow(Icons.Rounded.Language, c[1], c[0] in cats, c[2]) { on -> if (on) cats.add(c[0]) else cats.remove(c[0]) }
+                SwitchRow(Icons.Rounded.Language, tr(c[1]), c[0] in cats, tr(c[2])) { on -> if (on) cats.add(c[0]) else cats.remove(c[0]) }
             }
         }
-        SettingsGroup("Свои сайты", "Домен вместе с поддоменами пойдёт мимо VPN. Например: example.com") {
+        SettingsGroup(tr("Свои сайты"), tr("Домен вместе с поддоменами пойдёт мимо VPN. Например: example.com")) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     input, { input = it; inputError = false }, Modifier.weight(1f),
                     singleLine = true, placeholder = { Text("example.com") }, isError = inputError,
-                    supportingText = if (inputError) { { Text("Не похоже на домен") } } else null,
+                    supportingText = if (inputError) { { Text(tr("Не похоже на домен")) } } else null,
                 )
                 IconButton(onClick = {
                     val d = XKStore.normalizeSite(input)
                     if (d.isEmpty()) inputError = true
                     else { if (d !in sites) sites.add(d); sites.sort(); input = "" }
-                }) { Icon(Icons.Rounded.Add, "Добавить") }
+                }) { Icon(Icons.Rounded.Add, tr("Добавить")) }
             }
             sites.toList().forEach { s ->
                 ListItem(
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     headlineContent = { Text(s) },
-                    trailingContent = { IconButton(onClick = { sites.remove(s) }) { Icon(Icons.Rounded.Close, "Удалить") } },
+                    trailingContent = { IconButton(onClick = { sites.remove(s) }) { Icon(Icons.Rounded.Close, tr("Удалить")) } },
                 )
             }
         }

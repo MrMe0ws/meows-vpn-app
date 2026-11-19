@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.nav
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Spacer
@@ -55,17 +56,17 @@ fun MeowsRail(page: Page, onPage: (Page) -> Unit, onAdd: () -> Unit, expanded: B
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         header = {
             Spacer(Modifier.height(12.dp))
-            IconButton(onClick = onToggle) { Icon(if (expanded) Icons.Rounded.ChevronLeft else Icons.Rounded.ChevronRight, if (expanded) "Свернуть меню" else "Развернуть меню") }
+            IconButton(onClick = onToggle) { Icon(if (expanded) Icons.Rounded.ChevronLeft else Icons.Rounded.ChevronRight, if (expanded) tr("Свернуть меню") else tr("Развернуть меню")) }
             Spacer(Modifier.height(8.dp))
         },
     ) {
-        item(page == Page.Home, { onPage(Page.Home) }, Icons.Rounded.Public, "Серверы")
-        item(false, onAdd, Icons.Rounded.Add, "Добавить")
-        item(page == Page.Settings, { onPage(Page.Settings) }, Icons.Rounded.Settings, "Настройки")
-        item(page == Page.Stats, { onPage(Page.Stats) }, Icons.Rounded.Timeline, "Статистика")
-        item(page == Page.Logs, { onPage(Page.Logs) }, Icons.Rounded.Terminal, "Логи")
+        item(page == Page.Home, { onPage(Page.Home) }, Icons.Rounded.Public, tr("Серверы"))
+        item(false, onAdd, Icons.Rounded.Add, tr("Добавить"))
+        item(page == Page.Settings, { onPage(Page.Settings) }, Icons.Rounded.Settings, tr("Настройки"))
+        item(page == Page.Stats, { onPage(Page.Stats) }, Icons.Rounded.Timeline, tr("Статистика"))
+        item(page == Page.Logs, { onPage(Page.Logs) }, Icons.Rounded.Terminal, tr("Логи"))
         Spacer(Modifier.weight(1f))
-        item(page == Page.About, { onPage(Page.About) }, Icons.Rounded.Info, "О программе")
+        item(page == Page.About, { onPage(Page.About) }, Icons.Rounded.Info, tr("О программе"))
         Spacer(Modifier.height(8.dp))
     }
 }

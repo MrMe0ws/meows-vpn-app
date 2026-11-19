@@ -1,5 +1,9 @@
 package app.meows.vpn.ui.settings
 
+import app.meows.vpn.ui.settings.pages.languageName
+import androidx.compose.material.icons.rounded.Translate
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Row
@@ -38,39 +42,40 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
     val st = vm.st
     vm.rev
     val ctx = LocalContext.current
-    val theme = listOf("Авто", "Светлая", "Тёмная")[vm.themeMode.coerceIn(0, 2)]
-    val color = if (vm.dynamicColors) "из обоев" else Palettes.names[vm.palette.coerceIn(0, Palettes.names.lastIndex)]
+    val theme = listOf(tr("Авто"), tr("Светлая"), tr("Тёмная"))[vm.themeMode.coerceIn(0, 2)]
+    val color = if (vm.dynamicColors) tr("из обоев") else Palettes.names[vm.palette.coerceIn(0, Palettes.names.lastIndex)]
     val bypassCount = st.bypassCats().size + st.bypassSites().size + st.excludedApps().size
 
-    SettingsPageScaffold("Настройки", onBack) {
+    SettingsPageScaffold(tr("Настройки"), onBack) {
         SettingsGroup {
-            ValueRow(Icons.Rounded.Palette, "Оформление", summary = "$theme · $color") { open(SettingsPage.Appearance) }
+            ValueRow(Icons.Rounded.Palette, tr("Оформление"), summary = "$theme · $color") { open(SettingsPage.Appearance) }
+            ValueRow(Icons.Rounded.Translate, tr("Язык"), summary = languageName()) { open(SettingsPage.Language) }
             ValueRow(
-                Icons.Rounded.Language, "Маршрутизация",
-                summary = (if (st.ruApps()) "Российские приложения напрямую" else "По правилам подписки") + if (bypassCount > 0) " · исключений: $bypassCount" else "",
+                Icons.Rounded.Language, tr("Маршрутизация"),
+                summary = if (st.allVpn()) tr("Весь трафик через VPN") else (if (st.ruApps()) tr("Российские приложения напрямую") else tr("По правилам подписки")) + if (bypassCount > 0) " · " + trf("исключений: %d", bypassCount) else "",
             ) { open(SettingsPage.Routing) }
-            ValueRow(Icons.Rounded.Autorenew, "Подписка", summary = autoUpdateTitle(st)) { open(SettingsPage.Subscription) }
+            ValueRow(Icons.Rounded.Autorenew, tr("Подписка"), summary = autoUpdateTitle(st)) { open(SettingsPage.Subscription) }
             ValueRow(
-                Icons.Rounded.PlayArrow, "Подключение",
-                summary = if (st.flag(XKStore.P_AUTOCONN, false)) "Автозапуск включён" else "Always-on, локальная сеть",
+                Icons.Rounded.PlayArrow, tr("Подключение"),
+                summary = if (st.flag(XKStore.P_AUTOCONN, false)) tr("Автозапуск включён") else tr("Always-on, локальная сеть"),
             ) { open(SettingsPage.Connection) }
             ValueRow(
-                Icons.Rounded.Speed, "Пинг",
-                summary = if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else "Реальный",
+                Icons.Rounded.Speed, tr("Пинг"),
+                summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else tr("Реальный")) + " · ${st.pref(XKStore.P_PING_TO, XKStore.PING_TO_DEFAULT)} ${tr("с")}",
             ) { open(SettingsPage.Ping) }
-            ValueRow(Icons.Rounded.Timeline, "Статистика", summary = "Скорость и трафик за подключение") { open(SettingsPage.Stats) }
+            ValueRow(Icons.Rounded.Timeline, tr("Статистика"), summary = tr("Скорость и трафик за подключение")) { open(SettingsPage.Stats) }
             if (!Edition.isPlay) ValueRow(
-                Icons.Rounded.SystemUpdate, "Обновления приложения",
-                summary = if (vm.updates.autoCheck) "Проверять автоматически" else "Проверка выключена",
+                Icons.Rounded.SystemUpdate, tr("Обновления приложения"),
+                summary = if (vm.updates.autoCheck) tr("Проверять автоматически") else tr("Проверка выключена"),
             ) { open(SettingsPage.Updates) }
-            ValueRow(Icons.Rounded.Info, "О приложении", summary = "Версия ${vm.updates.currentVersion}") { open(SettingsPage.About) }
+            ValueRow(Icons.Rounded.Info, tr("О приложении"), summary = "${tr("Версия")} ${vm.updates.currentVersion}") { open(SettingsPage.About) }
         }
 
         SettingsGroup {
-            ValueRow(Icons.Rounded.Share, "Рассказать друзьям", summary = "Отправить ссылку на приложение") {
+            ValueRow(Icons.Rounded.Share, tr("Рассказать друзьям"), summary = tr("Отправить ссылку на приложение")) {
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, "Meows — быстрый и удобный VPN. Скачать приложение для Android: ${if (Edition.isPlay) Edition.PLAY_URL else AppLinks.RELEASES_URL}")
-                runCatching { ctx.startActivity(Intent.createChooser(send, "Рассказать друзьям").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    .putExtra(Intent.EXTRA_TEXT, trf("Meows — быстрый и удобный VPN. Скачать приложение для Android: %s", if (Edition.isPlay) Edition.PLAY_URL else AppLinks.RELEASES_URL))
+                runCatching { ctx.startActivity(Intent.createChooser(send, tr("Рассказать друзьям")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {

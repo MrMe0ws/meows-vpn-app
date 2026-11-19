@@ -1,5 +1,7 @@
 package app.meows.desktop.update
 
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
@@ -24,12 +26,12 @@ object UpdateChecker {
         try {
             when (val code = c.responseCode) {
                 404 -> Result.NoReleases
-                403, 429 -> Result.Failed("GitHub временно ограничил запросы. Попробуйте позже.")
+                403, 429 -> Result.Failed(tr("GitHub временно ограничил запросы. Попробуйте позже."))
                 in 200..299 -> parse(c.inputStream.bufferedReader().use { it.readText() })
-                else -> Result.Failed("GitHub ответил $code")
+                else -> Result.Failed(trf("GitHub ответил %d", code))
             }
         } finally { c.disconnect() }
-    } catch (e: Exception) { Result.Failed("Нет связи с GitHub: ${e.message}") }
+    } catch (e: Exception) { Result.Failed(trf("Нет связи с GitHub: %s", e.message)) }
 
     private fun parse(json: String): Result {
         val list = JSONArray(json)
@@ -46,6 +48,6 @@ object UpdateChecker {
                     return Result.Found(ReleaseInfo(tag.removePrefix(TAG_PREFIX), o.optString("body"), a.getString("browser_download_url"), a.optLong("size")))
             }
         }
-        return if (sawWindows) Result.Failed("В последнем релизе нет установщика (.msi).") else Result.NoReleases
+        return if (sawWindows) Result.Failed(tr("В последнем релизе нет установщика (.msi).")) else Result.NoReleases
     }
 }

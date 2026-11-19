@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.home
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -46,20 +47,20 @@ fun HomeToolbar(
         scrollBehavior = scrollBehavior,
         modifier = modifier.navigationBarsPadding().padding(bottom = 12.dp),
     ) {
-        IconButton(onClick = openSettings) { Icon(Icons.Rounded.Settings, "Настройки") }
+        IconButton(onClick = openSettings) { Icon(Icons.Rounded.Settings, tr("Настройки")) }
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.Add, "Добавить подписку") }
+            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.Add, tr("Добавить подписку")) }
             DropdownMenu(menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(
-                    text = { Text("Вставить из буфера обмена") }, leadingIcon = { Icon(Icons.Rounded.ContentPaste, null) },
+                    text = { Text(tr("Вставить из буфера обмена")) }, leadingIcon = { Icon(Icons.Rounded.ContentPaste, null) },
                     onClick = { menu = false; vm.addFromClipboard() },
                 )
                 DropdownMenuItem(
-                    text = { Text("QR-код") }, leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, null) },
+                    text = { Text(tr("QR-код")) }, leadingIcon = { Icon(Icons.Rounded.QrCodeScanner, null) },
                     onClick = { menu = false; onScanQr() },
                 )
                 DropdownMenuItem(
-                    text = { Text("Ввести вручную") }, leadingIcon = { Icon(Icons.Rounded.Keyboard, null) },
+                    text = { Text(tr("Ввести вручную")) }, leadingIcon = { Icon(Icons.Rounded.Keyboard, null) },
                     onClick = { menu = false; onManual() },
                 )
             }

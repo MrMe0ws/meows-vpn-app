@@ -1,5 +1,8 @@
 package app.meows.desktop
 
+import app.meows.desktop.i18n.Lang
+import app.meows.desktop.i18n.trf
+import app.meows.desktop.i18n.tr
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -75,10 +78,11 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     val updates = UpdateController(settings, scope)
 
     var themeMode by mutableIntStateOf(settings.int("theme", 0))       // 0 авто, 1 светлая, 2 тёмная
-    var palette by mutableIntStateOf(settings.int("palette", 10))
+    var palette by mutableIntStateOf(settings.int("palette", 0))
     var amoled by mutableStateOf(settings.bool("amoled", false))
     var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
+    var allVpn by mutableStateOf(settings.bool("allVpn", false))          // весь трафик через VPN, кроме торрентов и локальной сети
     var railExpanded by mutableStateOf(settings.bool("railExpanded", true))   // боковое меню: с подписями / только иконки
     var autoSwitch by mutableStateOf(settings.bool("autoSwitch", true))   // сменить сервер, если текущий перестал отвечать
     val switchFilter = SwitchFilter(settings)                              // на какие серверы можно переключаться
@@ -89,6 +93,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         { Probe.viaVpn(if (mode == VpnMode.Proxy) CoreProcess.HTTP_PORT else null) }) { failover() }
 
     init {
+        Lang.init(settings)
         AppLog.add("APP", "Meows ${AppInfo.VERSION} · Windows ${System.getProperty("os.version")} · администратор: ${if (Elevation.isAdmin()) "да" else "нет"} · режим: ${mode.title}")
         proxy.restore()   // прошлый запуск мог закончиться аварийно с включённым прокси
         subs.forEach { if (System.currentTimeMillis() - it.data.updated > 60_000) refresh(it, silent = true) }
@@ -121,7 +126,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         windowVisible = true; showTick++
     }
 
-    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("noVV", true).toString()
+    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("allVpn", allVpn).put("noVV", true).toString()
 
     private fun saveSubs() = SubEntry.save(settings, subs, active?.id ?: -1)
 
@@ -143,12 +148,12 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
                 if (e.selected >= d.servers.size) e.selected = 0
                 saveSubs()
                 AppLog.add("SUB", (if (existing == null) "Подписка добавлена" else "Подписка обновлена") + ": серверов ${d.servers.size}")
-                if (!silent) toast = if (existing == null) "Подписка добавлена" else "Подписка обновлена"
+                if (!silent) toast = if (existing == null) tr("Подписка добавлена") else tr("Подписка обновлена")
                 checkReminders()
                 if (state == ConnState.Connected && existing != null && existing.id == active?.id && !silent && raw != existing.data.url) reconnect()
             }.onFailure {
                 AppLog.add("SUB", "Ошибка: ${it.message}" + if (it.message?.startsWith("Это не похоже") == true) " (получено: ${LinkNormalizer.head(raw)})" else "")
-                if (!silent) error = (if (existing == null) "Не получилось" else "Не удалось обновить") to (it.message ?: "Ошибка")
+                if (!silent) error = (if (existing == null) tr("Не получилось") else tr("Не удалось обновить")) to (it.message ?: tr("Ошибка"))
             }
             existing?.refreshing = false
         }
@@ -173,7 +178,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
 
     fun toggle() {
         when (state) {
-            ConnState.Idle -> if (sub == null) error = "Сначала подписка" to "Добавьте ссылку подписки, чтобы подключиться." else connect()
+            ConnState.Idle -> if (sub == null) error = tr("Сначала подписка") to tr("Добавьте ссылку подписки, чтобы подключиться.") else connect()
             else -> disconnect()
         }
     }
@@ -187,18 +192,18 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         scope.launch {
             core.start(s, selected, opts(), mode.key) { tail ->
                 proxy.restore(); state = ConnState.Idle; connectedAt = 0
-                error = "Подключение прервано" to (tail ?: "Ядро остановилось")
+                error = tr("Подключение прервано") to (tail ?: tr("Ядро остановилось"))
             }.onSuccess {
-                if (mode == VpnMode.Proxy) runCatching { proxy.enable(CoreProcess.HTTP_PORT) }.onFailure { error = "Системный прокси" to (it.message ?: "Не удалось включить") }
+                if (mode == VpnMode.Proxy) runCatching { proxy.enable(CoreProcess.HTTP_PORT) }.onFailure { error = tr("Системный прокси") to (it.message ?: tr("Не удалось включить")) }
                 connectedAt = System.currentTimeMillis(); state = ConnState.Connected; AppLog.add("VPN", "Подключено"); watch.start()
-            }.onFailure { state = ConnState.Idle; AppLog.add("VPN", "Не подключилось: ${it.message}"); error = "Не подключилось" to (it.message ?: "Ошибка ядра") }
+            }.onFailure { state = ConnState.Idle; AppLog.add("VPN", "Не подключилось: ${it.message}"); error = tr("Не подключилось") to (it.message ?: tr("Ошибка ядра")) }
         }
     }
 
     /** TUN требует администратора: перезапускаемся с правами (окно UAC) и подключаемся уже там. */
     private fun elevateAndConnect() {
         if (Elevation.relaunch(listOf("--connect"))) { shutdown(); exitRequested = true }
-        else error = "Нужны права администратора" to "Режим «Все программы» создаёт виртуальную сетевую карту — подтвердите запрос Windows. Или выберите «Системный прокси»: он работает без администратора."
+        else error = tr("Нужны права администратора") to tr("Режим «Все программы» создаёт виртуальную сетевую карту — подтвердите запрос Windows. Или выберите «Системный прокси»: он работает без администратора.")
     }
 
     fun chooseMode(m: VpnMode) {
@@ -228,13 +233,13 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     /** «Выбрать быстрейший»: пингуем все серверы подписки и выбираем лучший по результату. */
     fun selectFastest(e: SubEntry) {
         if (e.pinging) return
-        toast = "Измеряем пинг…"; e.pinging = true; e.pings.clear()
+        toast = tr("Измеряем пинг…"); e.pinging = true; e.pings.clear()
         scope.launch {
             PingRunner.measure(e.data.body, e.data.servers.indices.toList()) { i, ms -> e.pings[i] = ms }
             e.pinging = false
             val best = e.pings.filter { it.value > 0 }.minByOrNull { it.value }
-            if (best == null) toast = "Ни один сервер не ответил"
-            else { toast = "Быстрейший: ${e.data.servers[best.key].title} · ${best.value} мс"; select(e, best.key) }
+            if (best == null) toast = tr("Ни один сервер не ответил")
+            else { toast = trf("Быстрейший: %s · %d мс", e.data.servers[best.key].title, best.value); select(e, best.key) }
         }
     }
 
@@ -255,9 +260,9 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         while (switchTimes.isNotEmpty() && now - switchTimes.first() > 600_000L) switchTimes.removeFirst()
         if (best != null && (res[cur] ?: -1) <= 0 && switchTimes.size < 3) {
             switchTimes.addLast(now)
-            val msg = "«${s.servers.getOrNull(cur)?.title}» не отвечал — подключились к «${s.servers[best].title}»"
+            val msg = trf("«%s» не отвечал — подключились к «%s»", s.servers.getOrNull(cur)?.title, s.servers[best].title)
             selected = best
-            AppLog.add("VPN", "Сервер сменился: $msg"); toast = msg; notifier?.invoke("Сервер сменился", msg, null)
+            AppLog.add("VPN", "Сервер сменился: $msg"); toast = msg; notifier?.invoke(tr("Сервер сменился"), msg, null)
         } else AppLog.add("VPN", if (res.values.none { it > 0 }) "Ни один сервер не отвечает — похоже, нет интернета, переподключаемся" else "Сервер отвечает, переподключаемся")
         connect()
     }
@@ -275,7 +280,9 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     fun setTheme(m: Int) { themeMode = m; settings.set("theme", m) }
     fun choosePalette(p: Int) { palette = p; settings.set("palette", p) }
     fun chooseAmoled(v: Boolean) { amoled = v; settings.set("amoled", v) }
+    fun chooseLang(v: Int) = Lang.set(settings, v)
     fun chooseBlockAds(v: Boolean) { blockAds = v; settings.set("blockAds", v); if (state != ConnState.Idle) reconnect() }
+    fun chooseAllVpn(v: Boolean) { allVpn = v; settings.set("allVpn", v); if (state != ConnState.Idle) reconnect() }
     fun chooseRuDirect(v: Boolean) { ruDirect = v; settings.set("ruDirect", v); if (state != ConnState.Idle) reconnect() }
 
     fun chooseCloseToTray(v: Boolean) { closeToTray = v; settings.set("closeToTray", v) }

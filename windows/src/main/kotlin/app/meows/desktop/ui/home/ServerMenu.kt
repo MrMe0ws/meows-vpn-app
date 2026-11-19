@@ -1,5 +1,6 @@
 package app.meows.desktop.ui.home
 
+import app.meows.desktop.i18n.tr
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
@@ -37,9 +38,9 @@ fun Modifier.secondaryClick(onOpen: (IntOffset) -> Unit): Modifier = pointerInpu
 fun ServerMenu(at: IntOffset?, title: String, onDismiss: () -> Unit, onPing: () -> Unit, onSelect: () -> Unit) {
     Box(Modifier.offset { at ?: IntOffset.Zero }) {
         DropdownMenu(at != null, onDismissRequest = onDismiss) {
-            DropdownMenuItem(text = { Text("Проверить пинг") }, leadingIcon = { Icon(Icons.Rounded.Speed, null) }, onClick = { onDismiss(); onPing() })
-            DropdownMenuItem(text = { Text("Выбрать сервер") }, leadingIcon = { Icon(Icons.Rounded.CheckCircle, null) }, onClick = { onDismiss(); onSelect() })
-            DropdownMenuItem(text = { Text("Скопировать название") }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) }, onClick = { onDismiss(); copyText(title) })
+            DropdownMenuItem(text = { Text(tr("Проверить пинг")) }, leadingIcon = { Icon(Icons.Rounded.Speed, null) }, onClick = { onDismiss(); onPing() })
+            DropdownMenuItem(text = { Text(tr("Выбрать сервер")) }, leadingIcon = { Icon(Icons.Rounded.CheckCircle, null) }, onClick = { onDismiss(); onSelect() })
+            DropdownMenuItem(text = { Text(tr("Скопировать название")) }, leadingIcon = { Icon(Icons.Rounded.ContentCopy, null) }, onClick = { onDismiss(); copyText(title) })
         }
     }
 }

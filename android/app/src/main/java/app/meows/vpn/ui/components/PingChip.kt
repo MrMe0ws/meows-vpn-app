@@ -1,5 +1,6 @@
 package app.meows.vpn.ui.components
 
+import app.meows.vpn.i18n.tr
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -17,11 +18,11 @@ fun PingChip(ms: Int?) {
     val (text, bg, fg) = when {
         ms == -2 -> Triple("UDP", cs.surfaceContainerHighest, cs.onSurfaceVariant)
         ms <= 0 -> Triple("—", cs.errorContainer, cs.onErrorContainer)
-        ms < 150 -> Triple("$ms мс", cs.primaryContainer, cs.onPrimaryContainer)
-        ms < 400 -> Triple("$ms мс", cs.tertiaryContainer, cs.onTertiaryContainer)
-        else -> Triple("$ms мс", cs.errorContainer, cs.onErrorContainer)
+        ms < 150 -> Triple("$ms ${tr("мс")}", cs.primaryContainer, cs.onPrimaryContainer)
+        ms < 400 -> Triple("$ms ${tr("мс")}", cs.tertiaryContainer, cs.onTertiaryContainer)
+        else -> Triple("$ms ${tr("мс")}", cs.errorContainer, cs.onErrorContainer)
     }
     Surface(color = bg, contentColor = fg, shape = CircleShape) {
-        Text(text, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge)
+        Text(text, Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium)
     }
 }

@@ -1,5 +1,7 @@
 package app.meows.vpn.update
 
+import app.meows.vpn.i18n.trf
+import app.meows.vpn.i18n.tr
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -22,7 +24,7 @@ object UpdateInstaller {
         c.connectTimeout = 15_000; c.readTimeout = 30_000
         c.setRequestProperty("User-Agent", "MeowsVPN-Android")
         try {
-            if (c.responseCode !in 200..299) error("Сервер ответил ${c.responseCode}")
+            if (c.responseCode !in 200..299) error(trf("Сервер ответил %d", c.responseCode))
             val total = c.contentLengthLong.takeIf { it > 0 } ?: info.apkSize
             var done = 0L
             c.inputStream.use { input ->
@@ -39,7 +41,7 @@ object UpdateInstaller {
                     }
                 }
             }
-            if (total > 0 && done != total) { out.delete(); error("Файл скачан не полностью") }
+            if (total > 0 && done != total) { out.delete(); error(tr("Файл скачан не полностью")) }
         } finally { c.disconnect() }
         return out
     }
