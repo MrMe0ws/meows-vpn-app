@@ -12,8 +12,8 @@ android {
         applicationId = "app.meows.vpn"
         minSdk = 24
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.7.0"
+        versionCode = 15
+        versionName = "1.8.0"
 
         // Универсальная APK: ядро Xray лежит в jniLibs/<abi>/libxkcore.so для каждой архитектуры.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86") }
