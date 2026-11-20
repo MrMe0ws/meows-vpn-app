@@ -6,9 +6,9 @@ import android.content.pm.PackageManager
 
 /** Варианты иконки приложения: на каждый — activity-alias в манифесте; включён ровно один. */
 enum class AppIcon(val alias: String, val title: String, val preview: Int) {
-    Default("LauncherDefault", "Зелёная лапа", R.drawable.icon_prev_default),
-    Glow("LauncherGlow", "Свечение", R.drawable.icon_prev_glow),
     Lime("LauncherLime", "Лайм", R.drawable.icon_prev_lime),
+    Green("LauncherGreen", "Зелёная лапа", R.drawable.icon_prev_green),
+    Glow("LauncherGlow", "Свечение", R.drawable.icon_prev_glow),
     Classic("LauncherClassic", "Классика", R.drawable.icon_prev_classic);
 
     private fun component(ctx: Context) = ComponentName(ctx.packageName, "app.meows.vpn.$alias")
@@ -30,10 +30,23 @@ enum class AppIcon(val alias: String, val title: String, val preview: Int) {
             return entries.firstOrNull { icon ->
                 when (pm.getComponentEnabledSetting(icon.component(ctx))) {
                     PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
-                    PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> icon == Default
+                    PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> icon == Lime
                     else -> false
                 }
-            } ?: Default
+            } ?: Lime
+        }
+
+        /** Если ни один alias не включён (например, после смены набора alias-ов) — включает «Лайм», иначе иконка пропадёт из лаунчера. */
+        fun ensureOne(ctx: Context) {
+            val pm = ctx.packageManager
+            val any = entries.any {
+                when (pm.getComponentEnabledSetting(it.component(ctx))) {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+                    PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> it == Lime
+                    else -> false
+                }
+            }
+            if (!any) apply(ctx, Lime)
         }
 
         /** Включает выбранный alias и выключает остальные (без убийства приложения; лаунчер обновит ярлык сам). */

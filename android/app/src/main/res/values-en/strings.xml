@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Meows</string>
-    <string name="widget_description">Server and VPN toggle</string>
-    <string name="widget_small_description">Paw circle: turn the VPN on or off</string>
     <string name="widget_off">Off</string>
     <string name="widget_connecting">Connecting…</string>
     <string name="widget_on">Connected</string>

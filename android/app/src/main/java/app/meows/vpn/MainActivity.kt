@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppIcon.ensureOne(this)
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
