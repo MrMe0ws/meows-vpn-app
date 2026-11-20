@@ -25,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,12 +68,12 @@ fun UpdatesPage(vm: MeowsViewModel, onBack: () -> Unit) {
                     UpdateState.UpToDate -> Text(tr("У вас последняя версия."), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                     is UpdateState.Available -> {
                         Text(trf("Доступна версия %s", s.info.version) + if (s.info.apkSize > 0) " · ${formatBytesRu(s.info.apkSize)}" else "", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                        if (s.info.notes.isNotBlank()) {
-                            Spacer(Modifier.height(8.dp))
-                            Text(s.info.notes.trim().take(600), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = u::download) { Icon(Icons.Rounded.Download, null); Spacer(Modifier.width(8.dp)); Text(tr("Скачать")) }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Button(onClick = u::download) { Icon(Icons.Rounded.Download, null); Spacer(Modifier.width(8.dp)); Text(tr("Скачать")) }
+                            Spacer(Modifier.width(8.dp))
+                            TextButton(onClick = u::showDialog) { Text(tr("Что нового")) }   // полный список изменений — в той же шторке, что при запуске
+                        }
                     }
                     is UpdateState.Downloading -> {
                         Text(trf("Скачиваем %s… %d%%", s.info.version, s.percent))
@@ -82,9 +83,13 @@ fun UpdatesPage(vm: MeowsViewModel, onBack: () -> Unit) {
                     is UpdateState.Downloaded -> {
                         Text(trf("Версия %s скачана.", s.info.version), style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = {
-                            if (!u.install()) vm.toast = tr("Разрешите установку из этого источника и нажмите «Установить» ещё раз")
-                        }) { Icon(Icons.Rounded.InstallMobile, null); Spacer(Modifier.width(8.dp)); Text(tr("Установить")) }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Button(onClick = {
+                                if (!u.install()) vm.toast = tr("Разрешите установку из этого источника и нажмите «Установить» ещё раз")
+                            }) { Icon(Icons.Rounded.InstallMobile, null); Spacer(Modifier.width(8.dp)); Text(tr("Установить")) }
+                            Spacer(Modifier.width(8.dp))
+                            TextButton(onClick = u::showDialog) { Text(tr("Что нового")) }
+                        }
                     }
                     is UpdateState.Error -> Text(s.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
                 }

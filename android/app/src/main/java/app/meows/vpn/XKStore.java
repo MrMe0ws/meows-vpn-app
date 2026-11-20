@@ -55,7 +55,6 @@ public final class XKStore {
     public static final String P_PING_KEEP = "pingKeep";      // seconds to show results, 0 = always; default 60
     public static final String P_AUTOCONN = "autoConnect";    // default false
     public static final String P_LAN = "allowLan";            // default true
-    public static final String P_HWID = "sendHwid";           // default true
     public static final String P_RU_APPS = "ruApps";          // default true
     public static String LOCK_HOST = "";                      // white-label lock to one subscription host
     public static final String[] PING_URLS = {"https://www.gstatic.com/generate_204", "https://cp.cloudflare.com/generate_204", "https://captive.apple.com/hotspot-detect.html"};
@@ -455,7 +454,7 @@ public final class XKStore {
                 c.setConnectTimeout(15000); c.setReadTimeout(20000);
                 c.setRequestProperty("User-Agent", uas[attempt]);
                 c.setRequestProperty("Accept", "*/*");   // иначе Java шлёт text/html и панель отдаёт HTML-страницу
-                if (flag(P_HWID, true)) c.setRequestProperty("x-hwid", hwid());
+                c.setRequestProperty("x-hwid", hwid());   // HWID отправляем всегда: по нему панель считает лимит устройств
                 c.setRequestProperty("x-device-os", "Android");
                 c.setRequestProperty("x-ver-os", Build.VERSION.RELEASE);
                 c.setRequestProperty("x-device-model", Build.MANUFACTURER + " " + Build.MODEL);

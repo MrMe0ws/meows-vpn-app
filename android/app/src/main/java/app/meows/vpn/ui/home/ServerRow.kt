@@ -128,7 +128,7 @@ fun ServerRow(
                             color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    if (pinging) LoadingIndicator(Modifier.size(28.dp)) else PingChip(ping)
+                    if (pinging) LoadingIndicator(Modifier.size(28.dp)) else PingChip(ping, onSelected = selected)
                 }
                 if (!last) HorizontalDivider(Modifier.padding(start = 58.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             }

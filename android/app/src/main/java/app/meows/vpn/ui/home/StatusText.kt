@@ -36,13 +36,16 @@ fun StatusText(state: Int) {
     LaunchedEffect(state) {
         while (state == XKVpnService.CONNECTED) { now = System.currentTimeMillis(); delay(1000) }
     }
+    // при отключении сервис обнуляет connectedAt, а «Подключено» ещё плавно гаснет — берём последнее настоящее время старта
+    val since = remember { LongArray(1) }
+    if (XKVpnService.connectedAt > 0) since[0] = XKVpnService.connectedAt
     AnimatedContent(state, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "status") { s ->
         Column(Modifier.padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             when (s) {
                 XKVpnService.CONNECTED -> {
                     Text(tr("Подключено"), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
                     Text(
-                        formatTimer((now - XKVpnService.connectedAt).coerceAtLeast(0)),
+                        formatTimer((now - since[0]).coerceAtLeast(0)),
                         style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

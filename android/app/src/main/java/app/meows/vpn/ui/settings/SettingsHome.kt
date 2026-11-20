@@ -47,23 +47,30 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
     val bypassCount = st.bypassCats().size + st.bypassSites().size + st.excludedApps().size
 
     SettingsPageScaffold(tr("Настройки"), onBack) {
+        // группы по смыслу: внешний вид / работа VPN / измерения / приложение; между группами зазор больше, чем между пунктами
         SettingsGroup {
             ValueRow(Icons.Rounded.Palette, tr("Оформление"), summary = "$theme · $color") { open(SettingsPage.Appearance) }
             ValueRow(Icons.Rounded.Translate, tr("Язык"), summary = languageName()) { open(SettingsPage.Language) }
-            ValueRow(
-                Icons.Rounded.Language, tr("Маршрутизация"),
-                summary = if (st.allVpn()) tr("Весь трафик через VPN") else (if (st.ruApps()) tr("Российские приложения напрямую") else tr("По правилам подписки")) + if (bypassCount > 0) " · " + trf("исключений: %d", bypassCount) else "",
-            ) { open(SettingsPage.Routing) }
+        }
+        SettingsGroup {
             ValueRow(Icons.Rounded.Autorenew, tr("Подписка"), summary = autoUpdateTitle(st)) { open(SettingsPage.Subscription) }
             ValueRow(
                 Icons.Rounded.PlayArrow, tr("Подключение"),
                 summary = if (st.flag(XKStore.P_AUTOCONN, false)) tr("Автозапуск включён") else tr("Always-on, локальная сеть"),
             ) { open(SettingsPage.Connection) }
             ValueRow(
+                Icons.Rounded.Language, tr("Маршрутизация"),
+                summary = if (st.allVpn()) tr("Весь трафик через VPN") else (if (st.ruApps()) tr("Российские приложения напрямую") else tr("По правилам подписки")) + if (bypassCount > 0) " · " + trf("исключений: %d", bypassCount) else "",
+            ) { open(SettingsPage.Routing) }
+        }
+        SettingsGroup {
+            ValueRow(
                 Icons.Rounded.Speed, tr("Пинг"),
                 summary = (if (st.pref(XKStore.P_PING_MODE, 0) == 1) "TCP" else tr("Реальный")) + " · ${st.pref(XKStore.P_PING_TO, XKStore.PING_TO_DEFAULT)} ${tr("с")}",
             ) { open(SettingsPage.Ping) }
             ValueRow(Icons.Rounded.Timeline, tr("Статистика"), summary = tr("Скорость и трафик за подключение")) { open(SettingsPage.Stats) }
+        }
+        SettingsGroup {
             if (!Edition.isPlay) ValueRow(
                 Icons.Rounded.SystemUpdate, tr("Обновления приложения"),
                 summary = if (vm.updates.autoCheck) tr("Проверять автоматически") else tr("Проверка выключена"),

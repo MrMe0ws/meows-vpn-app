@@ -31,6 +31,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -86,12 +88,13 @@ fun SettingsPageScaffold(title: String, onBack: () -> Unit, content: @Composable
 
 /**
  * Группа настроек, как в системных настройках Android: каждый пункт — своя плитка, между плитками крошечный зазор.
+ * Пункты одного смысла кладём в одну группу, разные по смыслу — в разные (между группами зазор больше).
  * Внешние углы группы крупные, внутренние — мелкие. Плиткой становится каждый верхний элемент [content].
  */
 @Composable
 fun SettingsGroup(title: String? = null, footer: String? = null, content: @Composable () -> Unit) {
     val tile = MaterialTheme.colorScheme.surfaceContainer
-    Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+    Column(Modifier.padding(horizontal = 16.dp).padding(top = GROUP_GAP)) {
         if (title != null) Text(
             title.uppercase(), Modifier.padding(start = 12.dp, bottom = 8.dp),
             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
@@ -138,6 +141,7 @@ fun SettingsGroup(title: String? = null, footer: String? = null, content: @Compo
 private val TILE_OUTER = 28.dp
 private val TILE_INNER = 4.dp
 private val TILE_GAP = 2.dp
+private val GROUP_GAP = 20.dp   // между группами по смыслу — заметно больше, чем зазор между плитками внутри группы
 
 @Composable
 fun RowIcon(icon: ImageVector) {
@@ -147,21 +151,31 @@ fun RowIcon(icon: ImageVector) {
 }
 
 @Composable
-fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: String? = null, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: String? = null, enabled: Boolean = true, busy: Boolean = false, onChange: (Boolean) -> Unit) {
     ListItem(
-        modifier = (if (enabled) Modifier.clickable { onChange(!checked) } else Modifier.alpha(0.5f)),
+        modifier = when {
+            busy -> Modifier
+            enabled -> Modifier.clickable { onChange(!checked) }
+            else -> Modifier.alpha(0.5f)
+        },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         leadingContent = { RowIcon(icon) },
         headlineContent = { Text(title) },
-        supportingContent = subtitle?.let { { Text(it) } },
-        trailingContent = { Switch(checked, onChange, enabled = enabled) },
+        // busy — настройка применяется переподключением VPN: человек остаётся на этой странице и должен видеть, что идёт работа
+        supportingContent = if (busy) { { Text(tr("Применяем настройку…"), color = MaterialTheme.colorScheme.primary) } } else subtitle?.let { { Text(it) } },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (busy) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp); Spacer(Modifier.width(12.dp)) }
+                Switch(checked, onChange, enabled = enabled && !busy)
+            }
+        },
     )
 }
 
 /** Строка с переходом и отдельным тумблером (как «Wi‑Fi» в настройках Android): текст открывает подробности, тумблер включает. */
 @Composable
-fun SplitSwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: String?, onOpen: () -> Unit, onChange: (Boolean) -> Unit) {
-    Row(Modifier.height(IntrinsicSize.Min)) {
+fun SplitSwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle: String?, onOpen: () -> Unit, enabled: Boolean = true, onChange: (Boolean) -> Unit) {
+    Row(Modifier.height(IntrinsicSize.Min).alpha(if (enabled) 1f else 0.5f)) {
         // текст и стрелка — одна нажимаемая область: нажатие подсвечивает их вместе
         Row(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onOpen), verticalAlignment = Alignment.CenterVertically) {
             ListItem(
@@ -174,8 +188,8 @@ fun SplitSwitchRow(icon: ImageVector, title: String, checked: Boolean, subtitle:
             Icon(Icons.Rounded.ChevronRight, null, Modifier.padding(end = 16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         VerticalDivider(Modifier.padding(vertical = 12.dp))
-        Box(Modifier.fillMaxHeight().clickable { onChange(!checked) }.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-            Switch(checked, onChange)
+        Box(Modifier.fillMaxHeight().clickable(enabled = enabled) { onChange(!checked) }.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+            Switch(checked, onChange, enabled = enabled)
         }
     }
 }

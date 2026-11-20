@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.SupportAgent
@@ -23,7 +24,7 @@ import app.meows.vpn.ui.settings.ValueRow
 
 /** Версия, ядро, устройство, HWID, ссылки на кабинет и поддержку (то же, что на странице «О программе» в Windows). */
 @Composable
-fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit) {
+fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit, openUrlSchemes: () -> Unit) {
     val ctx = LocalContext.current
     val hwid = remember { vm.st.hwid() }
     val device = "Android ${Build.VERSION.RELEASE} · ${Build.MANUFACTURER} ${Build.MODEL} · ${Build.SUPPORTED_ABIS.firstOrNull() ?: "?"}"
@@ -40,6 +41,9 @@ fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit) {
         SettingsGroup {
             ValueRow(Icons.Rounded.SupportAgent, tr("Поддержка"), summary = ShopLinks.support(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.support(vm.st)) })
             if (!Edition.isPlay) ValueRow(Icons.Rounded.AccountCircle, tr("Личный кабинет"), summary = ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
+        }
+        SettingsGroup {   // для тех, кто делает свой магазин: обычному пользователю не нужно, поэтому не на главной
+            ValueRow(Icons.Rounded.Link, tr("Для разработчиков"), summary = tr("Схемы URL-адресов"), onClick = openUrlSchemes)
         }
     }
 }

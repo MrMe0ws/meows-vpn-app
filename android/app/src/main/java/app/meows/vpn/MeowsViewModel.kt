@@ -59,6 +59,11 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     private var autoPingDone = false
 
+    /** Настройка, которая сейчас применяется переподключением VPN (её строка показывает индикатор); null — ничего не применяется. */
+    var applyingKey by mutableStateOf<String?>(null); private set
+    private var applyPhase = 0   // 0 — нет, 1 — VPN останавливается, 2 — запускается заново
+    fun isApplying(key: String) = applyingKey == key
+
     init {
         XKAppHolder.ctx = app.applicationContext
         XKVpnService.addListener(this)
@@ -75,6 +80,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     override fun onState(state: Int) {
         vpnState = state
+        if (applyPhase == 2) { if (state == XKVpnService.CONNECTED) finishApply(true) else if (state == XKVpnService.IDLE) finishApply(false) }
         bump()   // сервис мог сам сменить сервер (автопереключение) — обновляем список и выбранный сервер
         if (state == XKVpnService.IDLE) {
             XKVpnService.lastError?.let { alert(tr("Не подключилось"), it); XKVpnService.lastError = null }
@@ -192,6 +198,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     /** Выбор сервера в любой карточке: подписка карточки становится активной. */
     fun select(s: XKStore, i: Int) {
         if (isActive(s) && i == s.index()) return
+        MobileBypass.userPicked(getApplication())
         XKStore.activate(getApplication(), s.id()); s.setIndex(i); bump(); reconnectIfNeeded()
     }
 
@@ -249,21 +256,37 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     fun startVpn() { XKVpnService.start(getApplication()) }
     fun stopVpn() { XKVpnService.stop(getApplication()) }
 
-    fun reconnectIfNeeded() {
+    /** Переподключить VPN, если он включён. [applyKey] — настройка, ради которой это делаем: её строка покажет «Применяем…», а в конце придёт сообщение. */
+    fun reconnectIfNeeded(applyKey: String? = null) {
         if (XKVpnService.state == XKVpnService.IDLE) return
+        if (applyKey != null) {
+            applyingKey = applyKey; applyPhase = 1
+            handler.removeCallbacksAndMessages(APPLY_TOKEN)
+            handler.postAtTime({ finishApply(false) }, APPLY_TOKEN, android.os.SystemClock.uptimeMillis() + 30_000)   // страховка: индикатор не должен зависнуть
+        }
         stopVpn()
-        handler.postDelayed({ if (XKVpnService.state == XKVpnService.IDLE) startVpn() }, 1200)
+        handler.postDelayed({
+            if (XKVpnService.state == XKVpnService.IDLE) { if (applyPhase == 1) applyPhase = 2; startVpn() }
+            else finishApply(false)
+        }, 1200)
+    }
+
+    private fun finishApply(ok: Boolean) {
+        if (applyPhase == 0) return
+        applyPhase = 0; applyingKey = null
+        handler.removeCallbacksAndMessages(APPLY_TOKEN)
+        if (ok) toast = tr("Настройка применена. VPN переподключился")
     }
 
     // ---------- настройки ----------
     fun setFlag(key: String, value: Boolean, reconnect: Boolean = false) {
         st.prefs().edit().putBoolean(key, value).apply()
         if (key == XKStore.P_REMIND) st.scheduleReminders()
-        bump(); if (reconnect) reconnectIfNeeded()
+        bump(); if (reconnect) reconnectIfNeeded(key)
     }
     fun setPref(key: String, value: Int, reconnect: Boolean = false) {
         st.prefs().edit().putInt(key, value).apply()
-        bump(); if (reconnect) reconnectIfNeeded()
+        bump(); if (reconnect) reconnectIfNeeded(key)
     }
     fun flag(key: String, def: Boolean): Boolean { rev; return st.flag(key, def) }
     fun pref(key: String, def: Int): Int { rev; return st.pref(key, def) }
@@ -276,9 +299,19 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
     fun setSwitchMode(m: Int) { SwitchFilter.setMode(st.prefs(), m); bump() }
     fun toggleSwitchTarget(title: String) { SwitchFilter.toggle(st.prefs(), st.servers(), title); bump() }
 
-    fun setBypassCats(s: Set<String>) { st.setBypassCats(s); bump(); reconnectIfNeeded() }
-    fun setBypassSites(s: Collection<String>) { st.setBypassSites(s); bump(); reconnectIfNeeded() }
-    fun setExcludedApps(s: Set<String>) { st.setExcludedApps(s); bump(); reconnectIfNeeded() }
+    /** «Обход в мобильной сети»: включение, выбор серверов обхода (по ключу «слот|название»). */
+    fun setMobileBypass(on: Boolean) {
+        val ctx = getApplication<Application>()
+        st.prefs().edit().putBoolean(MobileBypass.P_ON, on).apply()
+        bump()
+        if (on) { MobileBypassWatcher.recheck(); return }
+        if (MobileBypass.disable(ctx) != null) { bump(); reconnectIfNeeded() }   // выключили во время обхода — возвращаем прежний сервер
+    }
+    fun toggleBypassServer(key: String) { MobileBypass.toggle(getApplication(), key); bump() }
 
-    companion object { private val PING_TOKEN = Any() }
+    fun setBypassCats(s: Set<String>) { st.setBypassCats(s); bump(); reconnectIfNeeded("bypass") }
+    fun setBypassSites(s: Collection<String>) { st.setBypassSites(s); bump(); reconnectIfNeeded("bypass") }
+    fun setExcludedApps(s: Set<String>) { st.setExcludedApps(s); bump(); reconnectIfNeeded("bypass") }
+
+    companion object { private val PING_TOKEN = Any(); private val APPLY_TOKEN = Any() }
 }

@@ -4,7 +4,6 @@ import app.meows.vpn.i18n.trf
 import app.meows.vpn.i18n.tr
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Autorenew
-import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Update
 import androidx.compose.runtime.Composable
@@ -40,9 +39,6 @@ fun SubscriptionPage(vm: MeowsViewModel, onBack: () -> Unit) {
             ValueRow(Icons.Rounded.Autorenew, tr("Автообновление"), autoUpdateValue(vm.st)) { dialog = true }
             SwitchRow(Icons.Rounded.Update, tr("Обновлять при запуске"), vm.flag(XKStore.P_LAUNCH, true)) { vm.setFlag(XKStore.P_LAUNCH, it) }
             SwitchRow(Icons.Rounded.Notifications, tr("Напоминать об окончании"), vm.flag(XKStore.P_REMIND, true)) { vm.setFlag(XKStore.P_REMIND, it) }
-        }
-        SettingsGroup(footer = tr("HWID — идентификатор устройства для лимита устройств в панели. Если выключить, подписка может не обновиться.")) {
-            SwitchRow(Icons.Rounded.Fingerprint, tr("Отправлять HWID"), vm.flag(XKStore.P_HWID, true)) { vm.setFlag(XKStore.P_HWID, it) }
         }
     }
     if (dialog) {

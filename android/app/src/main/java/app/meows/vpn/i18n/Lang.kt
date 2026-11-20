@@ -21,7 +21,7 @@ object Lang {
     var choice by mutableIntStateOf(AUTO)
         private set
 
-    private val en: Map<String, String> by lazy { enDict1 + enDict2 + enDict3 + enDict4 + enDict5 + enDict6 + enDict7 }
+    private val en: Map<String, String> by lazy { enDict1 + enDict2 + enDict3 + enDict4 + enDict5 + enDict6 + enDict7 + enDict8 }
 
     @JvmStatic fun init(ctx: Context) { choice = XKStore.get(ctx.applicationContext).pref(KEY, AUTO) }
 

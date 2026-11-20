@@ -182,6 +182,7 @@ public class XKVpnService extends VpnService {
 
     private void startVpn() {
         stopping = false;
+        try { MobileBypass.evaluate(this); } catch (Exception ignored) { }   // на мобильной сети — сразу сервер обхода (до чтения выбранного сервера)
         XKStore st = XKStore.get(this);
         try {
             if (!st.hasSubscription()) throw new Exception(Lang.tr("Нет подписки. Добавьте ссылку в приложении."));
@@ -251,6 +252,7 @@ public class XKVpnService extends VpnService {
             broadcast(CONNECTED);
             ((android.app.NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(1, notification(Lang.tr("Подключено")));
             startWatchdog();
+            startBypassWatcher();
             // keep draining output; if the core dies, stop
             final BufferedReader fr = r;
             new Thread(new Runnable() { public void run() {
@@ -281,6 +283,17 @@ public class XKVpnService extends VpnService {
     }
 
     private void stopWatchdog() { Thread t = watchdog; watchdog = null; if (t != null) t.interrupt(); }
+
+    // ---------- обход в мобильной сети ----------
+    private volatile MobileBypassWatcher bypass;
+
+    private void startBypassWatcher() {
+        stopBypassWatcher();
+        MobileBypassWatcher w = new MobileBypassWatcher(this, new Runnable() { public void run() { restartTunnel(); } });
+        bypass = w; w.start();
+    }
+
+    private void stopBypassWatcher() { MobileBypassWatcher w = bypass; bypass = null; if (w != null) w.stop(); }
 
     /**
      * Раз в 30 с проверяет текущий сервер «реальным пингом» (трафик приложения идёт мимо VPN — проверяется сам сервер).
@@ -365,6 +378,7 @@ public class XKVpnService extends VpnService {
 
     /** Перезапуск туннеля на новый сервер без остановки сервиса (иначе Android может не дать запустить его из фона). */
     private void restartTunnel() {
+        stopBypassWatcher();
         synchronized (this) {
             stopping = true;
             if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
@@ -381,7 +395,7 @@ public class XKVpnService extends VpnService {
     private synchronized void pauseVpn() {
         if (state != CONNECTED) return;
         paused = true; stopping = true;
-        stopWatchdog();
+        stopWatchdog(); stopBypassWatcher();
         if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
         if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
         connectedAt = 0;
@@ -393,7 +407,7 @@ public class XKVpnService extends VpnService {
         if (stopping && state == IDLE && !paused) return;
         paused = false;
         stopping = true;
-        stopWatchdog();
+        stopWatchdog(); stopBypassWatcher();
         if (error != null) lastError = error;
         if (proc != null) { try { proc.destroy(); } catch (Exception ignored) { } proc = null; }
         if (tun != null) { try { tun.close(); } catch (Exception ignored) { } tun = null; }
