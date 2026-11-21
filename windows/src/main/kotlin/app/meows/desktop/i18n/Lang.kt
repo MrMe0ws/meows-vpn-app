@@ -19,7 +19,7 @@ object Lang {
     var choice by mutableIntStateOf(AUTO)
         private set
 
-    private val en: Map<String, String> by lazy { enDict1 + enDict2 + enDict3 + enDict4 + enDict5 + enDict6 + enDict7 }
+    private val en: Map<String, String> by lazy { enDict1 + enDict2 + enDict3 + enDict4 + enDict5 + enDict6 + enDict7 + enDict8 }
 
     fun init(settings: SettingsStore) { choice = settings.int("lang", AUTO) }
 

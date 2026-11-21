@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import app.meows.vpn.update.UpdateController
 
 /** Связывает старую Java-логику (XKStore / XKVpnService) с Compose-состоянием. */
@@ -109,7 +110,7 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
             alert(title, error, tr("Открыть кабинет")) { openLink(app.meows.vpn.shop.ShopLinks.cabinet(st)) }
         } else alert(title, error)
     }
-    private fun bump() { rev++ }
+    fun bump() { rev++ }
 
     // ---------- подписки ----------
     /** Все подписки (карточки на главной). */
@@ -288,6 +289,38 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
         st.prefs().edit().putInt(key, value).apply()
         bump(); if (reconnect) reconnectIfNeeded(key)
     }
+    /** Выбор профиля маршрутизации; применяется переподключением. */
+    fun setRouteProfile(id: String) {
+        st.prefs().edit().putString(XKStore.P_ROUTE_PROFILE, id).apply()
+        bump(); applyRouteChange()
+    }
+
+    /**
+     * Профиль маршрутизации выбран или изменён: сначала приводим гео-файлы к его ссылкам (иначе правила с новыми тегами
+     * не сработают), затем переподключаем VPN, если он включён.
+     */
+    fun applyRouteChange() {
+        if (XKVpnService.state == XKVpnService.IDLE) { syncGeo(); return }
+        applyingKey = XKStore.P_ROUTE_PROFILE; applyPhase = 1
+        viewModelScope.launch {
+            withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { app.meows.vpn.geo.GeoUpdater.sync(getApplication(), st) } }
+            if (XKVpnService.state == XKVpnService.IDLE) finishApply(false)   // пока качали, VPN выключили
+            else reconnectIfNeeded(XKStore.P_ROUTE_PROFILE)
+        }
+    }
+
+    /** Кнопка «Обновить» в профиле: скачать гео-файлы по [pins] (null — по ссылкам подписки или вшитые). После обновления VPN переподключается. */
+    suspend fun updateGeo(pins: app.meows.vpn.geo.GeoUpdater.Pins?): app.meows.vpn.geo.GeoUpdater.Result {
+        val r = withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { app.meows.vpn.geo.GeoUpdater.sync(getApplication(), st, pins ?: app.meows.vpn.geo.GeoUpdater.parsePins(st.routingHeader()), force = true) }
+                .getOrDefault(app.meows.vpn.geo.GeoUpdater.Result.FAILED)
+        }
+        bump()
+        if (r == app.meows.vpn.geo.GeoUpdater.Result.UPDATED || r == app.meows.vpn.geo.GeoUpdater.Result.BUNDLED) reconnectIfNeeded()
+        return r
+    }
+
+    fun geoStatus() = app.meows.vpn.geo.GeoUpdater.status(getApplication(), st)
     fun flag(key: String, def: Boolean): Boolean { rev; return st.flag(key, def) }
     fun pref(key: String, def: Int): Int { rev; return st.pref(key, def) }
 

@@ -40,7 +40,8 @@ public final class XKStore {
     public static final String P_RU = "ruDirect";          // default false (расширенное правило; основной split — в шаблоне подписки)
     public static final String P_ADS = "blockAds";
     public static final String P_ALL_VPN = "allVpn";       // default false: весь трафик через VPN, кроме торрентов и локальной сети
-    public static final String P_AUTO = "autoMode";        // 0 by sub, -1 off, N hours
+    public static final String P_ROUTE_PROFILE = "routeProfile"; // "sub" — правила подписки (по умолчанию), "meows" — встроенный профиль
+    public static final String P_AUTO = "autoMode";       // 0 by sub, -1 off, N hours
     public static final String P_LAUNCH = "updateOnLaunch";// default true
     public static final String P_REMIND = "remind";        // default true
     public static final String P_AUTOSWITCH = "autoswitch"; // default true: сменить сервер, если текущий перестал отвечать
@@ -251,6 +252,7 @@ public final class XKStore {
             o.put("blockAds", blockAds());
             o.put("allVpn", allVpn());
             o.put("noVV", true);
+            o.put("profile", app.meows.vpn.routing.RoutingProfiles.INSTANCE.selectedJson(this));
             o.put("cats", new JSONArray(bypassCats()));
             o.put("domains", new JSONArray(bypassSites()));
             return o.toString();

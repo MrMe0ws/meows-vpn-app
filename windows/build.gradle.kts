@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "app.meows"
-version = "1.3.0"
+version = "1.4.0"
 
 // Сборка вне OneDrive (build.ps1 задаёт MEOWS_WIN_BUILD_DIR)
 System.getenv("MEOWS_WIN_BUILD_DIR")?.let { layout.buildDirectory.set(file(it)) }
@@ -17,6 +17,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.2")
     implementation("com.materialkolor:material-kolor:3.0.1")   // палитры Material You из seed-цвета
     implementation("org.json:json:20240303")
+    implementation("com.google.zxing:core:3.5.3")                // QR профиля маршрутизации
     implementation("net.java.dev.jna:jna-platform:5.14.0")      // реестр и WinInet для системного прокси
     testImplementation(kotlin("test"))
 }
@@ -30,7 +31,7 @@ compose.desktop {
         nativeDistributions {
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             packageName = "Meows"
-            packageVersion = "1.3.0"
+            packageVersion = "1.4.0"
             description = "Meows VPN client"
             vendor = "Meows"
             modules("java.net.http", "jdk.unsupported", "java.naming")

@@ -1,6 +1,6 @@
 # Подписка
 
-- Формат: ссылка Remnawave, отдающая **Xray JSON** (массив конфигов). Запрос идёт с `User-Agent: Happ/3.9.0`, заголовками `x-hwid`, `x-device-os/ver/model`, `x-app-name: MeowsVPN`.
+- Формат: ссылка Remnawave, отдающая **Xray JSON** (массив конфигов). Запрос идёт с `User-Agent: Meows/<версия>`, заголовками `x-hwid`, `x-device-os/ver/model`, `x-app-name: Meows`. Если панель вернула ссылки, запрос повторяется с `Happ/3.9.0`, но этот UA сейчас получает заглушку, так что повтор практически бесполезен.
 - Ответ сохраняется в prefs (`sub.url`, `sub.body`, `sub.headers`, `sub.updated`). Из заголовков берём: `profile-title`, `announce`, `support-url`, `profile-web-page-url`, `profile-update-interval`, `subscription-userinfo` (трафик, срок).
 - Если сервер отдал ссылки вместо Xray JSON — ошибка с подсказкой включить Xray JSON-шаблон в Remnawave.
 - Автообновление: `P_AUTO` (0 — по подписке, −1 — выкл, N часов); при запуске — `P_LAUNCH`. Напоминания о сроке — `P_REMIND` (за 3 дня, за 1 день, в день окончания).

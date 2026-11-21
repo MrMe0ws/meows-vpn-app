@@ -18,7 +18,9 @@ import app.meows.desktop.data.SwitchFilter
 import app.meows.desktop.data.SubscriptionClient
 import app.meows.desktop.data.SubscriptionData
 import app.meows.desktop.log.AppLog
+import app.meows.desktop.geo.GeoUpdater
 import app.meows.desktop.notify.Reminders
+import app.meows.desktop.routing.RoutingProfiles
 import app.meows.desktop.stats.StatsFeed
 import app.meows.desktop.system.Autostart
 import app.meows.desktop.system.Elevation
@@ -34,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 enum class ConnState { Idle, Connecting, Connected }
@@ -83,6 +86,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
     var allVpn by mutableStateOf(settings.bool("allVpn", false))          // весь трафик через VPN, кроме торрентов и локальной сети
+    var profilesRev by mutableIntStateOf(0)                                // растёт при любой правке профилей маршрутизации: экраны профилей перерисовываются
     var railExpanded by mutableStateOf(settings.bool("railExpanded", true))   // боковое меню: с подписями / только иконки
     var autoSwitch by mutableStateOf(settings.bool("autoSwitch", true))   // сменить сервер, если текущий перестал отвечать
     val switchFilter = SwitchFilter(settings)                              // на какие серверы можно переключаться
@@ -126,7 +130,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         windowVisible = true; showTick++
     }
 
-    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("allVpn", allVpn).put("noVV", true).toString()
+    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("allVpn", allVpn).put("noVV", true).put("profile", RoutingProfiles.selectedJson(settings)).toString()
 
     private fun saveSubs() = SubEntry.save(settings, subs, active?.id ?: -1)
 
@@ -150,6 +154,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
                 AppLog.add("SUB", (if (existing == null) "Подписка добавлена" else "Подписка обновлена") + ": серверов ${d.servers.size}")
                 if (!silent) toast = if (existing == null) tr("Подписка добавлена") else tr("Подписка обновлена")
                 checkReminders()
+                if (e.id == active?.id) runCatching { GeoUpdater.sync(settings, GeoUpdater.wanted(settings, routingHeader)) }   // гео-файлы следуют ссылкам профиля или панели
                 if (state == ConnState.Connected && existing != null && existing.id == active?.id && !silent && raw != existing.data.url) reconnect()
             }.onFailure {
                 AppLog.add("SUB", "Ошибка: ${it.message}" + if (it.message?.startsWith("Это не похоже") == true) " (получено: ${LinkNormalizer.head(raw)})" else "")
@@ -284,6 +289,41 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     fun chooseBlockAds(v: Boolean) { blockAds = v; settings.set("blockAds", v); if (state != ConnState.Idle) reconnect() }
     fun chooseAllVpn(v: Boolean) { allVpn = v; settings.set("allVpn", v); if (state != ConnState.Idle) reconnect() }
     fun chooseRuDirect(v: Boolean) { ruDirect = v; settings.set("ruDirect", v); if (state != ConnState.Idle) reconnect() }
+
+    /** Заголовок `routing` активной подписки (`happ://routing/add/<base64 JSON>`) — из него берутся имя и списки профиля «Из подписки». */
+    val routingHeader: String? get() = sub?.headers?.get("routing")
+
+    /** Выбор профиля маршрутизации; применяется переподключением. */
+    fun chooseRouteProfile(id: String) { settings.set("routeProfile", id); profilesRev++; applyRouteChange() }
+
+    /** Профили изменены (создание, правка, удаление, сброс). [reconnectIfSelected] — id профиля, правка которого требует применения, если он выбран. */
+    fun profilesChanged(reconnectIfSelected: String? = null) {
+        profilesRev++
+        if (reconnectIfSelected != null && RoutingProfiles.selectedId(settings) == reconnectIfSelected) applyRouteChange()
+    }
+
+    /**
+     * Профиль выбран или изменён: сначала приводим гео-файлы к его ссылкам (иначе правила с новыми тегами не сработают),
+     * затем переподключаем VPN, если он включён.
+     */
+    private fun applyRouteChange() {
+        scope.launch {
+            runCatching { GeoUpdater.sync(settings, GeoUpdater.wanted(settings, routingHeader)) }
+            if (state != ConnState.Idle) reconnect()
+        }
+    }
+
+    /** Кнопка «Обновить» в профиле: скачать гео-файлы по [pins] (null — по ссылкам подписки или вшитые). После обновления VPN переподключается. */
+    suspend fun updateGeo(pins: GeoUpdater.Pins?): GeoUpdater.Result {
+        val r = withContext(Dispatchers.IO) {
+            runCatching { GeoUpdater.sync(settings, pins ?: GeoUpdater.parsePins(routingHeader), force = true) }.getOrDefault(GeoUpdater.Result.FAILED)
+        }
+        profilesRev++
+        if ((r == GeoUpdater.Result.UPDATED || r == GeoUpdater.Result.BUNDLED) && state != ConnState.Idle) reconnect()
+        return r
+    }
+
+    fun geoStatus() = GeoUpdater.status(settings)
 
     fun chooseCloseToTray(v: Boolean) { closeToTray = v; settings.set("closeToTray", v) }
     fun chooseAutoStart(v: Boolean) { Autostart.set(v); autoStart = Autostart.isEnabled() }

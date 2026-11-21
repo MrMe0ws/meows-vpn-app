@@ -2,6 +2,7 @@ package app.meows.vpn.ui.settings.pages
 
 import app.meows.vpn.i18n.tr
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Language
@@ -21,7 +22,7 @@ import app.meows.vpn.ui.settings.ValueRow
  * здесь — российские приложения мимо VPN и личные исключения. Подстраницы: категории/сайты и приложения.
  */
 @Composable
-fun RoutingPage(vm: MeowsViewModel, onBack: () -> Unit, openBypass: () -> Unit, openApps: () -> Unit) {
+fun RoutingPage(vm: MeowsViewModel, onBack: () -> Unit, openBypass: () -> Unit, openApps: () -> Unit, openProfiles: () -> Unit) {
     val st = vm.st
     vm.rev
     val allVpn = vm.flag(XKStore.P_ALL_VPN, false)
@@ -46,6 +47,9 @@ fun RoutingPage(vm: MeowsViewModel, onBack: () -> Unit, openBypass: () -> Unit, 
         SettingsGroup(footer = if (allVpn) offNote else tr("Свои исключения: выбранные категории и сайты идут мимо VPN, выбранные приложения целиком работают без VPN.")) {
             ValueRow(Icons.Rounded.Language, tr("Мимо VPN: категории и сайты"), "${st.bypassCats().size + st.bypassSites().size}", onClick = openBypass)
             ValueRow(Icons.Rounded.Apps, tr("Приложения без VPN"), "${st.excludedApps().size}", onClick = openApps)
+        }
+        SettingsGroup(title = tr("Для опытных"), footer = tr("Свои правила маршрутизации. Если не уверены, оставьте по умолчанию.")) {
+            ValueRow(Icons.AutoMirrored.Rounded.AltRoute, tr("Профили маршрутизации"), summary = routeProfileTitle(vm), onClick = openProfiles)
         }
     }
 }

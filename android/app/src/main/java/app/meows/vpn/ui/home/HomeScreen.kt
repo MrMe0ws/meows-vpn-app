@@ -20,8 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingToolbarDefaults
-import androidx.compose.material3.FloatingToolbarExitDirection
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +32,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
@@ -54,9 +51,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     var configOf by remember { mutableStateOf<Pair<XKStore, Int>?>(null) }
     val collapsed = remember { mutableStateListOf<Int>() }   // карточки, свёрнутые пользователем (по номеру слота)
 
-    // панель уезжает вниз при прокрутке списка и возвращается при прокрутке вверх
-    val toolbarScroll = FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = FloatingToolbarExitDirection.Bottom)
-    Box(Modifier.fillMaxSize().nestedScroll(toolbarScroll)) {
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
     // шапка с кнопкой подключения закреплена и не меняется при прокрутке: скроллится только список подписок и серверов
     val listState = rememberLazyListState()
@@ -118,7 +113,7 @@ fun HomeScreen(vm: MeowsViewModel, onToggle: () -> Unit, openSettings: () -> Uni
     }
     HomeToolbar(
         vm, openSettings = openSettings, onScanQr = onScanQr, onManual = { manualEntry = true },
-        scrollBehavior = toolbarScroll, modifier = Modifier.align(Alignment.BottomCenter),
+        modifier = Modifier.align(Alignment.BottomCenter),
     )
     }
 

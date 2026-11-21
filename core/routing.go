@@ -12,6 +12,7 @@ type xkOpts struct {
 	Domains  []string `json:"domains"` // user sites that bypass the VPN
 	Apps     []string `json:"apps"`    // desktop: process names that bypass the VPN
 	AllVpn   bool     `json:"allVpn"` // всё через VPN, кроме торрентов и локальной сети (см. allvpn.go)
+	Profile  string   `json:"profile"` // выбранный профиль маршрутизации (JSON формата Happ, см. profile.go); пусто — правила подписки
 	Lite     bool     `json:"lite"`
 	NoVV     bool     `json:"noVV"`    // white-label build: no built-in VkusVill bypass    // iOS: ~50 MB extension limit — skip the heaviest geo lists
 }
@@ -155,7 +156,8 @@ func addRouting(obj map[string]any, o xkOpts) {
 		direct = "xk-direct"
 		outs = append(outs, map[string]any{"protocol": "freedom", "tag": direct})
 	}
-	if block == "" && o.BlockAds {
+	profile, hasProfile := parseProfile(o.Profile)
+	if block == "" && (o.BlockAds || hasProfile) {
 		block = "xk-block"
 		outs = append(outs, map[string]any{"protocol": "blackhole", "tag": block})
 	}
@@ -180,6 +182,37 @@ func addRouting(obj map[string]any, o xkOpts) {
 	if o.AllVpn {
 		applyAllVpn(obj, routing, o, direct, block, proxyRule)
 		return
+	}
+
+	// свой профиль: его правила вместо правил подписки; личные надстройки (ниже) всё равно идут выше
+	if hasProfile {
+		rules, strategy := profileRules(profile, direct, block, proxyRule)
+		routing["rules"] = rules
+		if strategy != "" {
+			routing["domainStrategy"] = strategy
+		}
+		dnsCfg, _ := obj["dns"].(map[string]any)
+		if dnsCfg == nil {
+			dnsCfg = map[string]any{}
+		}
+		rest, _ := dnsCfg["servers"].([]any)
+		if servers := profileDNS(profile, rest); servers != nil {
+			dnsCfg["servers"] = servers
+			obj["dns"] = dnsCfg
+		}
+		if len(profile.DnsHosts) > 0 {
+			hosts, _ := dnsCfg["hosts"].(map[string]any)
+			if hosts == nil {
+				hosts = map[string]any{}
+			}
+			for d, ip := range profile.DnsHosts {
+				if d, ip = strings.TrimSpace(d), strings.TrimSpace(ip); d != "" && ip != "" {
+					hosts[d] = ip
+				}
+			}
+			dnsCfg["hosts"] = hosts
+			obj["dns"] = dnsCfg
+		}
 	}
 
 	var pre []any

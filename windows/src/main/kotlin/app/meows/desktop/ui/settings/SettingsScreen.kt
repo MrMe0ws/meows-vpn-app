@@ -127,12 +127,17 @@ private fun Swatch(color: Color, selected: Boolean, onClick: () -> Unit) = Surfa
 @Composable
 fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
     var autoSwitchOpen by remember { mutableStateOf(false) }
+    var profilesOpen by remember { mutableStateOf(false) }
+    var editProfile by remember { mutableStateOf<String?>(null) }   // id профиля маршрутизации в редакторе
+    val scroll = rememberScrollState()   // создаётся до раннего return: иначе уход в подстраницу сбрасывает прокрутку
     if (autoSwitchOpen) { AutoSwitchScreen(app) { autoSwitchOpen = false }; return }
+    editProfile?.let { ProfileEditScreen(app, it) { editProfile = null }; return }
+    if (profilesOpen) { ProfilesScreen(app, { profilesOpen = false }) { editProfile = it }; return }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = { TopAppBar(title = { Text(tr("Настройки")) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Назад")) } }) },
     ) { pad ->
-        Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(Modifier.padding(pad).fillMaxSize().verticalScroll(scroll)) {
             Group(tr("Язык")) {
                 val langs = listOf(tr("Авто"), "Русский", "English")
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -159,6 +164,9 @@ fun SettingsScreen(app: AppModel, onBack: () -> Unit) {
                 SwitchRow(tr("Весь трафик через VPN"), null, app.allVpn, app::chooseAllVpn)
                 SwitchRow(tr("Блокировать рекламу"), null, app.blockAds, app::chooseBlockAds)
                 SwitchRow(tr("Все российские сайты напрямую"), if (app.allVpn) tr("В режиме «Весь трафик через VPN» не действует") else tr("Расширенно, поверх правил подписки"), app.ruDirect, !app.allVpn, app::chooseRuDirect)
+            }
+            Group(tr("Для опытных"), tr("Свои правила маршрутизации. Если не уверены, оставьте по умолчанию.")) {
+                NavRow(tr("Профили маршрутизации"), routeProfileTitle(app)) { profilesOpen = true }
             }
             SystemGroup(app) { autoSwitchOpen = true }
             UpdatesGroup(app)

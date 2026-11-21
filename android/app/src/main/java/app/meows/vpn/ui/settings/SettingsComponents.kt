@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.Layout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.VerticalDivider
@@ -23,7 +24,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -62,10 +65,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 
+/** Состояние прокрутки текущей страницы: хранится в [SettingsScreen], чтобы переживать уход на подстраницу и возврат. */
+val LocalPageScroll = compositionLocalOf<ScrollState?> { null }
+
 /** Каркас страницы настроек: большой заголовок со сворачиванием и кнопка «назад». */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsPageScaffold(title: String, onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+fun SettingsPageScaffold(title: String, onBack: () -> Unit, actions: @Composable RowScope.() -> Unit = {}, content: @Composable ColumnScope.() -> Unit) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -74,12 +80,13 @@ fun SettingsPageScaffold(title: String, onBack: () -> Unit, content: @Composable
             LargeTopAppBar(
                 title = { Text(title) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Назад")) } },
+                actions = actions,
                 scrollBehavior = scroll,
             )
         },
         contentWindowInsets = WindowInsets(0),
     ) { pad ->
-        Column(Modifier.padding(pad).verticalScroll(rememberScrollState())) {
+        Column(Modifier.padding(pad).verticalScroll(LocalPageScroll.current ?: rememberScrollState())) {
             content()
             Spacer(Modifier.height(24.dp).navigationBarsPadding())
         }
