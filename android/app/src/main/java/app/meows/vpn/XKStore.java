@@ -190,7 +190,7 @@ public final class XKStore {
     /** Российские приложения (банки, Госуслуги и т.д.) целиком мимо VPN. По умолчанию включено. */
     public boolean ruApps() { return sp.getBoolean(P_RU_APPS, true); }
     public boolean allVpn() { return sp.getBoolean(P_ALL_VPN, false); }
-    public boolean blockAds() { return sp.getBoolean(P_ADS, false); }
+    public boolean blockAds() { return false; }   // переключателя в UI больше нет: рекламу блокирует шаблон подписки
     public boolean remind() { return sp.getBoolean(P_REMIND, true); }
     public boolean updateOnLaunch() { return sp.getBoolean(P_LAUNCH, true); }
 

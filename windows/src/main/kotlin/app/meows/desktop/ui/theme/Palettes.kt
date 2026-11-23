@@ -6,15 +6,17 @@ import com.materialkolor.PaletteStyle
 
 /** Палитры те же, что в Android-версии, и в том же порядке (индекс хранится в настройках). «Мяу-зелёный» (0) — по умолчанию. */
 object Palettes {
-    val names: List<String> get() = listOf(tr("Мяу-зелёный"), tr("Бирюза"), tr("Лаванда"), tr("Закат"), tr("Роза"), tr("Океан"), tr("Серая"), tr("Монохром"), tr("Лес"), tr("Шалфей"), tr("Лапка"))
+    val names: List<String> get() = listOf(tr("Мяу-зелёный"), tr("Бирюза"), tr("Лаванда"), tr("Закат"), tr("Роза"), tr("Океан"), tr("Серая"), tr("Монохром"), tr("Лес"), tr("Шалфей"), tr("Лапка"), tr("Сумерки"))
     val seeds = listOf(
         Color(0xFF6FD321), Color(0xFF14C8D8), Color(0xFF8E7CF0), Color(0xFFFF8A3D),
         Color(0xFFE8638F), Color(0xFF3D8BFF), Color(0xFF8793A0), Color(0xFF8C8C8C),
-        Color(0xFF4F8A5F), Color(0xFF7A9A82), Color(0xFF00C8C8),
+        Color(0xFF4F8A5F), Color(0xFF7A9A82), Color(0xFF00C8C8), Color(0xFF5B52E6),
     )
+    /** Насыщенность поверхностей тёмной темы по палитрам (0 — серые). У «Сумерек» (11) свои цвета, см. [indigoDark]. */
+    val darkTint = listOf(28.0, 28.0, 30.0, 22.0, 26.0, 32.0, 6.0, 0.0, 14.0, 8.0, 22.0, 0.0)
     val styles = listOf(
         PaletteStyle.Vibrant, PaletteStyle.Vibrant, PaletteStyle.Vibrant, PaletteStyle.Vibrant,
         PaletteStyle.Vibrant, PaletteStyle.Vibrant, PaletteStyle.Neutral, PaletteStyle.Monochrome,
-        PaletteStyle.TonalSpot, PaletteStyle.Neutral, PaletteStyle.TonalSpot,
+        PaletteStyle.TonalSpot, PaletteStyle.Neutral, PaletteStyle.TonalSpot, PaletteStyle.TonalSpot,
     )
 }

@@ -38,6 +38,11 @@ fun MeowsTheme(themeMode: Int, palette: Int, amoled: Boolean, content: @Composab
     val dark = when (themeMode) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
     val i = palette.coerceIn(0, Palettes.seeds.lastIndex)
     var scheme = rememberDynamicColorScheme(seedColor = Palettes.seeds[i], isDark = dark, style = Palettes.styles[i])
+    scheme = when {
+        !dark -> scheme.separateLayers(false)
+        i == INDIGO_PALETTE -> scheme.indigoDark()
+        else -> scheme.tintedDark(Palettes.seeds[i], Palettes.darkTint[i])
+    }
     if (dark && amoled) scheme = scheme.amoled()
     MaterialTheme(colorScheme = scheme, typography = typography(), shapes = shapes, content = content)
 }

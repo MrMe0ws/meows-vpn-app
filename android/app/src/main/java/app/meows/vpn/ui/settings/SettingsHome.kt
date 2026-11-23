@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Timeline
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Autorenew
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +57,7 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
             ValueRow(Icons.Rounded.Autorenew, tr("Подписка"), summary = autoUpdateTitle(st)) { open(SettingsPage.Subscription) }
             ValueRow(
                 Icons.Rounded.PlayArrow, tr("Подключение"),
-                summary = if (st.flag(XKStore.P_AUTOCONN, false)) tr("Автозапуск включён") else tr("Always-on, локальная сеть"),
+                summary = if (st.flag(XKStore.P_AUTOCONN, false)) tr("Автозапуск включён") else tr("Автозапуск, автопереключение"),
             ) { open(SettingsPage.Connection) }
             ValueRow(
                 Icons.Rounded.Language, tr("Маршрутизация"),
@@ -78,6 +79,9 @@ fun SettingsHome(vm: MeowsViewModel, onBack: () -> Unit, open: (SettingsPage) ->
             ValueRow(Icons.Rounded.Info, tr("О приложении"), summary = "${tr("Версия")} ${vm.updates.currentVersion}") { open(SettingsPage.About) }
         }
 
+        SettingsGroup {
+            ValueRow(Icons.Rounded.Tune, tr("Для опытных"), summary = tr("Маршруты, локальная сеть, защита от обрыва")) { open(SettingsPage.Advanced) }
+        }
         SettingsGroup {
             ValueRow(Icons.Rounded.Share, tr("Рассказать друзьям"), summary = tr("Отправить ссылку на приложение")) {
                 val send = Intent(Intent.ACTION_SEND).setType("text/plain")

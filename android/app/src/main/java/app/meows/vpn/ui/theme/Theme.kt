@@ -68,6 +68,12 @@ fun MeowsTheme(
     var scheme = if (dynamic && Build.VERSION.SDK_INT >= 31) {
         if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
     } else kolor
+    val useDynamic = dynamic && Build.VERSION.SDK_INT >= 31
+    scheme = when {
+        !dark || useDynamic -> scheme.separateLayers(dark)
+        idx == INDIGO_PALETTE -> scheme.indigoDark()
+        else -> scheme.tintedDark(Palettes.seeds[idx], Palettes.darkTint[idx])
+    }
     if (dark && amoled) scheme = scheme.amoled()
 
     val view = LocalView.current

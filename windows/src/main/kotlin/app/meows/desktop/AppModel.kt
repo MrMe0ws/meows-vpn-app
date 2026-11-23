@@ -83,7 +83,6 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     var themeMode by mutableIntStateOf(settings.int("theme", 0))       // 0 авто, 1 светлая, 2 тёмная
     var palette by mutableIntStateOf(settings.int("palette", 0))
     var amoled by mutableStateOf(settings.bool("amoled", false))
-    var blockAds by mutableStateOf(settings.bool("blockAds", false))
     var ruDirect by mutableStateOf(settings.bool("ruDirect", false))
     var allVpn by mutableStateOf(settings.bool("allVpn", false))          // весь трафик через VPN, кроме торрентов и локальной сети
     var profilesRev by mutableIntStateOf(0)                                // растёт при любой правке профилей маршрутизации: экраны профилей перерисовываются
@@ -130,7 +129,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
         windowVisible = true; showTick++
     }
 
-    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", blockAds).put("allVpn", allVpn).put("noVV", true).put("profile", RoutingProfiles.selectedJson(settings)).toString()
+    private fun opts() = JSONObject().put("ruDirect", ruDirect).put("blockAds", false).put("allVpn", allVpn).put("noVV", true).put("profile", RoutingProfiles.selectedJson(settings)).toString()
 
     private fun saveSubs() = SubEntry.save(settings, subs, active?.id ?: -1)
 
@@ -286,7 +285,6 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
     fun choosePalette(p: Int) { palette = p; settings.set("palette", p) }
     fun chooseAmoled(v: Boolean) { amoled = v; settings.set("amoled", v) }
     fun chooseLang(v: Int) = Lang.set(settings, v)
-    fun chooseBlockAds(v: Boolean) { blockAds = v; settings.set("blockAds", v); if (state != ConnState.Idle) reconnect() }
     fun chooseAllVpn(v: Boolean) { allVpn = v; settings.set("allVpn", v); if (state != ConnState.Idle) reconnect() }
     fun chooseRuDirect(v: Boolean) { ruDirect = v; settings.set("ruDirect", v); if (state != ConnState.Idle) reconnect() }
 

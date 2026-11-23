@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.launch
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.ui.settings.pages.AboutPage
+import app.meows.vpn.ui.settings.pages.AdvancedPage
 import app.meows.vpn.ui.settings.pages.AppIconPage
 import app.meows.vpn.ui.settings.pages.AppearancePage
 import app.meows.vpn.ui.settings.pages.AppsPage
@@ -38,8 +39,8 @@ import app.meows.vpn.ui.settings.pages.UrlSchemesPage
 /** Страницы настроек. [parent] — куда ведёт «назад». Новая страница = новый элемент + файл в pages/. */
 enum class SettingsPage(val parent: SettingsPage?, val depth: Int) {
     Home(null, 0),
-    Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1), UrlSchemes(About, 2),
-    Bypass(Routing, 2), Apps(Routing, 2), Profiles(Routing, 2), ProfileEdit(Profiles, 3), AutoSwitch(Connection, 2), MobileBypass(Connection, 2), AppIcon(Appearance, 2),
+    Appearance(Home, 1), Language(Home, 1), Routing(Home, 1), Subscription(Home, 1), Connection(Home, 1), Ping(Home, 1), Updates(Home, 1), About(Home, 1), Stats(Home, 1), Advanced(Home, 1), UrlSchemes(About, 2),
+    Bypass(Advanced, 2), Apps(Routing, 2), Profiles(Advanced, 2), ProfileEdit(Profiles, 3), AutoSwitch(Connection, 2), MobileBypass(Connection, 2), AppIcon(Appearance, 2),
 }
 
 /**
@@ -76,7 +77,8 @@ fun SettingsScreen(vm: MeowsViewModel, onBack: () -> Unit) {
                 SettingsPage.Appearance -> AppearancePage(vm, back, openAppIcon = { go(SettingsPage.AppIcon) })
                 SettingsPage.AppIcon -> AppIconPage(back)
                 SettingsPage.Language -> LanguagePage(vm, back)
-                SettingsPage.Routing -> RoutingPage(vm, back, openBypass = { go(SettingsPage.Bypass) }, openApps = { go(SettingsPage.Apps) }, openProfiles = { go(SettingsPage.Profiles) })
+                SettingsPage.Routing -> RoutingPage(vm, back, openApps = { go(SettingsPage.Apps) })
+                SettingsPage.Advanced -> AdvancedPage(vm, back, openBypass = { go(SettingsPage.Bypass) }, openProfiles = { go(SettingsPage.Profiles) })
                 SettingsPage.Subscription -> SubscriptionPage(vm, back)
                 SettingsPage.Connection -> ConnectionPage(vm, back, openAutoSwitch = { go(SettingsPage.AutoSwitch) }, openMobileBypass = { go(SettingsPage.MobileBypass) })
                 SettingsPage.AutoSwitch -> AutoSwitchPage(vm, back)
