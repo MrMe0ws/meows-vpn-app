@@ -9,7 +9,10 @@ enum class AppIcon(val alias: String, val title: String, val preview: Int) {
     Lime("LauncherLime", "Лайм", R.drawable.icon_prev_lime),
     Green("LauncherGreen", "Зелёная лапа", R.drawable.icon_prev_green),
     Glow("LauncherGlow", "Свечение", R.drawable.icon_prev_glow),
-    Classic("LauncherClassic", "Классика", R.drawable.icon_prev_classic);
+    Classic("LauncherClassic", "Классика", R.drawable.icon_prev_classic),
+    Paw("LauncherPaw", "Чёрная лапа", R.drawable.icon_prev_paw),
+    Shield("LauncherShield", "Щит", R.drawable.icon_prev_shield),
+    Eyes("LauncherEyes", "Глаза", R.drawable.icon_prev_eyes);
 
     private fun component(ctx: Context) = ComponentName(ctx.packageName, "app.meows.vpn.$alias")
 

@@ -62,5 +62,8 @@ internal val enDict5 = mapOf(
     "Свечение" to "Glow",
     "Лайм" to "Lime",
     "Классика" to "Classic",
+    "Чёрная лапа" to "Black paw",
+    "Щит" to "Shield",
+    "Глаза" to "Eyes",
     "Ссылку подписки можно взять в боте или личном кабинете. Серверы появятся автоматически." to "You can get the subscription link in the bot or your account. Servers will appear automatically.",
 )

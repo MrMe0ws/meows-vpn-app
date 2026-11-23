@@ -2,4 +2,7 @@
 <resources>
     <color name="ic_launcher_bg">#00020F</color>
     <color name="ic_launcher_bg_glow">#0A0E12</color>
+    <color name="ic_launcher_bg_paw">#0B0B0B</color>
+    <color name="ic_launcher_bg_shield">#09090B</color>
+    <color name="ic_launcher_bg_eyes">#131313</color>
 </resources>

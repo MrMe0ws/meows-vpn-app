@@ -98,6 +98,45 @@
             </intent-filter>
         </activity-alias>
 
+        <activity-alias
+            android:name=".LauncherPaw"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_paw"
+            android:roundIcon="@mipmap/ic_launcher_paw">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherShield"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_shield"
+            android:roundIcon="@mipmap/ic_launcher_shield">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherEyes"
+            android:targetActivity=".MainActivity"
+            android:enabled="false"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_eyes"
+            android:roundIcon="@mipmap/ic_launcher_eyes">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <!-- установка скачанных обновлений -->
         <provider
             android:name="androidx.core.content.FileProvider"
