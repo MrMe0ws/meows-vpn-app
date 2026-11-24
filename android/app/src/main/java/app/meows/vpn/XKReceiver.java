@@ -31,10 +31,6 @@ public class XKReceiver extends BroadcastReceiver {
                 Lang.tr("Через 3 дня подписка закончится. Нажмите, чтобы продлить в личном кабинете."),
                 Lang.tr("Остался 1 день. Продлите подписку, чтобы VPN не отключился."),
                 Lang.tr("Подписка закончилась. Продлите её в личном кабинете и нажмите «Обновить» в приложении.")};
-        if (app.meows.vpn.Edition.isPlay) bodies = new String[]{
-                Lang.tr("Через 3 дня подписка закончится."),
-                Lang.tr("Остался 1 день до конца подписки."),
-                Lang.tr("Подписка закончилась. После продления нажмите «Обновить» в приложении.")};
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel("remind") == null) {
             nm.createNotificationChannel(new NotificationChannel("remind", Lang.tr("Напоминания о подписке"), NotificationManager.IMPORTANCE_HIGH));
@@ -49,11 +45,11 @@ public class XKReceiver extends BroadcastReceiver {
     }
 
     private static Intent cabinetIntent(Context c, XKStore st) {
-        if (app.meows.vpn.Edition.isPlay) {   // в Play-версии ссылок на оплату нет: нажатие просто открывает приложение
+        String url = app.meows.vpn.shop.ShopLinks.cabinet(st);
+        if (url == null) {   // у подписки нет ссылки на кабинет — нажатие просто открывает приложение
             Intent open = c.getPackageManager().getLaunchIntentForPackage(c.getPackageName());
             if (open != null) return open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
-        String url = app.meows.vpn.shop.ShopLinks.cabinet(st);
         return new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
@@ -74,9 +70,7 @@ public class XKReceiver extends BroadcastReceiver {
             nm.createNotificationChannel(new NotificationChannel("remind", Lang.tr("Напоминания о подписке"), NotificationManager.IMPORTANCE_HIGH));
         }
         String title = level == 100 ? Lang.tr("Трафик закончился") : Lang.tr("Трафик почти закончился");
-        String body = app.meows.vpn.Edition.isPlay
-                ? (level == 100 ? Lang.tr("Лимит трафика исчерпан.") : Lang.tr("Использовано ") + pct + Lang.tr("% трафика."))
-                : (level == 100 ? Lang.tr("Лимит исчерпан. Продлите или докупите трафик в личном кабинете.") : Lang.tr("Использовано ") + pct + Lang.tr("% трафика. Нажмите, чтобы открыть личный кабинет."));
+        String body = level == 100 ? Lang.tr("Лимит исчерпан. Продлите или докупите трафик в личном кабинете.") : Lang.tr("Использовано ") + pct + Lang.tr("% трафика. Нажмите, чтобы открыть личный кабинет.");
         int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, "remind") : new Notification.Builder(c);
         b.setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(body).setStyle(new Notification.BigTextStyle().bigText(body))

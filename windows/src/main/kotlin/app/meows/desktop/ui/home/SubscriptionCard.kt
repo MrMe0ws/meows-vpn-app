@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextAlign
@@ -76,6 +77,9 @@ fun SubscriptionCard(
     val shape = if (expanded) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(28.dp)
     val chevron by animateFloatAsState(if (expanded) 0f else -90f, label = "chevron")
     val cs = MaterialTheme.colorScheme
+    // полосы внутри карточки (трафик, срок, объявление): едва заметный нейтральный оттенок поверх цвета карточки (светлее в тёмной теме, темнее в светлой)
+    val strip = cs.onSurface.copy(alpha = 0.05f)
+    val track = cs.onSurface.copy(alpha = 0.12f)
     var menu by remember { mutableStateOf(false) }
     Surface(Modifier.fillMaxWidth().padding(horizontal = 12.dp), shape = shape, color = cs.surfaceContainerHigh) {
         Column {
@@ -119,9 +123,9 @@ fun SubscriptionCard(
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth().background(cs.surfaceContainerHighest.copy(alpha = 0.5f)).padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().background(strip).padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 val frac = if (sub.total > 0) (sub.used.toFloat() / sub.total).coerceIn(0f, 1f) else 0f
-                Box(Modifier.weight(1f).height(24.dp).clip(RoundedCornerShape(12.dp)).background(cs.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+                Box(Modifier.weight(1f).height(24.dp).clip(RoundedCornerShape(12.dp)).background(track), contentAlignment = Alignment.Center) {
                     Box(Modifier.align(Alignment.CenterStart).fillMaxWidth(frac).fillMaxSize().background(cs.primaryContainer))
                     Text(formatBytesRu(sub.used) + " / " + (if (sub.total > 0) formatBytesRu(sub.total) else "∞"), style = MaterialTheme.typography.labelMedium)
                 }
@@ -135,13 +139,15 @@ fun SubscriptionCard(
                 }
             }
             sub.announce?.takeIf { it.isNotBlank() }?.let {
-                Text(it, Modifier.fillMaxWidth().background(cs.surfaceContainerHighest.copy(alpha = 0.5f)).padding(horizontal = 16.dp, vertical = 10.dp), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                Text(it, Modifier.fillMaxWidth().background(strip).padding(horizontal = 16.dp, vertical = 10.dp), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = { openUrl(sub.webUrl ?: "https://cabinet.me0ws.store") }, modifier = Modifier.weight(1f)) {
+            val cabinet = sub.cabinetLink
+            val support = sub.supportLink
+            if (cabinet != null || support != null) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (cabinet != null) FilledTonalButton(onClick = { openUrl(cabinet) }, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.AccountCircle, null); Spacer(Modifier.width(8.dp)); Text(tr("Кабинет"))
                 }
-                FilledTonalButton(onClick = { openUrl(sub.supportUrl ?: "https://t.me/VPNmeows_bot") }, modifier = Modifier.weight(1f)) {
+                if (support != null) FilledTonalButton(onClick = { openUrl(support) }, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.SupportAgent, null); Spacer(Modifier.width(8.dp)); Text(tr("Поддержка"))
                 }
             }

@@ -53,6 +53,7 @@ internal val enDict6 = mapOf(
     "серверов" to "servers",
     "через VPN" to "through VPN",
     " · автообновление %d ч" to " · auto-update every %d h",
+    " · авто %d ч" to " · auto %d h",
     "По подписке (%d ч)" to "By subscription (%d h)",
     "Каждые %d ч" to "Every %d h",
     "Быстрейший: %s · %d мс" to "Fastest: %s · %d ms",

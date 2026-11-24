@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
-import app.meows.vpn.Edition
 import app.meows.vpn.shop.ShopLinks
 
 /**
@@ -31,18 +30,20 @@ import app.meows.vpn.shop.ShopLinks
 fun AccountActions(vm: MeowsViewModel, st: XKStore, onSupport: () -> Unit) {
     vm.rev
     val renew = ShopLinks.needsRenewal(st)
+    val cabinet = ShopLinks.cabinet(st)
+    val hasSupport = ShopLinks.support(st) != null
+    if (cabinet == null && !hasSupport) return
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (Edition.isPlay) Unit
-        else if (renew) {
-            Button(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
+        if (cabinet != null && renew) {
+            Button(onClick = { vm.openLink(cabinet) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.Autorenew, null); Spacer(Modifier.width(8.dp)); Text(tr("Продлить"))
             }
-        } else {
-            FilledTonalButton(onClick = { vm.openLink(ShopLinks.cabinet(st)) }, modifier = Modifier.weight(1f)) {
+        } else if (cabinet != null) {
+            FilledTonalButton(onClick = { vm.openLink(cabinet) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Rounded.AccountCircle, null); Spacer(Modifier.width(8.dp)); Text(tr("Кабинет"))
             }
         }
-        FilledTonalButton(onClick = onSupport, modifier = Modifier.weight(1f)) {
+        if (hasSupport) FilledTonalButton(onClick = onSupport, modifier = Modifier.weight(1f)) {
             Icon(Icons.Rounded.SupportAgent, null); Spacer(Modifier.width(8.dp)); Text(tr("Поддержка"))
         }
     }

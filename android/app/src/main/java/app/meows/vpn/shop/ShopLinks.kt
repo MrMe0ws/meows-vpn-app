@@ -3,15 +3,18 @@ package app.meows.vpn.shop
 import app.meows.vpn.XKStore
 
 /**
- * Ссылки магазина Meows. Берём из заголовков подписки (их задаёт панель Remnawave:
- * `profile-web-page-url`, `support-url`); если подписка ещё не добавлена — запасные адреса.
+ * Ссылки «Кабинет» и «Поддержка» — из заголовков подписки (их задаёт панель Remnawave: `profile-web-page-url`, `support-url`),
+ * то есть у каждого VPN-сервиса свои. Запасные адреса Meows подставляем только для подписок Meows (домен me0ws.store);
+ * у чужой подписки без заголовка ссылки нет (null) — кнопку не показываем.
  */
 object ShopLinks {
     const val CABINET_FALLBACK = "https://cabinet.me0ws.store"
     const val SUPPORT_FALLBACK = "https://t.me/VPNmeows_bot"
 
-    @JvmStatic fun cabinet(st: XKStore): String = st.webUrl()?.takeIf { it.isNotBlank() } ?: CABINET_FALLBACK
-    fun support(st: XKStore): String = st.supportUrl()?.takeIf { it.isNotBlank() } ?: SUPPORT_FALLBACK
+    fun isMeows(st: XKStore): Boolean = runCatching { java.net.URI(st.url()).host.orEmpty().endsWith("me0ws.store") }.getOrDefault(false)
+
+    @JvmStatic fun cabinet(st: XKStore): String? = st.webUrl()?.takeIf { it.isNotBlank() } ?: CABINET_FALLBACK.takeIf { isMeows(st) }
+    fun support(st: XKStore): String? = st.supportUrl()?.takeIf { it.isNotBlank() } ?: SUPPORT_FALLBACK.takeIf { isMeows(st) }
 
     /** Дней до конца подписки: null — срок неизвестен, отрицательное — уже закончилась. */
     fun daysLeft(st: XKStore): Int? {

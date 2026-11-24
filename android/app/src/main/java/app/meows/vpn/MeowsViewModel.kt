@@ -106,8 +106,9 @@ class MeowsViewModel(app: Application) : AndroidViewModel(app), XKVpnService.Lis
 
     /** Ошибка загрузки подписки; если похоже на лимит устройств — сразу предлагаем кабинет. */
     private fun fetchError(title: String, error: String) {
-        if (!Edition.isPlay && (error.contains("лимит", ignoreCase = true) || error.contains("limit", ignoreCase = true))) {
-            alert(title, error, tr("Открыть кабинет")) { openLink(app.meows.vpn.shop.ShopLinks.cabinet(st)) }
+        if (error.contains("лимит", ignoreCase = true) || error.contains("limit", ignoreCase = true)) {
+            val cabinet = app.meows.vpn.shop.ShopLinks.cabinet(st)
+            if (cabinet != null) alert(title, error, tr("Открыть кабинет")) { openLink(cabinet) } else alert(title, error)
         } else alert(title, error)
     }
     fun bump() { rev++ }

@@ -19,6 +19,10 @@ class SubscriptionData(val url: String, val body: String, val headers: Map<Strin
     val announce: String? get() = decoded(header("announce"))
     val supportUrl: String? get() = header("support-url")
     val webUrl: String? get() = header("profile-web-page-url")
+    /** Запасные адреса Meows — только для подписок Meows (домен me0ws.store); у чужой подписки без заголовка ссылки нет. */
+    private val isMeows: Boolean get() = runCatching { java.net.URI(url).host.orEmpty().endsWith("me0ws.store") }.getOrDefault(false)
+    val cabinetLink: String? get() = webUrl ?: "https://cabinet.me0ws.store".takeIf { isMeows }
+    val supportLink: String? get() = supportUrl ?: "https://t.me/VPNmeows_bot".takeIf { isMeows }
     val updateIntervalHours: Int get() = header("profile-update-interval")?.trim()?.toIntOrNull() ?: 0
 
     private fun info(key: String): Long = header("subscription-userinfo")?.split(";")?.map { it.trim().split("=") }

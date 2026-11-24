@@ -50,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.layout
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.XKStore
+import app.meows.vpn.shop.ShopLinks
 import app.meows.vpn.ui.components.formatBytesRu
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -78,6 +80,10 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
     val shape = if (expanded) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(28.dp)
     val chevron by animateFloatAsState(if (expanded) 0f else -90f, label = "chevron")
     var menu by remember { mutableStateOf(false) }
+    val cs = MaterialTheme.colorScheme
+    // полосы внутри карточки (трафик, срок, объявление): едва заметный нейтральный оттенок поверх цвета карточки (светлее в тёмной теме, темнее в светлой)
+    val strip = cs.onSurface.copy(alpha = 0.05f)
+    val track = cs.onSurface.copy(alpha = 0.12f)
 
     Surface(modifier.fillMaxWidth(), shape = shape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column {
@@ -91,9 +97,9 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
                     val upd = st.updated()
                     val auto = st.autoUpdateHours()
                     Text(
-                        (if (upd > 0) SimpleDateFormat("dd.MM.yyyy HH:mm", RU).format(Date(upd)) else "—") +
-                            if (auto > 0) trf(" · автообновление %d ч", auto) else "",
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2,
+                        (if (upd > 0) SimpleDateFormat(if (sameYear(upd)) "dd.MM HH:mm" else "dd.MM.yy HH:mm", RU).format(Date(upd)) else "—") +
+                            if (auto > 0) trf(" · авто %d ч", auto) else "",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
                 val inf = rememberInfiniteTransition(label = "refresh")
@@ -123,8 +129,8 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
                             text = { Text(tr("Заменить ссылку")) }, leadingIcon = { Icon(Icons.Rounded.Edit, null) },
                             onClick = { menu = false; onReplace() },
                         )
-                        val web = st.webUrl()
-                        if (!Edition.isPlay && !web.isNullOrBlank()) DropdownMenuItem(
+                        val web = ShopLinks.cabinet(st)
+                        if (!web.isNullOrBlank()) DropdownMenuItem(
                             text = { Text(tr("Личный кабинет")) }, leadingIcon = { Icon(Icons.Rounded.OpenInBrowser, null) },
                             onClick = { menu = false; openUrl(ctx, web) },
                         )
@@ -138,14 +144,14 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
             }
 
             Row(
-                Modifier.fillW().background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
+                Modifier.fillW().background(strip)
                     .padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 val frac = if (total > 0) (used.toFloat() / total).coerceIn(0f, 1f) else 0f
                 Box(
                     Modifier.weight(1f).height(24.dp).clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                        .background(track),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(Modifier.align(Alignment.CenterStart).fillW(frac).fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer))
@@ -166,9 +172,9 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
             }
 
             val ann = st.announce()
-            if (!Edition.isPlay && !ann.isNullOrBlank()) {
+            if (!ann.isNullOrBlank()) {
                 Text(
-                    ann, Modifier.fillW().background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f))
+                    ann, Modifier.fillW().background(strip)
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center,
                 )
@@ -176,6 +182,12 @@ fun SubscriptionHeader(vm: MeowsViewModel, st: XKStore, expanded: Boolean, onExp
             AccountActions(vm, st, onSupport)
         }
     }
+}
+
+/** Год без указания, если обновление было в этом же году (строка в шапке должна влезать в одну линию). */
+private fun sameYear(ms: Long): Boolean {
+    val a = java.util.Calendar.getInstance().apply { timeInMillis = ms }
+    return a.get(java.util.Calendar.YEAR) == java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
 }
 
 private fun openUrl(ctx: android.content.Context, url: String) {

@@ -15,7 +15,6 @@ import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import app.meows.vpn.Edition
 import app.meows.vpn.MeowsViewModel
 import app.meows.vpn.shop.ShopLinks
 import app.meows.vpn.ui.settings.SettingsGroup
@@ -39,8 +38,8 @@ fun AboutPage(vm: MeowsViewModel, onBack: () -> Unit, openUrlSchemes: () -> Unit
             })
         }
         SettingsGroup {
-            ValueRow(Icons.Rounded.SupportAgent, tr("Поддержка"), summary = ShopLinks.support(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.support(vm.st)) })
-            if (!Edition.isPlay) ValueRow(Icons.Rounded.AccountCircle, tr("Личный кабинет"), summary = ShopLinks.cabinet(vm.st).removePrefix("https://"), onClick = { open(ShopLinks.cabinet(vm.st)) })
+            ShopLinks.support(vm.st)?.let { u -> ValueRow(Icons.Rounded.SupportAgent, tr("Поддержка"), summary = u.removePrefix("https://"), onClick = { open(u) }) }
+            ShopLinks.cabinet(vm.st)?.let { u -> ValueRow(Icons.Rounded.AccountCircle, tr("Личный кабинет"), summary = u.removePrefix("https://"), onClick = { open(u) }) }
         }
         SettingsGroup {   // для тех, кто делает свой магазин: обычному пользователю не нужно, поэтому не на главной
             ValueRow(Icons.Rounded.Link, tr("Для разработчиков"), summary = tr("Схемы URL-адресов"), onClick = openUrlSchemes)

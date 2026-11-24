@@ -115,7 +115,7 @@ class AppModel(startHidden: Boolean = false, connectOnStart: Boolean = false) {
                 if (settings.str(key) == n.key) continue
                 settings.set(key, n.key)
                 val who = if (subs.size > 1) "«${d.title}»: " else ""
-                notifier?.invoke(n.title, who + n.text, d.webUrl ?: "https://cabinet.me0ws.store")
+                notifier?.invoke(n.title, who + n.text, d.cabinetLink)
                 AppLog.add("APP", "Напоминание: ${n.title}" + if (subs.size > 1) " (${d.title})" else "")
             }
         }

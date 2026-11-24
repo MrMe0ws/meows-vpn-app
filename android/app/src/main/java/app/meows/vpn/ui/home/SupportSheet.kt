@@ -55,7 +55,7 @@ fun SupportSheet(vm: MeowsViewModel, st: XKStore, onDismiss: () -> Unit) {
                 Button(
                     onClick = {
                         vm.copy(report, "support"); vm.toast = tr("Отчёт скопирован — вставьте его в чат")
-                        vm.openLink(ShopLinks.support(st)); onDismiss()
+                        ShopLinks.support(st)?.let { vm.openLink(it) }; onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Icon(Icons.Rounded.Send, null); Spacer(Modifier.width(8.dp)); Text(tr("Написать в поддержку")) }
